@@ -20,7 +20,7 @@ namespace Fp2Trainer
         public const string Description = "Training tools for speedrunning Freedom Planet 2: Quick Warps, Quick Resets, Live Tilemap Editing, etc"; // Description for the Mod.  (Set as null if none)
         public const string Author = "Catssandra Ann"; // Author of the Mod.  (MUST BE SET)
         public const string Company = null; // Company that made the Mod.  (Set as null if none)
-        public const string Version = "0.1.0"; // Version of the Mod.  (MUST BE SET)
+        public const string Version = "0.3.0"; // Version of the Mod.  (MUST BE SET)
         public const string DownloadLink = null; // Download Link for the Mod.  (Set as null if none)
     }
 
@@ -47,6 +47,14 @@ namespace Fp2Trainer
         private GameObject stageSelectMenu = null;
         private FPPauseMenu pauseMenu = null;
         private List<FPHudDigit> positionDigits = null;
+
+        private int currentDataPage = 0;
+        private int maxDataPages = 2;
+        private readonly int DATAPAGE_MOVEMENT = 0;
+        private readonly int DATAPAGE_COMBAT = 1;
+        private readonly int DATAPAGE_NONE = 2;
+            
+        
         // Tilemap tm = null;
         //private Tilemap[] tms = null;
         //private TileBase copyTile = null;
@@ -92,6 +100,8 @@ namespace Fp2Trainer
             playerValuesToShow = new HashSet<string>();
             playerValuesToShow.Add("Pos");
             playerValuesToShow.Add("Vel");
+            playerValuesToShow.Add("Magnitude");
+            playerValuesToShow.Add("InflictedDamage");
             playerValuesToShow.Add("Ground Angle");
             playerValuesToShow.Add("Ground Velocity");
             playerValuesToShow.Add("Ceiling Angle");
@@ -383,46 +393,7 @@ namespace Fp2Trainer
                 if (fpplayer != null)
                 {
                     HandleWarpControls();
-
-                    if (playerValuesToShow.Contains("Pos"))
-                    {
-                        debugDisplay += "Pos: " + fpplayer.position.ToString() + "\n";
-                    }
-                    if (playerValuesToShow.Contains("Vel"))
-                    {
-                        debugDisplay += "Vel: " + fpplayer.velocity.ToString() + "\n";
-                    }
-                    if (playerValuesToShow.Contains("Ground Angle"))
-                    {
-                        debugDisplay += "Ground Angle: " + fpplayer.groundAngle.ToString() + "\n";
-                    }
-                    if (playerValuesToShow.Contains("Ground Velocity"))
-                    {
-                        debugDisplay += "Ground Velocity: " + fpplayer.groundVel.ToString() + "\n";
-                    }
-                    if (playerValuesToShow.Contains("Ceiling Angle"))
-                    {
-                        debugDisplay += "Ceiling Angle: " + fpplayer.ceilingAngle.ToString() + "\n";
-                    }
-                    if (playerValuesToShow.Contains("ensor Angle"))
-                    {
-                        debugDisplay += "Sensor Angle: " + fpplayer.sensorAngle.ToString() + "\n";
-                    }
-                    if (playerValuesToShow.Contains("Gravity Angle"))
-                    {
-                        debugDisplay += "Gravity Angle: " + fpplayer.gravityAngle.ToString() + "\n";
-                    }
-                    if (playerValuesToShow.Contains("Gravity Strength"))
-                    {
-                        debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength.ToString() + "\n";
-                    }
                     
-                    if (goStageHUD != null && playerValuesToShow.Contains("HUD Position"))
-                    {
-                        debugDisplay += "HUD Position: " + goStageHUD.GetComponent<FPHudMaster>().hudPosition.ToString() + "\n";
-                        debugDisplay += "HUD Position (base): " + goStageHUD.GetComponent<FPHudMaster>().transform.position.ToString() + "\n";
-                    }
-
                     if (fptls != null)
                     {
                         SceneNamePair snp = fptls.availableScenes[fptls.menuSelection]; 
@@ -432,6 +403,79 @@ namespace Fp2Trainer
                         debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position.ToString() + "\n";
                         debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition.ToString() + "\n";
                     }
+
+                    if (currentDataPage == DATAPAGE_MOVEMENT)
+                    {
+                        if (playerValuesToShow.Contains("Pos"))
+                        {
+                             debugDisplay += "Pos: " + fpplayer.position.ToString() + "\n";
+                        }
+                        if (playerValuesToShow.Contains("Vel"))
+                        {
+                            debugDisplay += "Vel: " + fpplayer.velocity.ToString() + "\n";
+                        }
+                        if (playerValuesToShow.Contains("Magnitude"))
+                        {
+                             debugDisplay += "Acceleration: " + fpplayer.acceleration.ToString() + "\n";
+                             debugDisplay += "Magnitude: " + fpplayer.velocity.magnitude.ToString() + "\n";
+                             debugDisplay += "Accel: " + fpplayer.acceleration.ToString() + "\n";
+                             debugDisplay += "Air Accel: " + fpplayer.airAceleration.ToString() + "\n";
+                             debugDisplay += "Air Drag: " + fpplayer.airDrag.ToString() + "\n";
+                        }
+                        if (playerValuesToShow.Contains("Ground Angle"))
+                        {
+                             debugDisplay += "Ground Angle: " + fpplayer.groundAngle.ToString() + "\n";
+                        }
+                        if (playerValuesToShow.Contains("Ground Velocity"))
+                        {
+                             debugDisplay += "Ground Velocity: " + fpplayer.groundVel.ToString() + "\n";
+                        }
+                        if (playerValuesToShow.Contains("Ceiling Angle"))
+                        {
+                             debugDisplay += "Ceiling Angle: " + fpplayer.ceilingAngle.ToString() + "\n";
+                        }
+                        if (playerValuesToShow.Contains("Sensor Angle"))
+                        {
+                             debugDisplay += "Sensor Angle: " + fpplayer.sensorAngle.ToString() + "\n";
+                        }
+                        if (playerValuesToShow.Contains("Gravity Angle"))
+                        {
+                             debugDisplay += "Gravity Angle: " + fpplayer.gravityAngle.ToString() + "\n";
+                        }
+                        if (playerValuesToShow.Contains("Gravity Strength"))
+                        {
+                             debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength.ToString() + "\n";
+                        }
+                    }
+                    else if (currentDataPage == DATAPAGE_COMBAT)
+                    {
+                        debugDisplay += "Health: " + fpplayer.health.ToString() + "\n";
+                        debugDisplay += "Energy: " + fpplayer.energy.ToString() + "\n";
+                        debugDisplay += "Faction: " + fpplayer.faction.ToString() + "\n";
+                        debugDisplay += "Attack Power: " + fpplayer.attackPower.ToString() + "\n";
+                        debugDisplay += "Attack Hitstun: " + fpplayer.attackHitstun.ToString() + "\n";
+                        debugDisplay += "Attack Knockback: " + fpplayer.attackKnockback.ToString() + "\n";
+                        if (playerValuesToShow.Contains("InflictedDamage"))
+                        {
+                            debugDisplay += "InflictedDamage: " + fpplayer.damageInflicted.ToString() + "\n";
+                        }
+                        debugDisplay += "Guard Time: " + fpplayer.guardTime.ToString() + "\n";
+                        debugDisplay += "ATK NME INV TIM: " + fpplayer.attackEnemyInvTime.ToString() + "\n";
+                        debugDisplay += "Hit Stun: " + fpplayer.hitStun.ToString() + "\n";
+                        debugDisplay += "Invul Time: " + fpplayer.invincibilityTime.ToString() + "\n";
+                        
+                    }
+
+
+                    /*
+                    if (goStageHUD != null && playerValuesToShow.Contains("HUD Position"))
+                    {
+                        debugDisplay += "HUD Position: " + goStageHUD.GetComponent<FPHudMaster>().hudPosition.ToString() + "\n";
+                        debugDisplay += "HUD Position (base): " + goStageHUD.GetComponent<FPHudMaster>().transform.position.ToString() + "\n";
+                    }
+                    */
+
+                    
                     
                 }
 
@@ -508,7 +552,7 @@ namespace Fp2Trainer
             if (Input.GetKeyUp(KeyCode.F8))
             {
                 Log("F8 -> Main Menu");
-                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu", LoadSceneMode.Additive);
+                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
             }
             if (Input.GetKeyUp(KeyCode.F7))
             {
@@ -567,7 +611,7 @@ namespace Fp2Trainer
                 }
                 else
                 {
-                    Log("...But the Level Selector hasn't been created yet...");
+                    Log("...But the Level Selector hasn't been created yet... (Press F6?)");
                 }
 
             }
@@ -588,7 +632,21 @@ namespace Fp2Trainer
 
         private void ToggleVariableDisplay()
         {
-            showVarString = !showVarString;
+            currentDataPage++;
+            if (currentDataPage == maxDataPages)
+            {
+                showVarString = false;
+            }
+            else
+            {
+                showVarString = true;
+            }
+
+            if (currentDataPage > maxDataPages)
+            {
+                currentDataPage = 0;
+            }
+
         }
 
         public void LoadAssetBundlesFromModsFolder()
