@@ -38,6 +38,8 @@ namespace Fp2Trainer
         private GameObject player = null;
         private FPPlayer fpplayer = null;
         private List<FPPlayer> fpplayers = null;
+
+        private FPTrainerLevelSelect fptls;
         //private InputHandler inputHandler = null;
 
         private GameObject crosshair = null;
@@ -505,15 +507,30 @@ namespace Fp2Trainer
             if (Input.GetKeyUp(KeyCode.F6))
             {
                 Log("F6 -> Level Select");
-                List<Scene> availableScenes = new List<Scene>(); 
-                for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) 
+                List<SceneNamePair> availableScenes = new List<SceneNamePair>();
+                int i = 0;
+                for (i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) 
                 {
-                    availableScenes.Add(UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(i));
                     string sceneName =
                         System.IO.Path.GetFileNameWithoutExtension(UnityEngine.SceneManagement.SceneUtility
                             .GetScenePathByBuildIndex(i));
-                    Log(i.ToString() + " | " + sceneName);
+                    availableScenes.Add(new SceneNamePair(UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(i), sceneName));
                 }
+
+                for (i = 0; i < loadedAssetBundles.Count; i++)
+                {
+                    foreach (string scenePath in loadedAssetBundles[i].GetAllScenePaths()) 
+                    {
+                        var sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
+                        availableScenes.Add(new SceneNamePair(UnityEngine.SceneManagement.SceneManager.GetSceneByPath(scenePath), sceneName));
+                    }
+                }
+
+                for (i = 0; i < availableScenes.Count; i++)
+                {
+                    Log(i + " | " + availableScenes[i].name);
+                }
+
                 ShowLevelSelect(availableScenes);
             }
             if (Input.GetKeyUp(KeyCode.F5))
@@ -521,10 +538,25 @@ namespace Fp2Trainer
                 Log("F5 -> Toggle Level Select Menu Visibility");
                 ToggleLevelSelectVisibility();
             }
-            if (Input.GetKeyUp(KeyCode.F5))
+            if (Input.GetKeyUp(KeyCode.F4))
             {
                 Log("F4 -> Toggle Variable Displays");
                 ToggleVariableDisplay();
+            }
+            if (Input.GetKeyUp(KeyCode.F3))
+            {
+                Log("F3 -> Load last located scene: ");
+                if (fptls != null)
+                {
+                    var iWantToGoToBed = fptls.availableScenes[fptls.availableScenes.Count - 1];
+                    Log(iWantToGoToBed.name);
+                    SceneManager.LoadScene(iWantToGoToBed.name);
+                }
+                else
+                {
+                    Log("...But the Level Selector hasn't been created yet...");
+                }
+
             }
             
             
@@ -543,14 +575,7 @@ namespace Fp2Trainer
 
         private void ToggleVariableDisplay()
         {
-            if (showVarString)
-            {
-                
-            }
-            else
-            {
-                
-            }
+            showVarString = !showVarString;
         }
 
         public void LoadAssetBundlesFromModsFolder()
@@ -577,7 +602,7 @@ namespace Fp2Trainer
 
                     if (currentAB == null)
                     {
-                        Log("Failed to load AssetBundle. File may be corrupt.");
+                        Log("Failed to load AssetBundle. Bundle may already be loaded, or the file may be corrupt.");
                         continue;
                     }
 
@@ -601,6 +626,18 @@ namespace Fp2Trainer
             if (stageSelectMenu != null)
             {
                 stageSelectMenu.SetActive(stageSelectMenu.activeInHierarchy);
+                
+                // finna delete
+                var ssm = stageSelectMenu.GetComponent<FPPauseMenu>();
+                fptls = stageSelectMenu.AddComponent<FPTrainerLevelSelect>();
+                if (ssm != null)
+                {
+                    UnityEngine.Object.Destroy(ssm);
+                }
+                if (fptls != null)
+                {
+                    UnityEngine.Object.Destroy(ssm);
+                }
             }
             else
             {
@@ -608,7 +645,7 @@ namespace Fp2Trainer
             }
         }
 
-        private void ShowLevelSelect(List<Scene> availableScenes)
+        private void ShowLevelSelect(List<SceneNamePair> availableScenes)
         {
             if (stageSelectMenu != null)
             {
@@ -616,7 +653,7 @@ namespace Fp2Trainer
                 //stageSelectMenu.SetActive(true);
                 
                 var ssm = stageSelectMenu.GetComponent<FPPauseMenu>();
-                var fptls = stageSelectMenu.AddComponent<FPTrainerLevelSelect>();
+                fptls = stageSelectMenu.AddComponent<FPTrainerLevelSelect>();
                 fptls.availableScenes = availableScenes;
                 GameObject goButton = null;
                 
@@ -673,7 +710,10 @@ namespace Fp2Trainer
                 //base.transform.position = new Vector3(320f, -180f, 0f);
                 
                 //ssm.Start()
-                ssm.Invoke("Start", 0);
+                
+                
+                //ssm.Invoke("Start", 0);
+                UnityEngine.Object.Destroy(ssm);
             }
             else
             {

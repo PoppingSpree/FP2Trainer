@@ -12,7 +12,7 @@ namespace Fp2Trainer
         public int buttonCount = 0;
         public GameObject[] pfButtons;
 
-        public List<Scene> availableScenes;
+        public List<SceneNamePair> availableScenes;
         public int state = 0;
         public float yOffset = 0;
         public float[] targetX;
@@ -44,7 +44,7 @@ namespace Fp2Trainer
             if (FPStage.menuInput.cancel || InputControl.GetButtonDown(Controls.buttons.pause))
             {
                 
-                FPStage.SetStageRunning(pauseFlag: true, showPauseMenu: false);
+                //FPStage.SetStageRunning(pauseFlag: true, showPauseMenu: false);
                 /*
                 if (transform.gameObject.activeInHierarchy)
                 {

@@ -46,6 +46,7 @@
     <Compile Include="FPTrainerLevelSelect.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FP2Trainer.cs" />
+    <Compile Include="SceneNamePair.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
