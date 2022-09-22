@@ -20,7 +20,7 @@ namespace Fp2Trainer
         public const string Description = "Training tools for speedrunning Freedom Planet 2: Quick Warps, Quick Resets, Live Tilemap Editing, etc"; // Description for the Mod.  (Set as null if none)
         public const string Author = "Catssandra Ann"; // Author of the Mod.  (MUST BE SET)
         public const string Company = null; // Company that made the Mod.  (Set as null if none)
-        public const string Version = "0.3.0"; // Version of the Mod.  (MUST BE SET)
+        public const string Version = "0.4.0"; // Version of the Mod.  (MUST BE SET)
         public const string DownloadLink = null; // Download Link for the Mod.  (Set as null if none)
     }
 
@@ -38,6 +38,8 @@ namespace Fp2Trainer
         private GameObject player = null;
         private FPPlayer fpplayer = null;
         private List<FPPlayer> fpplayers = null;
+        private List<FPBaseEnemy> fpEnemies = null;
+        private List<FPBossHud> bossHuds = null;
 
         private FPTrainerLevelSelect fptls;
         //private InputHandler inputHandler = null;
@@ -48,12 +50,17 @@ namespace Fp2Trainer
         private FPPauseMenu pauseMenu = null;
         private List<FPHudDigit> positionDigits = null;
 
-        private int currentDataPage = 0;
-        private int maxDataPages = 2;
-        private readonly int DATAPAGE_MOVEMENT = 0;
-        private readonly int DATAPAGE_COMBAT = 1;
-        private readonly int DATAPAGE_NONE = 2;
-            
+        public enum DataPage
+        {
+            MOVEMENT,
+            COMBAT,
+            BATTLESPHERE,
+            BOSS,
+            NONE
+        }
+        
+        private DataPage currentDataPage = DataPage.MOVEMENT;
+        
         
         // Tilemap tm = null;
         //private Tilemap[] tms = null;
@@ -109,6 +116,8 @@ namespace Fp2Trainer
             playerValuesToShow.Add("Gravity Angle");
             playerValuesToShow.Add("Gravity Strength");
             playerValuesToShow.Add("HUD Position");
+
+            bossHuds = new List<FPBossHud>();
         }
 
         private void InitPrefs()
@@ -217,32 +226,25 @@ namespace Fp2Trainer
                 //goStageHUD.energyBarGraphic.transform.parent;
                 Log("Looking for Energy Bar");
                 var temp = goStageHUD.GetComponent<FPHudMaster>();
-                Log("2");
                 GameObject temp2;
-                Log("3");
                 if (temp != null)
                 {
-                    Log("4");
                     temp2 = temp.pfHudEnergyBar;
                 }
                 else
                 {
-                    Log("5");
                     Log("This aint it.");
                     return;
                 }
                 
-                Log("6");
+                
 
                 var energyBarGraphic = UnityEngine.Object.Instantiate(temp2, temp2.transform.parent);
-                Log("8");
+                
                 energyBarGraphic.transform.localScale *= 2;
-
-                Log("9");
+                
                 goFancyTextPosition = energyBarGraphic;
-                Log("9a");
                 goFancyTextPosition.SetActive(true);
-                Log("9b");
                 //GameObject.Destroy(goFancyTextPosition.GetComponent<SpriteRenderer>()); // Can't have Sprite Renderer and Mesh Renderer.
                 var tempGo = new GameObject();
                 tempGo.transform.parent = goFancyTextPosition.transform;
@@ -252,17 +254,13 @@ namespace Fp2Trainer
                 goFancyTextPosition = tempGo;
                 
                 textmeshFancyTextPosition = goFancyTextPosition.AddComponent<TextMesh>();
-                Log("9c");
                 if (textmeshFancyTextPosition != null)
                 {
                     Log("Current value of fpMenuFont: " + fpMenuFont);
                     textmeshFancyTextPosition.font = fpMenuFont;
-                    Log("9d");
                     textmeshFancyTextPosition.characterSize = 10;
-                    Log("9e");
                     textmeshFancyTextPosition.text = "I exist!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@";
                     Log("Attempting to clone energyBar. Attaching to Stage HUD.");
-                    Log("9f");
                 }
                 else
                 {
@@ -285,13 +283,9 @@ namespace Fp2Trainer
                 //return;
             }
             
-            Log("10a");
             goFancyTextPosition.transform.parent = goStageHUD.transform;
-            Log("10b");
             goFancyTextPosition.transform.localPosition = new Vector3(10, 20, 0);
-            Log("1c");
             UpdateFancyText();
-            Log("10d");
         }
 
         public void UpdateFancyText()
@@ -394,6 +388,11 @@ namespace Fp2Trainer
                 {
                     HandleWarpControls();
                     
+                    if (timeoutShowWarpInfo > 0)
+                    {
+                        debugDisplay += warpMessage + "\n";
+                    }
+                    
                     if (fptls != null)
                     {
                         SceneNamePair snp = fptls.availableScenes[fptls.menuSelection]; 
@@ -404,7 +403,7 @@ namespace Fp2Trainer
                         debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition.ToString() + "\n";
                     }
 
-                    if (currentDataPage == DATAPAGE_MOVEMENT)
+                    if (currentDataPage == DataPage.MOVEMENT)
                     {
                         if (playerValuesToShow.Contains("Pos"))
                         {
@@ -447,10 +446,12 @@ namespace Fp2Trainer
                              debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength.ToString() + "\n";
                         }
                     }
-                    else if (currentDataPage == DATAPAGE_COMBAT)
+                    else if (currentDataPage == DataPage.COMBAT)
                     {
                         debugDisplay += "Health: " + fpplayer.health.ToString() + "\n";
                         debugDisplay += "Energy: " + fpplayer.energy.ToString() + "\n";
+                        debugDisplay += "Energy Recover Current: " + fpplayer.energyRecoverRateCurrent.ToString() + "\n";
+                        debugDisplay += "Energy Recover: " + fpplayer.energyRecoverRate.ToString() + "\n";
                         debugDisplay += "Faction: " + fpplayer.faction.ToString() + "\n";
                         debugDisplay += "Attack Power: " + fpplayer.attackPower.ToString() + "\n";
                         debugDisplay += "Attack Hitstun: " + fpplayer.attackHitstun.ToString() + "\n";
@@ -465,30 +466,61 @@ namespace Fp2Trainer
                         debugDisplay += "Invul Time: " + fpplayer.invincibilityTime.ToString() + "\n";
                         
                     }
-
-
-                    /*
-                    if (goStageHUD != null && playerValuesToShow.Contains("HUD Position"))
+                    else if (currentDataPage == DataPage.BATTLESPHERE)
                     {
-                        debugDisplay += "HUD Position: " + goStageHUD.GetComponent<FPHudMaster>().hudPosition.ToString() + "\n";
-                        debugDisplay += "HUD Position (base): " + goStageHUD.GetComponent<FPHudMaster>().transform.position.ToString() + "\n";
+                        foreach (FPPlayer mp_fpplayer in fpplayers)
+                        {
+                            debugDisplay += mp_fpplayer.name + " Health: " + mp_fpplayer.health.ToString() 
+                                            + " / " + mp_fpplayer.healthMax.ToString() + "\n";
+                            debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy.ToString() + "\n";
+                            //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
+                            //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
+                            debugDisplay += mp_fpplayer.name + " Attack Power: " + mp_fpplayer.attackPower.ToString() + "\n";
+                            debugDisplay += mp_fpplayer.name + " Attack Hitstun: " + mp_fpplayer.attackHitstun.ToString() + "\n";
+                            debugDisplay += mp_fpplayer.name + " Attack Knockback: " + mp_fpplayer.attackKnockback.ToString() + "\n";
+                        }
                     }
-                    */
+                    else if (currentDataPage == DataPage.BOSS)
+                    {
+                        fpEnemies.Clear();
+                        foreach (var bh in bossHuds)
+                        {
+                            if (bh.targetBoss != null)
+                            {
+                                fpEnemies.Add(bh.targetBoss);
+                            }
+                        }
 
-                    
-                    
+                        if (fpEnemies.Count > 0)
+                        {
+                            foreach (FPBaseEnemy ene in fpEnemies)
+                            {
+                                if (ene == null)
+                                {
+                                    continue;
+                                }
+
+                                debugDisplay += ene.name + " Health: " + ene.health.ToString() + "\n";
+                                debugDisplay += ene.name + " Freeze Timer: " + ene.freezeTimer.ToString() + "\n";
+                                //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
+                                //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
+                                debugDisplay += ene.name + " Is Harmless: " + ene.isHarmless.ToString() + "\n";
+                                debugDisplay += ene.name + " Cannot Be Killed: " + ene.cannotBeKilled.ToString() + "\n";
+                                debugDisplay += ene.name + " Cannot Be Frozen: " + ene.cannotBeFrozen.ToString() + "\n";
+                                debugDisplay += ene.name + " Last Received Damage: " +
+                                                ene.lastReceivedDamage.ToString() + "\n";
+                                debugDisplay += ene.name + " LRD (Unmodified): " +
+                                                ene.lastReceivedDamageUnmodified.ToString() + "\n";
+                            }
+                        }
+                        else 
+                        {
+                            Log("Unable to find relevant enemies. Try switching to this view while the healthbar is visible.");
+                        }
+                    }
                 }
 
-                //debugDisplay += "Pos: " + player.transform.position.ToString() + "\n";
-                if (showAllPlayers)
-                {
-                    foreach (FPPlayer fpplayer in fpplayers)
-                    {
-                        debugDisplay += "Pos: " + fpplayer.position.ToString() + "\n";
-                        debugDisplay += "Vel: " + fpplayer.velocity.ToString() + "\n";
-                    }
-                }
-
+                    
                 if (goFancyTextPosition != null)
                 {
                     UpdateFancyText();
@@ -497,10 +529,8 @@ namespace Fp2Trainer
                 {
                     CreateFancyTextObjects();
                 }
-
-
-
             }
+
             catch (Exception e)
             {
                 Fp2Trainer.Log("Trainer Error During Update: " + e.Message + "(" + e.InnerException?.Message + ") @@" + e.StackTrace);
@@ -621,19 +651,32 @@ namespace Fp2Trainer
             {
                 fpplayer.position = new Vector2(warpPoint.x, warpPoint.y);
                 Log("Hold Guard + Tap Special -> Goto Warp: " + warpPoint.ToString());
+                warpMessage = "Warping to " + warpPoint.ToString();
+                timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
             
             if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.jump))
             {
                 warpPoint = new Vector2(fpplayer.position.x, fpplayer.position.y);
                 Log("Hold Guard + Tap Jump -> Set Warp: "  + warpPoint.ToString());
+                warpMessage = "Set warp at " + warpPoint.ToString();
+                timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
         }
 
         private void ToggleVariableDisplay()
         {
-            currentDataPage++;
-            if (currentDataPage == maxDataPages)
+            if (currentDataPage == DataPage.NONE)
+            {
+                currentDataPage = DataPage.MOVEMENT;
+            }
+            else
+            {
+                currentDataPage++;   
+            }
+            
+            // After incrementing.
+            if (currentDataPage == DataPage.NONE)
             {
                 showVarString = false;
             }
@@ -642,9 +685,17 @@ namespace Fp2Trainer
                 showVarString = true;
             }
 
-            if (currentDataPage > maxDataPages)
+            if (currentDataPage == DataPage.BOSS)
             {
-                currentDataPage = 0;
+                bossHuds = new List<FPBossHud>(GameObject.FindObjectsOfType<FPBossHud>());
+                fpEnemies = new List<FPBaseEnemy>();
+                foreach (FPBossHud fpbh in bossHuds)
+                {
+                    if (fpbh != null && fpbh.targetBoss != null)
+                    {
+                        fpEnemies.Add(fpbh.targetBoss);
+                    }
+                }
             }
 
         }
@@ -675,6 +726,10 @@ namespace Fp2Trainer
                     {
                         Log("Failed to load AssetBundle. Bundle may already be loaded, or the file may be corrupt.");
                         continue;
+                    }
+                    else
+                    {
+                        //currentAB.LoadAllAssets(); //Uncomment if the scenes are still unloadable?
                     }
 
                     loadedAssetBundles.Add(currentAB);
@@ -795,11 +850,13 @@ namespace Fp2Trainer
             }
             */
 
+            /*
             if (timeoutShowWarpInfo > 0)
             {
                 Rect r = new Rect(10, 10, 200, 32);
                 GUI.Box(r, warpMessage);
             }
+            */
 
             DrawLevelEditingInfo();
         }
@@ -1013,6 +1070,14 @@ namespace Fp2Trainer
 
         public void SkipBootIntros()
         {
+            var splash = GameObject.FindObjectOfType<MenuSplashScreen>();
+            if (splash != null)
+            {
+                var propTimer = splash.GetType().GetField("timer", System.Reflection.BindingFlags.NonPublic
+                                                                | System.Reflection.BindingFlags.Instance);
+                propTimer.SetValue(splash, 9999);
+            }
+
             return; //This is buggy AF and I just want it off for now.
             if (SceneManager.GetActiveScene().name.Equals("MainMenu"))
             {

@@ -6,11 +6,23 @@ namespace Fp2Trainer
     {
         public string name = "";
         public Scene scene;
+        public string path = "PATH NOT SET";
 
         public SceneNamePair(Scene theScene, string theName)
         {
             this.name = theName;
             this.scene = theScene;
+        }
+        public SceneNamePair(Scene theScene, string theName, string thePath)
+        {
+            this.name = theName;
+            this.scene = theScene;
+            this.path = thePath;
+        }
+
+        public override string ToString()
+        {
+            return this.name + " ->" + this.path;
         }
     }
 }

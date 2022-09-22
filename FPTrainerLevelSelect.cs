@@ -8,7 +8,7 @@ namespace Fp2Trainer
 {
     public class FPTrainerLevelSelect : UnityEngine.MonoBehaviour
     {
-        public int menuSelection = 3;
+        public int menuSelection = 1;
         public int buttonCount = 0;
         public GameObject[] pfButtons;
 
@@ -22,13 +22,13 @@ namespace Fp2Trainer
 
         public void Start()
         {
-            menuSelection = 3;
+            menuSelection = 1;
             buttonCount = pfButtons.Length;
         }
 
         public void ShowLevelSelectMenu()
         {
-            menuSelection = 3;
+            menuSelection = 1;
             FPStage.SetStageRunning(pauseFlag: false);
             transform.gameObject.SetActive(true);
         }
@@ -78,8 +78,13 @@ namespace Fp2Trainer
                 FPScreenTransition component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
                 component.transitionType = FPTransitionTypes.WIPE;
                 component.transitionSpeed = 48f;
-                global::Fp2Trainer.Fp2Trainer.Log("Attempting to load scene: " + GetSceneNameByIndex(menuSelection));
                 component.sceneToLoad = GetSceneNameByIndex(menuSelection);
+                global::Fp2Trainer.Fp2Trainer.Log("Attempting to load scene: "
+                                                  + component.sceneToLoad + " => " 
+                                                  + this.availableScenes[menuSelection].path);
+                
+                global::Fp2Trainer.Fp2Trainer.Log("Can Load?: "
+                                                  + Application.CanStreamedLevelBeLoaded(component.sceneToLoad).ToString());
                 component.SetTransitionColor(0f, 0f, 0f);
                 component.BeginTransition();
                 FPAudio.PlayMenuSfx(3);
