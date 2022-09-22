@@ -53,7 +53,7 @@ namespace Fp2Trainer
                 }
                 */
             }
-            else if (FPStage.menuInput.up)
+            else if (FPStage.menuInput.up || InputControl.GetButtonDown(Controls.buttons.up))
             {
                 menuSelection--;
                 if (menuSelection < 0)
@@ -63,7 +63,7 @@ namespace Fp2Trainer
                 }
                 FPAudio.PlayMenuSfx(1);
             }
-            else if (FPStage.menuInput.down)
+            else if (FPStage.menuInput.down || InputControl.GetButtonDown(Controls.buttons.down))
             {
                 menuSelection++;
                 if (menuSelection >= buttonCount)
@@ -73,7 +73,7 @@ namespace Fp2Trainer
                 }
                 FPAudio.PlayMenuSfx(1);
             }
-            else if (FPStage.menuInput.confirm)
+            else if (/*FPStage.menuInput.confirm || */InputControl.GetButtonDown(Controls.buttons.jump))
             {
                 FPScreenTransition component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
                 component.transitionType = FPTransitionTypes.WIPE;

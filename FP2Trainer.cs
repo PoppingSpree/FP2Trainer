@@ -128,8 +128,19 @@ namespace Fp2Trainer
                 foreach (FPPauseMenu pauseMenu in Resources.FindObjectsOfTypeAll(typeof(FPPauseMenu)) as FPPauseMenu[])
                 {
                     this.pauseMenu = pauseMenu;
-                    stageSelectMenu = GameObject.Instantiate(pauseMenu.transform.gameObject);
+                    //stageSelectMenu = GameObject.Instantiate(pauseMenu.transform.gameObject);
+                    stageSelectMenu = new GameObject("Stage Select Menu");
+                    stageSelectMenu.transform.position = new Vector3(-376, -192, 0);
+                    GameObject resumeIcon = GameObject.Instantiate(this.pauseMenu.transform.Find("Pause Icon - Resume").gameObject);
+                    if (resumeIcon != null)
+                    {
+                        resumeIcon.name = "AnnStagePlayIcon";
+                        resumeIcon.transform.parent = stageSelectMenu.transform;
+                        resumeIcon.transform.localPosition = new Vector3(-112, -64, -4);
+                    }
+
                     Log("Found a pauseMenu to modify.");
+                    Log("...But created a new GameObject instead anyway. The frame was annoying.");
                     stageSelectMenu.name = "Ann Stage Select Menu";
                     break;
                 }
@@ -411,8 +422,17 @@ namespace Fp2Trainer
                         debugDisplay += "HUD Position: " + goStageHUD.GetComponent<FPHudMaster>().hudPosition.ToString() + "\n";
                         debugDisplay += "HUD Position (base): " + goStageHUD.GetComponent<FPHudMaster>().transform.position.ToString() + "\n";
                     }
-                    
-                    if (goFancyTextPosition != null)
+
+                    if (fptls != null)
+                    {
+                        SceneNamePair snp = fptls.availableScenes[fptls.menuSelection]; 
+                        debugDisplay += "Warp to: " + fptls.menuSelection.ToString() + " | " + snp.name + "\n";
+                        debugDisplay += "Level Select Parent Pos: " + stageSelectMenu.transform.position.ToString() + "\n";
+                        GameObject tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
+                        debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position.ToString() + "\n";
+                        debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition.ToString() + "\n";
+                    }
+                    else if (goFancyTextPosition != null)
                     {
                         debugDisplay += "FancyText Position: " + goFancyTextPosition.transform.position.ToString() + "\n";
                         debugDisplay += "FancyText Position (local): " + goFancyTextPosition.transform.localPosition.ToString() + "\n";
@@ -532,6 +552,8 @@ namespace Fp2Trainer
                 }
 
                 ShowLevelSelect(availableScenes);
+                this.pauseMenu.gameObject.SetActive(false);
+                //GameObject.Destroy(this.pauseMenu);
             }
             if (Input.GetKeyUp(KeyCode.F5))
             {
@@ -625,9 +647,10 @@ namespace Fp2Trainer
         {
             if (stageSelectMenu != null)
             {
-                stageSelectMenu.SetActive(stageSelectMenu.activeInHierarchy);
+                stageSelectMenu.SetActive(!stageSelectMenu.activeInHierarchy);
                 
                 // finna delete
+                /*
                 var ssm = stageSelectMenu.GetComponent<FPPauseMenu>();
                 fptls = stageSelectMenu.AddComponent<FPTrainerLevelSelect>();
                 if (ssm != null)
@@ -638,6 +661,7 @@ namespace Fp2Trainer
                 {
                     UnityEngine.Object.Destroy(ssm);
                 }
+                */
             }
             else
             {
@@ -652,32 +676,19 @@ namespace Fp2Trainer
                 Log("Level Select.");
                 //stageSelectMenu.SetActive(true);
                 
-                var ssm = stageSelectMenu.GetComponent<FPPauseMenu>();
                 fptls = stageSelectMenu.AddComponent<FPTrainerLevelSelect>();
                 fptls.availableScenes = availableScenes;
                 GameObject goButton = null;
-                
-                if (ssm.pfButtons.Length > 3)
+
+                GameObject tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
+                if (tempGoButton != null)
                 {
-                    goButton = ssm.pfButtons[3]; // This is most likely the resume button.
-                }
-                else if (ssm.pfButtons.Length > 0)
-                {
-                    goButton = ssm.pfButtons[0];
+                    goButton = tempGoButton;
                 }
 
                 int i;
                 
-                for (i= 0; i < ssm.pfButtons.Length; i++) 
-                {
-                    if (ssm.pfButtons[i] != goButton)
-                    {
-                        GameObject.Destroy(ssm.pfButtons[i]);
-                    }
-                }
-
-                ssm.pfButtons = new GameObject[availableScenes.Count];
-                fptls.pfButtons = ssm.pfButtons;
+                fptls.pfButtons = new GameObject[availableScenes.Count];
 
                 GameObject currentButton = null;
                 TextMesh tm = null;
@@ -685,11 +696,11 @@ namespace Fp2Trainer
                 for (i = 0; i < availableScenes.Count; i++)
                 {
                     currentButton = GameObject.Instantiate(goButton, stageSelectMenu.transform);
-                    currentButton.transform.localPosition = new Vector3(0, -64 + (32 * i), 0);
+                    currentButton.transform.localPosition = new Vector3(0, -32 - (32 * i), 0);
                     
                     tm = currentButton.GetComponent<TextMesh>();
                     mt = currentButton.GetComponent<MenuText>();
-                    ssm.pfButtons.SetValue(currentButton, i);
+                    fptls.pfButtons.SetValue(currentButton, i);
                     if (tm != null)
                     {
                         tm.text = availableScenes[i].name;
@@ -697,23 +708,7 @@ namespace Fp2Trainer
                     }
                 }
 
-                Log("ssm button count: " + ssm.pfButtons.Length.ToString());
                 Log("fptls button count: " + fptls.pfButtons.Length.ToString());
-
-                /*
-                ssm.pfText = new MenuText[ssm.pfButtons.Length];
-                for (int i = 0; i < buttonCount; i++)
-                {
-                    pfText[i] = pfButtons[i].GetComponentInChildren<MenuText>();
-                }
-                */
-                //base.transform.position = new Vector3(320f, -180f, 0f);
-                
-                //ssm.Start()
-                
-                
-                //ssm.Invoke("Start", 0);
-                UnityEngine.Object.Destroy(ssm);
             }
             else
             {
@@ -739,111 +734,6 @@ namespace Fp2Trainer
             component.SetTransitionColor(0f, 0f, 0f);
             component.BeginTransition();
             FPAudio.PlayMenuSfx(3);
-        }
-
-        public void HandleTileEditControls()
-        {
-            //Log("FP2Trainer v" + UMFMod.GetModVersion().ToString() + " - Starting FixedUpdate.", true);
-            try
-            {
-                if (player != null && player.transform != null /*&& inputHandler != null*/)
-                {
-                    debugDisplay = "";
-
-                    debugDisplay += "(inputLETileCopy) KeyPressed " + GetKeyPressed(inputLETileCopy.Value).ToString();
-                    debugDisplay += "\r\n(inputLETileCopy) KeyDown " + GetKeyDown(inputLETileCopy.Value).ToString();
-
-                    debugDisplay = "";
-                    debugDisplay += "(inputLETilePaste) KeyPressed " + GetKeyPressed(inputLETilePaste.Value).ToString();
-                    debugDisplay += "\r\n(inputLETilePaste) KeyDown " + GetKeyDown(inputLETilePaste.Value).ToString();
-
-                    debugDisplay = "";
-                    debugDisplay += "(inputLETileLayer) KeyPressed " + GetKeyPressed(inputLETileLayer.Value).ToString();
-                    debugDisplay += "\r\n(inputLETileLayer) KeyDown " + GetKeyDown(inputLETileLayer.Value).ToString();
-
-                    /*
-                    debugDisplay += "CJump KeyPressed " + inputHandler.GetKeyPressed("CJump").ToString();
-                    debugDisplay += "\r\nCJump KeyDown " + inputHandler.GetKeyDown("CJump").ToString();
-
-                    debugDisplay += "Jump KeyPressed " + inputHandler.GetKeyPressed("Jump").ToString();
-                    debugDisplay += "\r\nJump KeyDown " + inputHandler.GetKeyDown("Jump").ToString();
-                    debugDisplay += "\r\nMenu KeyPressed " + inputHandler.GetKeyPressed("Menu").ToString();
-                    debugDisplay += "\r\nMenu KeyDown " + inputHandler.GetKeyDown("Menu").ToString();
-                    */
-
-                    /*
-                    if (tms != null && tms.Length > 0 && CrosshairIsValid())
-                    {
-                        HandleLevelEditorInputs();
-                        if (selectedTileLayer >= tms.Length) { selectedTileLayer = 0; };
-                        if (selectedTileLayer < 0) { selectedTileLayer = tms.Length; };
-                    }
-                    */
-
-                    /*
-                    if (
-                        (inputHandler.GetKeyPressed("CDown")
-                        && inputHandler.GetKeyPressed("CJump") //KEY PRESSED AND KEY DOWN ARE DIFFERENT THAN I'M USED TO HERE.
-                        && inputHandler.GetKeyPressed("CPrimary")
-                        && inputHandler.GetKeyPressed("CSecondary")
-                        && inputHandler.GetKeyPressed("CSpecial")
-                        ) // Cassie's Combo Input
-                        ||
-                        (inputHandler.GetKeyPressed("Down")
-                        && inputHandler.GetKeyPressed("Jump") //KEY PRESSED AND KEY DOWN ARE DIFFERENT THAN I'M USED TO HERE.
-                        && inputHandler.GetKeyPressed("Primary")
-                        && inputHandler.GetKeyPressed("Secondary")
-                        && inputHandler.GetKeyPressed("Special")
-                        ) // Alpha's Combo Input
-
-                        ||
-                        (
-                            inputHandler.GetKeyPressed("Menu")
-                            && (inputHandler.GetKeyPressed("CSpecial") || inputHandler.GetKeyPressed("Special"))
-                        ) // Alternate Pause + Special warp.
-                        ) //  Down + A + E + RB + RT
-                    {
-                        player.transform.position = warpPoint;
-                        debugDisplay += "/r/nWarping to " + warpPoint.ToString();
-
-                        warpMessage = "Warping to " + warpPoint.ToString();
-                        timeoutShowWarpInfo = howLongToShowWarpInfo;
-
-                        //WriteSceneObjectsToFile();
-                        //WriteAllAudioclipsToFile();
-                    }
-                    */
-
-                    // Set warp point to current position.  A + Start
-                    /*
-                    if (inputHandler.GetKeyPressed("Menu") && (inputHandler.GetKeyPressed("CJump") || inputHandler.GetKeyPressed("Jump")))
-                    {
-                        warpPoint = player.transform.position;
-                        debugDisplay += "/r/nWarp Point Set. " + warpPoint.ToString();
-
-                        warpMessage = "Warp Point Set." + warpPoint.ToString();
-                        timeoutShowWarpInfo = howLongToShowWarpInfo;
-                    }
-                    */
-
-                    // Reset to Default Warp. X + Start
-                    /*
-                    if (inputHandler.GetKeyPressed("Menu") && (inputHandler.GetKeyPressed("CPrimary") || inputHandler.GetKeyPressed("Primary")))
-                    {
-                        warpPoint = new Vector2(211f, 50f);
-                        debugDisplay += "/r/nWarp Point Cleared. " + warpPoint.ToString();
-
-                        warpMessage = "Warp Point Cleared." + warpPoint.ToString();
-                        timeoutShowWarpInfo = howLongToShowWarpInfo;
-                    }
-                    */
-                }
-                //Log("FP2Trainer v" + UMFMod.GetModVersion().ToString() + " - End of FixedUpdate.", true);
-            }
-            catch (Exception e)
-            {
-                MelonLogger.Msg("Trainer Error During FixedUpdate: " + e.Message + "(" + e.InnerException?.Message + ") @@" + e.StackTrace);
-            }
         }
 
         public override void OnGUI() // Can run multiple times per frame. Mostly used for Unity's IMGUI.
