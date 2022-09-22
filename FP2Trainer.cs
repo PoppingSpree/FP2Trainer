@@ -432,15 +432,6 @@ namespace Fp2Trainer
                         debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position.ToString() + "\n";
                         debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition.ToString() + "\n";
                     }
-                    else if (goFancyTextPosition != null)
-                    {
-                        debugDisplay += "FancyText Position: " + goFancyTextPosition.transform.position.ToString() + "\n";
-                        debugDisplay += "FancyText Position (local): " + goFancyTextPosition.transform.localPosition.ToString() + "\n";
-                        if (fpplayer != null)
-                        {
-                            debugDisplay += "hudCrystalIcon: " + goStageHUD.GetComponent<FPHudMaster>().pfHudCrystalIcon.transform.position.ToString() + "\n";
-                        }
-                    }
                     
                 }
 
