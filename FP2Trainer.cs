@@ -43,6 +43,7 @@ namespace Fp2Trainer
         private GameObject crosshair = null;
         private GameObject stageHUD = null;
         private GameObject stageSelectMenu = null;
+        private FPPauseMenu pauseMenu = null;
         private List<FPHudDigit> positionDigits = null;
         // Tilemap tm = null;
         //private Tilemap[] tms = null;
@@ -50,6 +51,7 @@ namespace Fp2Trainer
         private int selectedTileLayer = 0;
 
         bool warped = false;
+        public bool showVarString = true;
 
         string debugDisplay = "Never Updated";
         string warpMessage = "";
@@ -123,6 +125,7 @@ namespace Fp2Trainer
             {
                 foreach (FPPauseMenu pauseMenu in Resources.FindObjectsOfTypeAll(typeof(FPPauseMenu)) as FPPauseMenu[])
                 {
+                    this.pauseMenu = pauseMenu;
                     stageSelectMenu = GameObject.Instantiate(pauseMenu.transform.gameObject);
                     Log("Found a pauseMenu to modify.");
                     stageSelectMenu.name = "Ann Stage Select Menu";
@@ -208,9 +211,7 @@ namespace Fp2Trainer
                 
                 Log("6");
 
-                var energyBarGraphic = UnityEngine.Object.Instantiate(temp2);
-                Log("7");
-                energyBarGraphic.transform.parent = temp2.transform.parent;
+                var energyBarGraphic = UnityEngine.Object.Instantiate(temp2, temp2.transform.parent);
                 Log("8");
                 energyBarGraphic.transform.localScale *= 2;
 
@@ -224,7 +225,7 @@ namespace Fp2Trainer
                 tempGo.transform.parent = goFancyTextPosition.transform;
                 tempGo.transform.localPosition = Vector3.zero;
 
-                goFancyTextPosition.transform.position += new Vector3(16, -320, 0);
+                goFancyTextPosition.transform.position = new Vector3(16, -160, 0);
                 goFancyTextPosition = tempGo;
                 
                 textmeshFancyTextPosition = goFancyTextPosition.AddComponent<TextMesh>();
@@ -272,14 +273,19 @@ namespace Fp2Trainer
 
         public void UpdateFancyText()
         {
-            if (textmeshFancyTextPosition != null)
+            if (textmeshFancyTextPosition != null && showVarString)
             {
                 textmeshFancyTextPosition.text = debugDisplay;   
             }
+            else if (!showVarString)
+            {
+                textmeshFancyTextPosition.text = "";
+            }
+
             if (fpplayer != null && goFancyTextPosition != null)
             {
                 //goFancyTextPosition.transform.position = new Vector3(fpplayer.position.x - 10, fpplayer.position.y - 10, -1);
-                goFancyTextPosition.transform.position += new Vector3(16, -320, 0);
+                goFancyTextPosition.transform.position = new Vector3(16, -160, 0);
             }
         }
 
@@ -360,10 +366,6 @@ namespace Fp2Trainer
                 //HandleTileEditControls();
                 
                 debugDisplay = "";
-                if (player != null)
-                {
-                    debugDisplay += player.transform.ToString() + "\n";
-                }
 
                 if (fpplayer != null)
                 {
@@ -507,7 +509,10 @@ namespace Fp2Trainer
                 for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) 
                 {
                     availableScenes.Add(UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(i));
-                    Log(i.ToString() + " | " + availableScenes[i].name);
+                    string sceneName =
+                        System.IO.Path.GetFileNameWithoutExtension(UnityEngine.SceneManagement.SceneUtility
+                            .GetScenePathByBuildIndex(i));
+                    Log(i.ToString() + " | " + sceneName);
                 }
                 ShowLevelSelect(availableScenes);
             }
@@ -515,6 +520,11 @@ namespace Fp2Trainer
             {
                 Log("F5 -> Toggle Level Select Menu Visibility");
                 ToggleLevelSelectVisibility();
+            }
+            if (Input.GetKeyUp(KeyCode.F5))
+            {
+                Log("F4 -> Toggle Variable Displays");
+                ToggleVariableDisplay();
             }
             
             
@@ -528,6 +538,18 @@ namespace Fp2Trainer
             {
                 warpPoint = new Vector2(fpplayer.position.x, fpplayer.position.y);
                 Log("Hold Guard + Tap Jump -> Set Warp: "  + warpPoint.ToString());
+            }
+        }
+
+        private void ToggleVariableDisplay()
+        {
+            if (showVarString)
+            {
+                
+            }
+            else
+            {
+                
             }
         }
 
@@ -580,6 +602,10 @@ namespace Fp2Trainer
             {
                 stageSelectMenu.SetActive(stageSelectMenu.activeInHierarchy);
             }
+            else
+            {
+                Log("Attempted to toggle Level Select Visibility while it is not accessible.");
+            }
         }
 
         private void ShowLevelSelect(List<Scene> availableScenes)
@@ -587,9 +613,11 @@ namespace Fp2Trainer
             if (stageSelectMenu != null)
             {
                 Log("Level Select.");
-                stageSelectMenu.SetActive(true);
+                //stageSelectMenu.SetActive(true);
                 
                 var ssm = stageSelectMenu.GetComponent<FPPauseMenu>();
+                var fptls = stageSelectMenu.AddComponent<FPTrainerLevelSelect>();
+                fptls.availableScenes = availableScenes;
                 GameObject goButton = null;
                 
                 if (ssm.pfButtons.Length > 3)
@@ -612,14 +640,15 @@ namespace Fp2Trainer
                 }
 
                 ssm.pfButtons = new GameObject[availableScenes.Count];
+                fptls.pfButtons = ssm.pfButtons;
 
                 GameObject currentButton = null;
                 TextMesh tm = null;
                 MenuText mt = null;
                 for (i = 0; i < availableScenes.Count; i++)
                 {
-                    currentButton = GameObject.Instantiate(goButton);
-                    currentButton.transform.position += new Vector3(0, 32 * i, 0);
+                    currentButton = GameObject.Instantiate(goButton, stageSelectMenu.transform);
+                    currentButton.transform.localPosition = new Vector3(0, -64 + (32 * i), 0);
                     
                     tm = currentButton.GetComponent<TextMesh>();
                     mt = currentButton.GetComponent<MenuText>();
@@ -630,6 +659,9 @@ namespace Fp2Trainer
                         mt.paragraph[0] = availableScenes[i].name;
                     }
                 }
+
+                Log("ssm button count: " + ssm.pfButtons.Length.ToString());
+                Log("fptls button count: " + fptls.pfButtons.Length.ToString());
 
                 /*
                 ssm.pfText = new MenuText[ssm.pfButtons.Length];
@@ -647,6 +679,16 @@ namespace Fp2Trainer
             {
                 Log("Attempted to show level select, but the menu has not been prepared.");
             }
+
+            PauseGameWithoutPauseMenu();
+        }
+
+        private void PauseGameWithoutPauseMenu()
+        {
+            FPStage.UpdateMenuInput(pauseButtonOnly: false);
+            FPStage.SetStageRunning(pauseFlag: false);
+            FPAudio.ResumeSfx();
+            FPAudio.PlayMenuSfx(2);
         }
 
         public void PerformStageTransition()
@@ -766,11 +808,13 @@ namespace Fp2Trainer
 
         public override void OnGUI() // Can run multiple times per frame. Mostly used for Unity's IMGUI.
         {
+            /*
             if (showDebug.Value)
             {
                 Rect r = new Rect(10, 110, 500, 200);
                 GUI.Box(r, debugDisplay);
             }
+            */
 
             if (timeoutShowWarpInfo > 0)
             {
