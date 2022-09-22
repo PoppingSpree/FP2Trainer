@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net.Configuration;
+using System.Runtime.CompilerServices;
 using UnityEngine.SceneManagement;
 
 //using UnityEngine.Tilemaps;
@@ -40,9 +41,21 @@ namespace Fp2Trainer
         private List<FPPlayer> fpplayers = null;
         private List<FPBaseEnemy> fpEnemies = null;
         private List<FPBossHud> bossHuds = null;
+        
+        private FPBaseEnemy nearestEnemy = null;
+        private FPBaseEnemy nearestEnemyPrevious = null;
+        private float nearestEnemyPreviousHP = 0;
+
+        public Dictionary<int, float> allActiveEnemiesHealth;
+        public Dictionary<int, float> allActiveEnemiesHealthPrevious;
+        public Dictionary<int, string> allActiveEnemiesNames;
+
+        public FP2TrainerDPSTracker dpsTracker;
 
         private FPTrainerLevelSelect fptls;
         //private InputHandler inputHandler = null;
+
+        public static bool introSkipped = false;
 
         private GameObject crosshair = null;
         private GameObject stageHUD = null;
@@ -54,6 +67,8 @@ namespace Fp2Trainer
         {
             MOVEMENT,
             COMBAT,
+            DPS,
+            DPS_ALL,
             BATTLESPHERE,
             BOSS,
             NONE
@@ -81,13 +96,12 @@ namespace Fp2Trainer
         public double dpsTimer = 0d;
 
         Vector2 warpPoint = new Vector2(211f, 50f);
-        private bool showAllPlayers = false;
 
-        private GameObject goFancyTextPosition;
-        private GameObject goStageHUD;
-        private TextMesh textmeshFancyTextPosition;
+        public GameObject goFancyTextPosition;
+        public GameObject goStageHUD;
+        public TextMesh textmeshFancyTextPosition;
 
-        public Font fpMenuFont;
+        public static Font fpMenuFont;
 
         private HashSet<string> playerValuesToShow;
 
@@ -118,6 +132,10 @@ namespace Fp2Trainer
             playerValuesToShow.Add("HUD Position");
 
             bossHuds = new List<FPBossHud>();
+            allActiveEnemiesHealth = null;
+            allActiveEnemiesHealthPrevious = null;
+            dpsTracker = new FP2TrainerDPSTracker();
+            introSkipped = false;
         }
 
         private void InitPrefs()
@@ -198,6 +216,11 @@ namespace Fp2Trainer
             goFancyTextPosition = null;
             goStageHUD = null;
             textmeshFancyTextPosition = null;
+        }
+
+        public static Font GetFPMenuFont()
+        {
+            return fpMenuFont;
         }
 
         public void CreateFancyTextObjects()
@@ -321,7 +344,11 @@ namespace Fp2Trainer
         public override void OnUpdate()
         {
             SkipBootIntros();
-            
+            if (dpsTracker != null)
+            {
+                dpsTracker.Update();
+            }
+
             if (timeoutShowWarpInfo > 0) { timeoutShowWarpInfo -= Time.deltaTime; }
             if (timeoutShowWarpInfo < 0) { timeoutShowWarpInfo = 0; }
             try
@@ -449,6 +476,16 @@ namespace Fp2Trainer
                     else if (currentDataPage == DataPage.COMBAT)
                     {
                         debugDisplay += "Health: " + fpplayer.health.ToString() + "\n";
+                        
+                        
+                        
+                        debugDisplay += nearestEnemy.name + " Health: " + nearestEnemy.health.ToString() + "\n";
+                        
+                        if (dpsTracker != null)
+                        {
+                            debugDisplay += "DPS: " + dpsTracker.ToString() + "\n";
+                        }
+
                         debugDisplay += "Energy: " + fpplayer.energy.ToString() + "\n";
                         debugDisplay += "Energy Recover Current: " + fpplayer.energyRecoverRateCurrent.ToString() + "\n";
                         debugDisplay += "Energy Recover: " + fpplayer.energyRecoverRate.ToString() + "\n";
@@ -465,6 +502,30 @@ namespace Fp2Trainer
                         debugDisplay += "Hit Stun: " + fpplayer.hitStun.ToString() + "\n";
                         debugDisplay += "Invul Time: " + fpplayer.invincibilityTime.ToString() + "\n";
                         
+                    }
+                    else if (currentDataPage == DataPage.DPS)
+                    {
+                        if (dpsTracker != null)
+                        {
+                            debugDisplay += "Previous Nearest Enemy: " + this.nearestEnemyPrevious.name + "\n";
+                            debugDisplay += "Prev Health: " + this.nearestEnemyPreviousHP.ToString() + "\n";
+                            debugDisplay += dpsTracker.GetDPSBreakdownString();
+                        }
+                        else
+                        {
+                            debugDisplay += "No DPS Tracker found?";
+                        }
+                    }
+                    else if (currentDataPage == DataPage.DPS_ALL)
+                    {
+                        if (dpsTracker != null)
+                        {
+                            debugDisplay += dpsTracker.GetDPSBreakdownString();
+                        }
+                        else
+                        {
+                            debugDisplay += "No DPS Tracker found?";
+                        }
                     }
                     else if (currentDataPage == DataPage.BATTLESPHERE)
                     {
@@ -485,6 +546,12 @@ namespace Fp2Trainer
                         fpEnemies.Clear();
                         foreach (var bh in bossHuds)
                         {
+                            if (!bh.transform.gameObject.activeInHierarchy)
+                            {
+                                ReacquireBossHuds();
+                                break;
+                            }
+
                             if (bh.targetBoss != null)
                             {
                                 fpEnemies.Add(bh.targetBoss);
@@ -539,7 +606,103 @@ namespace Fp2Trainer
 
         public void UpdateDPS()
         {
-            dpsTimer += UnityEngine.Time.deltaTime;
+            if (dpsTracker != null)
+            {
+                dpsTracker.Update();
+            }
+
+            UpdateDPSNearestEnemy();
+
+            if (currentDataPage == DataPage.DPS_ALL)
+            {
+                UpdateDPSALLEnemies();
+            }
+        }
+
+        private void UpdateDPSNearestEnemy()
+        {
+            // Show nearest enemy HP and update DPS.
+            if (FPStage.currentStage != null)
+            {
+                //var activeEnemies = FPStage.GetActiveEnemies();
+                nearestEnemy = FPStage.FindNearestEnemy(fpplayer, 200f);
+                if (nearestEnemy != null)
+                {
+                    if (nearestEnemy == nearestEnemyPrevious
+                        && nearestEnemy.health < nearestEnemyPreviousHP)
+                    {
+                        dpsTracker.AddDamage(nearestEnemyPreviousHP - nearestEnemy.health);
+                    }
+                    else if (nearestEnemy != nearestEnemyPrevious)
+                    {
+                        // Do we want to reset on target changed??
+                    }
+
+                    nearestEnemyPreviousHP = nearestEnemy.health;
+                }
+                // Add toggle option to check against damage done to ALL enemies instead of just nearest
+                // If adding, give warning that this may cause slowdown.
+            }
+        }
+
+        private void UpdateDPSALLEnemies()
+        {
+            if (currentDataPage == DataPage.DPS_ALL)
+            {
+                var tempCachedEnemyList = FPStage.GetActiveEnemies();
+                InitializeActiveEnemyList();
+                PopulateTrainerActiveEnemyList(tempCachedEnemyList);
+                
+                if (allActiveEnemiesHealth != null 
+                    && allActiveEnemiesHealthPrevious != null 
+                    && allActiveEnemiesHealth.Count > 0)
+                {
+                    foreach (var ene in allActiveEnemiesHealth)
+                    {
+                        if (allActiveEnemiesHealthPrevious.ContainsKey(ene.Key))
+                        {
+                            float dmg = allActiveEnemiesHealthPrevious[ene.Key] - ene.Value;
+                            if (dmg > 0)
+                            {
+                                dpsTracker.AddDamage(dmg, allActiveEnemiesNames[ene.Key]);
+                            }
+                        }
+                    }
+                }
+                
+                allActiveEnemiesHealthPrevious = allActiveEnemiesHealth;
+                
+                
+                
+            }
+        }
+
+        public void InitializeActiveEnemyList()
+        {
+            /*
+            if (allActiveEnemiesHealth == null)
+            {
+                allActiveEnemiesHealth = new Dictionary<int, float>();
+                allActiveEnemiesNames = new Dictionary<int, string>();
+            }
+            else
+            {
+                allActiveEnemiesHealth.Clear();
+                allActiveEnemiesNames.Clear();
+            }
+            */
+            
+            allActiveEnemiesHealth = new Dictionary<int, float>();
+            allActiveEnemiesNames = new Dictionary<int, string>();
+        }
+
+        private void PopulateTrainerActiveEnemyList(List<FPBaseEnemy> tempCachedEnemyList)
+        {
+            foreach (var ene in tempCachedEnemyList)
+            {
+                allActiveEnemiesHealth.Add(ene.objectID, ene.health);
+                allActiveEnemiesNames.Add(ene.objectID, ene.name);
+            }
         }
 
         private List<FPPlayer> GetFPPlayers()
@@ -582,7 +745,8 @@ namespace Fp2Trainer
             if (Input.GetKeyUp(KeyCode.F8))
             {
                 Log("F8 -> Main Menu");
-                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+                //UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+                GoToMainMenuNoLogos();
             }
             if (Input.GetKeyUp(KeyCode.F7))
             {
@@ -645,6 +809,35 @@ namespace Fp2Trainer
                 }
 
             }
+            if (Input.GetKeyUp(KeyCode.F2))
+            {
+                dpsTracker.AddDamage(5, "FP2 Trainer HotKey");
+            }
+            if (Input.GetKeyUp(KeyCode.F1))
+            {
+                Log("F1 -> Test Damage Number: ");
+                if (fpplayer != null)
+                {
+                    var fpcam = FPCamera.stageCamera;
+                    Log("1");
+                    if (fpcam != null)
+                    {
+                        Log("2");
+                        Vector3 relativePos = new Vector3(fpplayer.position.x - fpcam.xpos,
+                            fpplayer.position.y - fpcam.ypos, fpplayer.gameObject.transform.position.z);
+                        Log("3");
+                        Log(relativePos.ToString());
+                        Log("4");
+                        GameObject goDmgTest = FP2TrainerDamageNumber.CreateDMGNumberObject(relativePos, 5);
+                        Log("5");
+                    }
+                }
+                else
+                {
+                    Log("No player???");
+                }
+
+            }
             
             
             if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.special))
@@ -687,17 +880,22 @@ namespace Fp2Trainer
 
             if (currentDataPage == DataPage.BOSS)
             {
-                bossHuds = new List<FPBossHud>(GameObject.FindObjectsOfType<FPBossHud>());
-                fpEnemies = new List<FPBaseEnemy>();
-                foreach (FPBossHud fpbh in bossHuds)
-                {
-                    if (fpbh != null && fpbh.targetBoss != null)
-                    {
-                        fpEnemies.Add(fpbh.targetBoss);
-                    }
-                }
+                ReacquireBossHuds();
             }
 
+        }
+
+        public void ReacquireBossHuds()
+        {
+            bossHuds = new List<FPBossHud>(GameObject.FindObjectsOfType<FPBossHud>());
+            fpEnemies = new List<FPBaseEnemy>();
+            foreach (FPBossHud fpbh in bossHuds)
+            {
+                if (fpbh != null && fpbh.targetBoss != null)
+                {
+                    fpEnemies.Add(fpbh.targetBoss);
+                }
+            }
         }
 
         public void LoadAssetBundlesFromModsFolder()
@@ -1071,38 +1269,36 @@ namespace Fp2Trainer
         public void SkipBootIntros()
         {
             var splash = GameObject.FindObjectOfType<MenuSplashScreen>();
+            /*
             if (splash != null)
             {
                 var propTimer = splash.GetType().GetField("timer", System.Reflection.BindingFlags.NonPublic
                                                                 | System.Reflection.BindingFlags.Instance);
                 propTimer.SetValue(splash, 9999);
+            }*/
+
+            if (!introSkipped)
+            {
+                GoToMainMenuNoLogos();
             }
 
             return; //This is buggy AF and I just want it off for now.
-            if (SceneManager.GetActiveScene().name.Equals("MainMenu"))
+        }
+
+        public static void GoToMainMenuNoLogos()
+        {
+            FPScreenTransition component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
+            if (component != null)
             {
-                Log("Attempting to Skip Main Menu Intros");
-                var temp = GameObject.Find("Screen Transition");
-                if (temp != null)
-                {
-                    var temp2 = temp.GetComponent<FPScreenTransition>();
-                    if (temp2 != null)
-                    {
-                        temp2.transitionSpeed = 100f;
-                        temp2.loadingBarDuration = 1;
-                    }
-                    else
-                    {
-                        Log("No FPScreenTransition Component.");
-                    }
-                }
-                else
-                {
-                    Log("No Screen Transition Object");
-                }
+                component.transitionType = FPTransitionTypes.WIPE;
+                component.transitionSpeed = 48f;
+                component.sceneToLoad = "MainMenu";
+                FPSaveManager.menuToLoad = 2; // This is how we skip the intros.
+                
+                introSkipped = true;
             }
         }
-        
+
         private IEnumerator LoadAsyncScene()
         {
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneToLoad, LoadSceneMode.Single);
