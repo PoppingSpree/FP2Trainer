@@ -5,8 +5,10 @@ using UnityEngine;
 //using UnityEngine.InputSystem;
 using System.IO;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net.Configuration;
+using UnityEngine.SceneManagement;
 
 //using UnityEngine.Tilemaps;
 
@@ -40,6 +42,7 @@ namespace Fp2Trainer
 
         private GameObject crosshair = null;
         private GameObject stageHUD = null;
+        private GameObject stageSelectMenu = null;
         private List<FPHudDigit> positionDigits = null;
         // Tilemap tm = null;
         //private Tilemap[] tms = null;
@@ -62,16 +65,25 @@ namespace Fp2Trainer
         private bool showAllPlayers = false;
 
         private GameObject goFancyTextPosition;
+        private GameObject goStageHUD;
         private TextMesh textmeshFancyTextPosition;
 
+        public Font fpMenuFont;
+
         private HashSet<string> playerValuesToShow;
-        
+
+        public string sceneToLoad = "";
+
+        public List<AssetBundle> loadedAssetBundles;
+
 
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
             MelonLogger.Msg("OnApplicationStart");
             MelonPreferences.Load();
             InitPrefs();
+
+            loadedAssetBundles = new List<AssetBundle>();
 
             playerValuesToShow = new HashSet<string>();
             playerValuesToShow.Add("Pos");
@@ -82,6 +94,7 @@ namespace Fp2Trainer
             playerValuesToShow.Add("Sensor Angle");
             playerValuesToShow.Add("Gravity Angle");
             playerValuesToShow.Add("Gravity Strength");
+            playerValuesToShow.Add("HUD Position");
         }
 
         private void InitPrefs()
@@ -99,7 +112,41 @@ namespace Fp2Trainer
         {
             MelonLogger.Msg("OnSceneWasLoaded: " + buildindex.ToString() + " | " + sceneName);
             ResetSceneSpecificVariables();
+            AttemptToFindFPFont();
+            AttemptToFindPauseMenu();
             MelonPreferences.Save();
+        }
+
+        private void AttemptToFindPauseMenu()
+        {
+            if (stageSelectMenu == null)
+            {
+                foreach (FPPauseMenu pauseMenu in Resources.FindObjectsOfTypeAll(typeof(FPPauseMenu)) as FPPauseMenu[])
+                {
+                    stageSelectMenu = GameObject.Instantiate(pauseMenu.transform.gameObject);
+                    Log("Found a pauseMenu to modify.");
+                    stageSelectMenu.name = "Ann Stage Select Menu";
+                    break;
+                }
+            }
+        }
+
+        private void AttemptToFindFPFont()
+        {
+            if (fpMenuFont != null)
+            {
+                return;
+            }
+
+            foreach (UnityEngine.TextMesh textMesh in Resources.FindObjectsOfTypeAll(typeof(UnityEngine.TextMesh)) as UnityEngine.TextMesh[])
+            {
+                if (textMesh.font!= null && textMesh.font.name.Equals("FP Menu Font"))
+                {
+                    Log("Found the FP Menu Font loaded in memory. Saving reference.");
+                    fpMenuFont = textMesh.font;
+                    break;
+                }
+            }
         }
 
         private void ResetSceneSpecificVariables()
@@ -114,42 +161,132 @@ namespace Fp2Trainer
             dpsTimer = 0;
 
             goFancyTextPosition = null;
+            goStageHUD = null;
             textmeshFancyTextPosition = null;
         }
 
         public void CreateFancyTextObjects()
         {
-            GameObject goStageHUD = GameObject.Find("Stage HUD");
+            goStageHUD = GameObject.Find("Stage HUD");
+            //GameObject goStageHUD = GameObject.Find("Hud Pause Menu");
             if (goStageHUD == null)
             {
                 return;
             }
 
+            Log("Successfully found HUD to attach text to.");
             goFancyTextPosition = GameObject.Find("Resume Text");
             if (goFancyTextPosition != null)
             {
-                goFancyTextPosition = GameObject.Instantiate((goFancyTextPosition));
+                Log("Found Resume Text");
+                goFancyTextPosition = GameObject.Instantiate(goFancyTextPosition);
+                goFancyTextPosition.SetActive(true);
                 textmeshFancyTextPosition = goFancyTextPosition.GetComponent<TextMesh>();
+                textmeshFancyTextPosition.font = fpMenuFont;
+                textmeshFancyTextPosition.characterSize = 10;
+                Log("Successfully cloned Resume Text. Attaching to Stage HUD.");
+            }
+            else if (goStageHUD != null)
+            {
+                //goStageHUD.energyBarGraphic.transform.parent;
+                Log("Looking for Energy Bar");
+                var temp = goStageHUD.GetComponent<FPHudMaster>();
+                Log("2");
+                GameObject temp2;
+                Log("3");
+                if (temp != null)
+                {
+                    Log("4");
+                    temp2 = temp.pfHudEnergyBar;
+                }
+                else
+                {
+                    Log("5");
+                    Log("This aint it.");
+                    return;
+                }
+                
+                Log("6");
+
+                var energyBarGraphic = UnityEngine.Object.Instantiate(temp2);
+                Log("7");
+                energyBarGraphic.transform.parent = temp2.transform.parent;
+                Log("8");
+                energyBarGraphic.transform.localScale *= 2;
+
+                Log("9");
+                goFancyTextPosition = energyBarGraphic;
+                Log("9a");
+                goFancyTextPosition.SetActive(true);
+                Log("9b");
+                //GameObject.Destroy(goFancyTextPosition.GetComponent<SpriteRenderer>()); // Can't have Sprite Renderer and Mesh Renderer.
+                var tempGo = new GameObject();
+                tempGo.transform.parent = goFancyTextPosition.transform;
+                tempGo.transform.localPosition = Vector3.zero;
+
+                goFancyTextPosition.transform.position += new Vector3(16, -320, 0);
+                goFancyTextPosition = tempGo;
+                
+                textmeshFancyTextPosition = goFancyTextPosition.AddComponent<TextMesh>();
+                Log("9c");
+                if (textmeshFancyTextPosition != null)
+                {
+                    Log("Current value of fpMenuFont: " + fpMenuFont);
+                    textmeshFancyTextPosition.font = fpMenuFont;
+                    Log("9d");
+                    textmeshFancyTextPosition.characterSize = 10;
+                    Log("9e");
+                    textmeshFancyTextPosition.text = "I exist!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@";
+                    Log("Attempting to clone energyBar. Attaching to Stage HUD.");
+                    Log("9f");
+                }
+                else
+                {
+                    Log("Tried to create textMesh but failed.");
+                }
+
+                
             }
             else
             {
                 goFancyTextPosition = new GameObject();
                 textmeshFancyTextPosition = goFancyTextPosition.AddComponent<TextMesh>();
+                textmeshFancyTextPosition.font = fpMenuFont;
+                textmeshFancyTextPosition.characterSize = 10;
+                Log("Could not clone Resume Text or Energy Bar. Manually creating TextMesh and Attaching to Stage HUD.");
+                
+                
+                
+                //Log("Could not clone Resume Text. Canceling.");
+                //return;
             }
             
+            Log("10a");
             goFancyTextPosition.transform.parent = goStageHUD.transform;
-            goFancyTextPosition.transform.localPosition = new Vector3(10, 110, 0);
+            Log("10b");
+            goFancyTextPosition.transform.localPosition = new Vector3(10, 20, 0);
+            Log("1c");
             UpdateFancyText();
+            Log("10d");
         }
 
         public void UpdateFancyText()
         {
-            textmeshFancyTextPosition.text = debugDisplay;
+            if (textmeshFancyTextPosition != null)
+            {
+                textmeshFancyTextPosition.text = debugDisplay;   
+            }
+            if (fpplayer != null && goFancyTextPosition != null)
+            {
+                //goFancyTextPosition.transform.position = new Vector3(fpplayer.position.x - 10, fpplayer.position.y - 10, -1);
+                goFancyTextPosition.transform.position += new Vector3(16, -320, 0);
+            }
         }
 
         public override void OnSceneWasInitialized(int buildindex, string sceneName) // Runs when a Scene has Initialized and is passed the Scene's Build Index and Name.
         {
             MelonLogger.Msg("OnSceneWasInitialized: " + buildindex.ToString() + " | " + sceneName);
+            SkipBootIntros();
         }
 
         public override void OnApplicationQuit() // Runs when the Game is told to Close.
@@ -160,7 +297,8 @@ namespace Fp2Trainer
 
         public override void OnUpdate()
         {
-
+            SkipBootIntros();
+            
             if (timeoutShowWarpInfo > 0) { timeoutShowWarpInfo -= Time.deltaTime; }
             if (timeoutShowWarpInfo < 0) { timeoutShowWarpInfo = 0; }
             try
@@ -263,6 +401,23 @@ namespace Fp2Trainer
                     {
                         debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength.ToString() + "\n";
                     }
+                    
+                    if (goStageHUD != null && playerValuesToShow.Contains("HUD Position"))
+                    {
+                        debugDisplay += "HUD Position: " + goStageHUD.GetComponent<FPHudMaster>().hudPosition.ToString() + "\n";
+                        debugDisplay += "HUD Position (base): " + goStageHUD.GetComponent<FPHudMaster>().transform.position.ToString() + "\n";
+                    }
+                    
+                    if (goFancyTextPosition != null)
+                    {
+                        debugDisplay += "FancyText Position: " + goFancyTextPosition.transform.position.ToString() + "\n";
+                        debugDisplay += "FancyText Position (local): " + goFancyTextPosition.transform.localPosition.ToString() + "\n";
+                        if (fpplayer != null)
+                        {
+                            debugDisplay += "hudCrystalIcon: " + goStageHUD.GetComponent<FPHudMaster>().pfHudCrystalIcon.transform.position.ToString() + "\n";
+                        }
+                    }
+                    
                 }
 
                 //debugDisplay += "Pos: " + player.transform.position.ToString() + "\n";
@@ -328,17 +483,180 @@ namespace Fp2Trainer
 
         public void HandleWarpControls()
         {
-            if (InputControl.GetButtonDown(Controls.buttons.pause) && InputControl.GetButton(Controls.buttons.special))
+            //if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.attack))
+            if (Input.GetKeyUp(KeyCode.F9))
             {
-                fpplayer.position = new Vector2(warpPoint.x, warpPoint.y);
-                debugDisplay += "Pause + Jump -> Goto Warp: " + warpPoint.ToString();
+                Log("F9 -> Load Debug Room");
+                UnityEngine.SceneManagement.SceneManager.LoadScene("StageDebugMenu", LoadSceneMode.Additive);
             }
             
-            if (InputControl.GetButtonDown(Controls.buttons.pause) && InputControl.GetButton(Controls.buttons.jump))
+            if (Input.GetKeyUp(KeyCode.F8))
+            {
+                Log("F8 -> Main Menu");
+                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu", LoadSceneMode.Additive);
+            }
+            if (Input.GetKeyUp(KeyCode.F7))
+            {
+                Log("F7 -> Load Asset Bundles");
+                LoadAssetBundlesFromModsFolder();
+            }
+            if (Input.GetKeyUp(KeyCode.F6))
+            {
+                Log("F6 -> Level Select");
+                List<Scene> availableScenes = new List<Scene>(); 
+                for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) 
+                {
+                    availableScenes.Add(UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(i));
+                    Log(i.ToString() + " | " + availableScenes[i].name);
+                }
+                ShowLevelSelect(availableScenes);
+            }
+            if (Input.GetKeyUp(KeyCode.F5))
+            {
+                Log("F5 -> Toggle Level Select Menu Visibility");
+                ToggleLevelSelectVisibility();
+            }
+            
+            
+            if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.special))
+            {
+                fpplayer.position = new Vector2(warpPoint.x, warpPoint.y);
+                Log("Hold Guard + Tap Special -> Goto Warp: " + warpPoint.ToString());
+            }
+            
+            if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.jump))
             {
                 warpPoint = new Vector2(fpplayer.position.x, fpplayer.position.y);
-                debugDisplay += "Pause + Jump -> Set Warp: "  + warpPoint.ToString();
+                Log("Hold Guard + Tap Jump -> Set Warp: "  + warpPoint.ToString());
             }
+        }
+
+        public void LoadAssetBundlesFromModsFolder()
+        {
+            try
+            {
+                var pathApp = Application.dataPath;
+                var pathMod = Path.Combine(Directory.GetParent(pathApp).FullName, "Mods");
+                var pathModAssetBundles = Path.Combine(pathMod, "AssetBundles");
+
+                var assetBundlePaths = Directory.GetFiles(pathModAssetBundles, "*.*");
+                foreach (var abp in assetBundlePaths)
+                {
+                    Log(abp);
+                    if (abp.Contains("."))
+                    {
+                        Log("Skipping this file, as it appears to have a " +
+                            "file extension (.whatever) at the end, " +
+                            "and is probably not an asset bundle.");
+                        continue;
+                    }
+                    
+                    var currentAB = AssetBundle.LoadFromFile(abp);
+
+                    if (currentAB == null)
+                    {
+                        Log("Failed to load AssetBundle. File may be corrupt.");
+                        continue;
+                    }
+
+                    loadedAssetBundles.Add(currentAB);
+                    Log("AssetBundle loaded successfully as loadedAssetBundles[" + (loadedAssetBundles.Count - 1).ToString() + "]:");
+                    Log("--------");
+                    Log(currentAB.GetAllScenePaths().ToString());
+                }
+            }
+            catch (NullReferenceException e)
+            {
+                Log("Null reference exception when trying to load asset bundles for modding. Canceling.");
+                Log(e.StackTrace);
+            }
+
+            
+        }
+
+        public void ToggleLevelSelectVisibility()
+        {
+            if (stageSelectMenu != null)
+            {
+                stageSelectMenu.SetActive(stageSelectMenu.activeInHierarchy);
+            }
+        }
+
+        private void ShowLevelSelect(List<Scene> availableScenes)
+        {
+            if (stageSelectMenu != null)
+            {
+                Log("Level Select.");
+                stageSelectMenu.SetActive(true);
+                
+                var ssm = stageSelectMenu.GetComponent<FPPauseMenu>();
+                GameObject goButton = null;
+                
+                if (ssm.pfButtons.Length > 3)
+                {
+                    goButton = ssm.pfButtons[3]; // This is most likely the resume button.
+                }
+                else if (ssm.pfButtons.Length > 0)
+                {
+                    goButton = ssm.pfButtons[0];
+                }
+
+                int i;
+                
+                for (i= 0; i < ssm.pfButtons.Length; i++) 
+                {
+                    if (ssm.pfButtons[i] != goButton)
+                    {
+                        GameObject.Destroy(ssm.pfButtons[i]);
+                    }
+                }
+
+                ssm.pfButtons = new GameObject[availableScenes.Count];
+
+                GameObject currentButton = null;
+                TextMesh tm = null;
+                MenuText mt = null;
+                for (i = 0; i < availableScenes.Count; i++)
+                {
+                    currentButton = GameObject.Instantiate(goButton);
+                    currentButton.transform.position += new Vector3(0, 32 * i, 0);
+                    
+                    tm = currentButton.GetComponent<TextMesh>();
+                    mt = currentButton.GetComponent<MenuText>();
+                    ssm.pfButtons.SetValue(currentButton, i);
+                    if (tm != null)
+                    {
+                        tm.text = availableScenes[i].name;
+                        mt.paragraph[0] = availableScenes[i].name;
+                    }
+                }
+
+                /*
+                ssm.pfText = new MenuText[ssm.pfButtons.Length];
+                for (int i = 0; i < buttonCount; i++)
+                {
+                    pfText[i] = pfButtons[i].GetComponentInChildren<MenuText>();
+                }
+                */
+                //base.transform.position = new Vector3(320f, -180f, 0f);
+                
+                //ssm.Start()
+                ssm.Invoke("Start", 0);
+            }
+            else
+            {
+                Log("Attempted to show level select, but the menu has not been prepared.");
+            }
+        }
+
+        public void PerformStageTransition()
+        {
+            FPScreenTransition component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
+            component.transitionType = FPTransitionTypes.LOCAL_WIPE;
+            component.transitionSpeed = 48f;
+            component.SetTransitionColor(0f, 0f, 0f);
+            component.BeginTransition();
+            FPAudio.PlayMenuSfx(3);
         }
 
         public void HandleTileEditControls()
@@ -668,6 +986,42 @@ namespace Fp2Trainer
             //GameObject goPauseHud = GameObject.Find("Hud Pause Menu");
 
             return goHud;
+        }
+
+        public void SkipBootIntros()
+        {
+            return; //This is buggy AF and I just want it off for now.
+            if (SceneManager.GetActiveScene().name.Equals("MainMenu"))
+            {
+                Log("Attempting to Skip Main Menu Intros");
+                var temp = GameObject.Find("Screen Transition");
+                if (temp != null)
+                {
+                    var temp2 = temp.GetComponent<FPScreenTransition>();
+                    if (temp2 != null)
+                    {
+                        temp2.transitionSpeed = 100f;
+                        temp2.loadingBarDuration = 1;
+                    }
+                    else
+                    {
+                        Log("No FPScreenTransition Component.");
+                    }
+                }
+                else
+                {
+                    Log("No Screen Transition Object");
+                }
+            }
+        }
+        
+        private IEnumerator LoadAsyncScene()
+        {
+            AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneToLoad, LoadSceneMode.Single);
+            while (!asyncLoad.isDone)
+            {
+                yield return null;
+            }
         }
 
         public static void Log(String txt)
