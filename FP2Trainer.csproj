@@ -49,4 +49,7 @@
     <Compile Include="SceneNamePair.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="AfterBuild">
+    <Copy SourceFiles="Output\FP2Trainer.dll" DestinationFolder="E:\SteamLibrary\steamapps\common\Freedom Planet 2\Mods" />
+  </Target>
 </Project>
