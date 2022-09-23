@@ -12,6 +12,7 @@ namespace Fp2Trainer
         {
             this.name = theName;
             this.scene = theScene;
+            this.path = theName;
         }
         public SceneNamePair(Scene theScene, string theName, string thePath)
         {

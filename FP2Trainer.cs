@@ -781,6 +781,7 @@ namespace Fp2Trainer
                 }
                 catch (ArgumentException e)
                 {
+                    Log(e.ToString());
                     Log(e.StackTrace);
                 }
                 
@@ -853,7 +854,7 @@ namespace Fp2Trainer
                     foreach (string scenePath in loadedAssetBundles[i].GetAllScenePaths()) 
                     {
                         var sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
-                        availableScenes.Add(new SceneNamePair(UnityEngine.SceneManagement.SceneManager.GetSceneByPath(scenePath), sceneName));
+                        availableScenes.Add(new SceneNamePair(UnityEngine.SceneManagement.SceneManager.GetSceneByPath(scenePath), sceneName, scenePath));
                     }
                 }
 

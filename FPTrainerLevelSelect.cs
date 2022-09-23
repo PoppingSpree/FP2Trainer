@@ -78,7 +78,9 @@ namespace Fp2Trainer
                 FPScreenTransition component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
                 component.transitionType = FPTransitionTypes.WIPE;
                 component.transitionSpeed = 48f;
-                component.sceneToLoad = GetSceneNameByIndex(menuSelection);
+                string scenePath = this.availableScenes[menuSelection].path;
+                component.sceneToLoad = scenePath;
+                //component.sceneToLoad = GetSceneNameByIndex(menuSelection);
                 global::Fp2Trainer.Fp2Trainer.Log("Attempting to load scene: "
                                                   + component.sceneToLoad + " => " 
                                                   + this.availableScenes[menuSelection].path);
