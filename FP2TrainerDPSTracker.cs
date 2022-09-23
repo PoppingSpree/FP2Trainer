@@ -8,6 +8,8 @@ namespace Fp2Trainer
         private List<DPSDamageInfo> damageInfos;
         public float timeElapsed;
         public float dps;
+        public float cutoffTime = 5f;
+        public float lastEmptyTime = 0f;
 
         public FP2TrainerDPSTracker()
         {
@@ -53,12 +55,12 @@ namespace Fp2Trainer
 
         public void UpdateTimer()
         {
-            timeElapsed += UnityEngine.Time.deltaTime;
+            timeElapsed += (FPStage.frameTime / 2);
 
-            // Purge times more than 1 second stale.
+            // Purge times more than 1 (or 2???) second stale.
             for (int i = 0; i < damageInfos.Count; i++)
             {
-                if (damageInfos[i].Time < (timeElapsed - 100f))
+                if (damageInfos[i].Time < (timeElapsed - cutoffTime))
                 {
                     damageInfos.RemoveAt(i);
                     i--;
@@ -75,12 +77,22 @@ namespace Fp2Trainer
 
         public void AddDamage(float dmg)
         {
+            UpdateLastEmptyTime();
             damageInfos.Add(new DPSDamageInfo(timeElapsed, dmg));
         }
         
         public void AddDamage(float dmg, string enemyName)
         {
+            UpdateLastEmptyTime();
             damageInfos.Add(new DPSDamageInfo(timeElapsed, dmg, enemyName));
+        }
+
+        public void UpdateLastEmptyTime()
+        {
+            if (damageInfos.Count < 1)
+            {
+                lastEmptyTime = timeElapsed;
+            }
         }
 
         public float CalculateDPS()
@@ -89,10 +101,30 @@ namespace Fp2Trainer
             foreach (DPSDamageInfo dInfo in damageInfos)
             {
                 dps += dInfo.DMG;
-                Fp2Trainer.Log("DPS Calc: " + dps.ToString() + " (+" + dInfo.DMG.ToString() + ")");
+                //Fp2Trainer.Log("DPS Calc: " + dps.ToString() + " (+" + dInfo.DMG.ToString() + ")");
             }
 
+            float timeSinceLastEmpty = timeElapsed - lastEmptyTime;
+            if (timeSinceLastEmpty > 0 && timeSinceLastEmpty < 1)
+            {
+                return (dps);    
+            }
+            else if (timeSinceLastEmpty >= 1 && timeSinceLastEmpty <= cutoffTime)
+            {
+                return (dps / timeSinceLastEmpty);    
+            }
+            else if (timeSinceLastEmpty > cutoffTime)
+            {
+                return (dps / cutoffTime);    
+            }
+            else if (timeSinceLastEmpty <= 0)
+            {
+                return dps;
+            }
+            
+            Fp2Trainer.Log("Something's funky with the DPS Tracker when calculating DPS???");
             return dps;
+
         }
         
         public float GetDPS()

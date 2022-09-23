@@ -23,7 +23,7 @@ namespace Fp2Trainer
 
         public void Update()
         {
-            timeRemaining -= UnityEngine.Time.deltaTime;
+            timeRemaining -= FPStage.frameTime;
 
             if (timeRemaining <= 0)
             {
@@ -31,7 +31,7 @@ namespace Fp2Trainer
             }
             else
             {
-                dt = UnityEngine.Time.deltaTime;
+                dt = FPStage.frameTime;
                 vel -= (grav * dt);
                 Vector3 p = this.transform.position;
                 this.transform.position = new Vector3(p.x + (vel.x * dt), p.y + (vel.y * dt), p.z);

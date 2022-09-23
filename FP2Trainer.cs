@@ -9,6 +9,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net.Configuration;
 using System.Runtime.CompilerServices;
+using System.Web;
 using UnityEngine.SceneManagement;
 
 //using UnityEngine.Tilemaps;
@@ -36,12 +37,18 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> inputLETilePaste;
         public static MelonPreferences_Entry<string> inputLETileLayer;
 
+        public static Fp2Trainer fp2TrainerInstance;
+        
         private GameObject player = null;
+        
+        private GameObject goDtTracker = null;
+        private static float fp2tDeltaTime = 0f;
+        
         private FPPlayer fpplayer = null;
         private List<FPPlayer> fpplayers = null;
         private List<FPBaseEnemy> fpEnemies = null;
         private List<FPBossHud> bossHuds = null;
-        
+
         private FPBaseEnemy nearestEnemy = null;
         private FPBaseEnemy nearestEnemyPrevious = null;
         private float nearestEnemyPreviousHP = 0;
@@ -49,6 +56,8 @@ namespace Fp2Trainer
         public Dictionary<int, float> allActiveEnemiesHealth;
         public Dictionary<int, float> allActiveEnemiesHealthPrevious;
         public Dictionary<int, string> allActiveEnemiesNames;
+
+        public Dictionary<int, string> fpElementTypeNames;
 
         public FP2TrainerDPSTracker dpsTracker;
 
@@ -102,6 +111,7 @@ namespace Fp2Trainer
         public TextMesh textmeshFancyTextPosition;
 
         public static Font fpMenuFont;
+        public static Material fpMenuMaterial;
 
         private HashSet<string> playerValuesToShow;
 
@@ -112,6 +122,8 @@ namespace Fp2Trainer
 
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
+            fp2TrainerInstance = this;
+            
             MelonLogger.Msg("OnApplicationStart");
             MelonPreferences.Load();
             InitPrefs();
@@ -130,6 +142,14 @@ namespace Fp2Trainer
             playerValuesToShow.Add("Gravity Angle");
             playerValuesToShow.Add("Gravity Strength");
             playerValuesToShow.Add("HUD Position");
+
+            fpElementTypeNames = new Dictionary<int, string>();
+            fpElementTypeNames.Add(-1, "Normal");
+            fpElementTypeNames.Add(0, "Wood");
+            fpElementTypeNames.Add(1, "Earth");
+            fpElementTypeNames.Add(2, "Water");
+            fpElementTypeNames.Add(3, "Fire");
+            fpElementTypeNames.Add(4, "Metal");
 
             bossHuds = new List<FPBossHud>();
             allActiveEnemiesHealth = null;
@@ -156,6 +176,19 @@ namespace Fp2Trainer
             AttemptToFindFPFont();
             AttemptToFindPauseMenu();
             MelonPreferences.Save();
+
+            
+            if (goDtTracker != null)
+            {
+                
+            }
+            else
+            {
+                goDtTracker = new GameObject("FP2TrainerDeltaTimeTracker");
+                goDtTracker.AddComponent<FP2TrainerDTTracker>();
+                Log("Created DeltaTime tracker. Updates will occur on LateUpdate.");
+            }
+            
         }
 
         private void AttemptToFindPauseMenu()
@@ -194,9 +227,12 @@ namespace Fp2Trainer
             foreach (UnityEngine.TextMesh textMesh in Resources.FindObjectsOfTypeAll(typeof(UnityEngine.TextMesh)) as UnityEngine.TextMesh[])
             {
                 if (textMesh.font!= null && textMesh.font.name.Equals("FP Menu Font"))
+                //if (textMesh.font!= null && textMesh.font.name.Equals("FP Small Font Light"))
                 {
                     Log("Found the FP Menu Font loaded in memory. Saving reference.");
+                    //Log("Found the FP Small Font loaded in memory. Saving reference.");
                     fpMenuFont = textMesh.font;
+                    fpMenuMaterial = textMesh.GetComponent<MeshRenderer>().materials[0];
                     break;
                 }
             }
@@ -241,7 +277,9 @@ namespace Fp2Trainer
                 goFancyTextPosition.SetActive(true);
                 textmeshFancyTextPosition = goFancyTextPosition.GetComponent<TextMesh>();
                 textmeshFancyTextPosition.font = fpMenuFont;
+                textmeshFancyTextPosition.GetComponent<MeshRenderer>().materials[0] = fpMenuMaterial;
                 textmeshFancyTextPosition.characterSize = 10;
+                textmeshFancyTextPosition.anchor = TextAnchor.UpperLeft;
                 Log("Successfully cloned Resume Text. Attaching to Stage HUD.");
             }
             else if (goStageHUD != null)
@@ -273,7 +311,7 @@ namespace Fp2Trainer
                 tempGo.transform.parent = goFancyTextPosition.transform;
                 tempGo.transform.localPosition = Vector3.zero;
 
-                goFancyTextPosition.transform.position = new Vector3(16, -160, 0);
+                goFancyTextPosition.transform.position = new Vector3(16, -80, 0);
                 goFancyTextPosition = tempGo;
                 
                 textmeshFancyTextPosition = goFancyTextPosition.AddComponent<TextMesh>();
@@ -281,7 +319,9 @@ namespace Fp2Trainer
                 {
                     Log("Current value of fpMenuFont: " + fpMenuFont);
                     textmeshFancyTextPosition.font = fpMenuFont;
+                    textmeshFancyTextPosition.GetComponent<MeshRenderer>().materials[0] = fpMenuMaterial;
                     textmeshFancyTextPosition.characterSize = 10;
+                    textmeshFancyTextPosition.anchor = TextAnchor.UpperLeft;
                     textmeshFancyTextPosition.text = "I exist!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@";
                     Log("Attempting to clone energyBar. Attaching to Stage HUD.");
                 }
@@ -297,7 +337,9 @@ namespace Fp2Trainer
                 goFancyTextPosition = new GameObject();
                 textmeshFancyTextPosition = goFancyTextPosition.AddComponent<TextMesh>();
                 textmeshFancyTextPosition.font = fpMenuFont;
+                textmeshFancyTextPosition.GetComponent<MeshRenderer>().materials[0] = fpMenuMaterial;
                 textmeshFancyTextPosition.characterSize = 10;
+                textmeshFancyTextPosition.anchor = TextAnchor.UpperLeft;
                 Log("Could not clone Resume Text or Energy Bar. Manually creating TextMesh and Attaching to Stage HUD.");
                 
                 
@@ -325,7 +367,7 @@ namespace Fp2Trainer
             if (fpplayer != null && goFancyTextPosition != null)
             {
                 //goFancyTextPosition.transform.position = new Vector3(fpplayer.position.x - 10, fpplayer.position.y - 10, -1);
-                goFancyTextPosition.transform.position = new Vector3(16, -160, 0);
+                goFancyTextPosition.transform.position = new Vector3(16, -80, 0);
             }
         }
 
@@ -341,7 +383,7 @@ namespace Fp2Trainer
             MelonPreferences.Save();
         }
 
-        public override void OnUpdate()
+        public void OnGameObjectUpdate()
         {
             SkipBootIntros();
             if (dpsTracker != null)
@@ -349,15 +391,13 @@ namespace Fp2Trainer
                 dpsTracker.Update();
             }
 
-            if (timeoutShowWarpInfo > 0) { timeoutShowWarpInfo -= Time.deltaTime; }
+            if (timeoutShowWarpInfo > 0) { timeoutShowWarpInfo -= FPStage.frameTime; }
             if (timeoutShowWarpInfo < 0) { timeoutShowWarpInfo = 0; }
             try
             {
 
                 if (player == null)
                 {
-                    UpdateDPS();
-                    
                     player = GetFirstPlayerGameObject();
                     fpplayer = FPStage.currentStage.GetPlayerInstance_FPPlayer();
 
@@ -413,6 +453,7 @@ namespace Fp2Trainer
 
                 if (fpplayer != null)
                 {
+                    UpdateDPS();
                     HandleWarpControls();
                     
                     if (timeoutShowWarpInfo > 0)
@@ -432,6 +473,7 @@ namespace Fp2Trainer
 
                     if (currentDataPage == DataPage.MOVEMENT)
                     {
+                        debugDisplay += "Movement: \n";
                         if (playerValuesToShow.Contains("Pos"))
                         {
                              debugDisplay += "Pos: " + fpplayer.position.ToString() + "\n";
@@ -475,12 +517,21 @@ namespace Fp2Trainer
                     }
                     else if (currentDataPage == DataPage.COMBAT)
                     {
+                        debugDisplay += "Combat: \n";
                         debugDisplay += "Health: " + fpplayer.health.ToString() + "\n";
                         
-                        
-                        
-                        debugDisplay += nearestEnemy.name + " Health: " + nearestEnemy.health.ToString() + "\n";
-                        
+                        int tempDmgType = fpplayer.damageType;
+                        if (tempDmgType > 4)
+                        {
+                            tempDmgType = -1;
+                        }
+                        debugDisplay += "Hurt Damage Element: " + fpElementTypeNames[tempDmgType] + "\n";
+
+                        if (nearestEnemy != null)
+                        {
+                            debugDisplay += nearestEnemy.name + " Health: " + nearestEnemy.health.ToString() + "\n";   
+                        }
+
                         if (dpsTracker != null)
                         {
                             debugDisplay += "DPS: " + dpsTracker.ToString() + "\n";
@@ -505,10 +556,23 @@ namespace Fp2Trainer
                     }
                     else if (currentDataPage == DataPage.DPS)
                     {
+                        debugDisplay += "DPS: \n";
                         if (dpsTracker != null)
                         {
-                            debugDisplay += "Previous Nearest Enemy: " + this.nearestEnemyPrevious.name + "\n";
-                            debugDisplay += "Prev Health: " + this.nearestEnemyPreviousHP.ToString() + "\n";
+                            if (nearestEnemy != null && nearestEnemyPrevious != null)
+                            {
+                                debugDisplay += "Previous Nearest Enemy: " + this.nearestEnemyPrevious.name + "\n";
+                                debugDisplay += "Prev Health: " + this.nearestEnemyPreviousHP.ToString() + "\n";
+                            }
+                            else if (nearestEnemy == null)
+                            {
+                                debugDisplay += "Nearest Enemy Not Found\n";
+                            }
+                            else if (nearestEnemy == null)
+                            {
+                                debugDisplay += "Previous Nearest Enemy Not Found\n";
+                            }
+
                             debugDisplay += dpsTracker.GetDPSBreakdownString();
                         }
                         else
@@ -520,6 +584,7 @@ namespace Fp2Trainer
                     {
                         if (dpsTracker != null)
                         {
+                            debugDisplay += "DPS ALL: \n";
                             debugDisplay += dpsTracker.GetDPSBreakdownString();
                         }
                         else
@@ -529,11 +594,20 @@ namespace Fp2Trainer
                     }
                     else if (currentDataPage == DataPage.BATTLESPHERE)
                     {
+                        debugDisplay += "Battlesphere: \n";
+                        int tempDmgType = -1;
                         foreach (FPPlayer mp_fpplayer in fpplayers)
                         {
                             debugDisplay += mp_fpplayer.name + " Health: " + mp_fpplayer.health.ToString() 
                                             + " / " + mp_fpplayer.healthMax.ToString() + "\n";
                             debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy.ToString() + "\n";
+                            
+                            tempDmgType = mp_fpplayer.damageType;
+                            if (tempDmgType > 4)
+                            {
+                                tempDmgType = -1;
+                            }
+                            debugDisplay += mp_fpplayer.name + " Last Hurt Element: " + fpElementTypeNames[tempDmgType] + "\n";
                             //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
                             //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
                             debugDisplay += mp_fpplayer.name + " Attack Power: " + mp_fpplayer.attackPower.ToString() + "\n";
@@ -543,6 +617,7 @@ namespace Fp2Trainer
                     }
                     else if (currentDataPage == DataPage.BOSS)
                     {
+                        debugDisplay += "Boss: \n";
                         fpEnemies.Clear();
                         foreach (var bh in bossHuds)
                         {
@@ -582,7 +657,7 @@ namespace Fp2Trainer
                         }
                         else 
                         {
-                            Log("Unable to find relevant enemies. Try switching to this view while the healthbar is visible.");
+                            debugDisplay += "Unable to find relevant enemies.\nTry switching to this view while the healthbar is visible.\n";
                         }
                     }
                 }
@@ -625,7 +700,7 @@ namespace Fp2Trainer
             if (FPStage.currentStage != null)
             {
                 //var activeEnemies = FPStage.GetActiveEnemies();
-                nearestEnemy = FPStage.FindNearestEnemy(fpplayer, 200f);
+                this.nearestEnemy = FPStage.FindNearestEnemy(fpplayer, 2000f);
                 if (nearestEnemy != null)
                 {
                     if (nearestEnemy == nearestEnemyPrevious
@@ -642,6 +717,8 @@ namespace Fp2Trainer
                 }
                 // Add toggle option to check against damage done to ALL enemies instead of just nearest
                 // If adding, give warning that this may cause slowdown.
+
+                nearestEnemyPrevious = nearestEnemy;
             }
         }
 
@@ -670,10 +747,7 @@ namespace Fp2Trainer
                     }
                 }
                 
-                allActiveEnemiesHealthPrevious = allActiveEnemiesHealth;
-                
-                
-                
+                allActiveEnemiesHealthPrevious = new Dictionary<int, float>(allActiveEnemiesHealth);
             }
         }
 
@@ -700,8 +774,16 @@ namespace Fp2Trainer
         {
             foreach (var ene in tempCachedEnemyList)
             {
-                allActiveEnemiesHealth.Add(ene.objectID, ene.health);
-                allActiveEnemiesNames.Add(ene.objectID, ene.name);
+                try
+                {
+                    allActiveEnemiesHealth.Add(ene.objectID, ene.health);
+                    allActiveEnemiesNames.Add(ene.objectID, ene.name);
+                }
+                catch (ArgumentException e)
+                {
+                    Log(e.StackTrace);
+                }
+                
             }
         }
 
@@ -791,8 +873,8 @@ namespace Fp2Trainer
             }
             if (Input.GetKeyUp(KeyCode.F4))
             {
-                Log("F4 -> Toggle Variable Displays");
                 ToggleVariableDisplay();
+                Log("F4 -> Toggle DataPage (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
             }
             if (Input.GetKeyUp(KeyCode.F3))
             {
@@ -811,6 +893,7 @@ namespace Fp2Trainer
             }
             if (Input.GetKeyUp(KeyCode.F2))
             {
+                Log("F2 -> Simulate DPS Damage Add: ");
                 dpsTracker.AddDamage(5, "FP2 Trainer HotKey");
             }
             if (Input.GetKeyUp(KeyCode.F1))
@@ -837,6 +920,24 @@ namespace Fp2Trainer
                     Log("No player???");
                 }
 
+            }
+            if (Input.GetKeyUp(KeyCode.KeypadPlus)
+                || Input.GetKeyUp(KeyCode.Plus))
+            {
+                Log("Numpad Plus -> Increase Font Size: ");
+                if (textmeshFancyTextPosition != null)
+                {
+                    textmeshFancyTextPosition.characterSize++;
+                }
+            }
+            if (Input.GetKeyUp(KeyCode.KeypadMinus) 
+                || Input.GetKeyUp(KeyCode.Minus))
+            {
+                Log("Numpad Minus -> Decrease Font Size: ");
+                if (textmeshFancyTextPosition != null)
+                {
+                    textmeshFancyTextPosition.characterSize--;
+                }
             }
             
             
@@ -1306,6 +1407,16 @@ namespace Fp2Trainer
             {
                 yield return null;
             }
+        }
+        
+        public static void SetFP2TDeltaTime(float dt)
+        {
+            Fp2Trainer.fp2tDeltaTime = dt;
+        }
+        
+        public static float GetFP2TDeltaTime()
+        {
+            return Fp2Trainer.fp2tDeltaTime;
         }
 
         public static void Log(String txt)
