@@ -4,17 +4,18 @@ namespace Fp2Trainer
 {
     public class FP2TrainerDTTracker : MonoBehaviour
     {
-        public float dt = 0;
+        public float dt;
+
         public void Awake()
         {
-            DontDestroyOnLoad(this.gameObject);
+            DontDestroyOnLoad(gameObject);
         }
-        
+
         public void Start()
         {
-            DontDestroyOnLoad(this.gameObject);
+            DontDestroyOnLoad(gameObject);
         }
-        
+
         public void LateUpdate()
         {
             dt = FPStage.frameTime;

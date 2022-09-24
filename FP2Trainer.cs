@@ -1,16 +1,13 @@
-﻿using MelonLoader;
-
-using UnityEngine;
-//using UnityEngine.InputSystem.Controls;
-//using UnityEngine.InputSystem;
-using System.IO;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Net.Configuration;
-using System.Runtime.CompilerServices;
-using System.Web;
+using System.IO;
+using MelonLoader;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
+//using UnityEngine.InputSystem.Controls;
+//using UnityEngine.InputSystem;
 
 //using UnityEngine.Tilemaps;
 
@@ -19,7 +16,10 @@ namespace Fp2Trainer
     public static class BuildInfo
     {
         public const string Name = "FP2 Trainer"; // Name of the Mod.  (MUST BE SET)
-        public const string Description = "Training tools for speedrunning Freedom Planet 2: Quick Warps, Quick Resets, Live Tilemap Editing, etc"; // Description for the Mod.  (Set as null if none)
+
+        public const string Description =
+            "Training tools for speedrunning Freedom Planet 2: Quick Warps, Quick Resets, Live Tilemap Editing, etc"; // Description for the Mod.  (Set as null if none)
+
         public const string Author = "Catssandra Ann"; // Author of the Mod.  (MUST BE SET)
         public const string Company = null; // Company that made the Mod.  (Set as null if none)
         public const string Version = "0.4.0"; // Version of the Mod.  (MUST BE SET)
@@ -28,50 +28,6 @@ namespace Fp2Trainer
 
     public class Fp2Trainer : MelonMod
     {
-        public static MelonPreferences_Category fp2Trainer;
-        public static MelonPreferences_Entry<bool> enableWarps;
-        public static MelonPreferences_Entry<bool> showDebug;
-        public static MelonPreferences_Entry<bool> showLevelEditDebug;
-
-        public static MelonPreferences_Entry<string> inputLETileCopy;
-        public static MelonPreferences_Entry<string> inputLETilePaste;
-        public static MelonPreferences_Entry<string> inputLETileLayer;
-
-        public static Fp2Trainer fp2TrainerInstance;
-        
-        private GameObject player = null;
-        
-        private GameObject goDtTracker = null;
-        private static float fp2tDeltaTime = 0f;
-        
-        private FPPlayer fpplayer = null;
-        private List<FPPlayer> fpplayers = null;
-        private List<FPBaseEnemy> fpEnemies = null;
-        private List<FPBossHud> bossHuds = null;
-
-        private FPBaseEnemy nearestEnemy = null;
-        private FPBaseEnemy nearestEnemyPrevious = null;
-        private float nearestEnemyPreviousHP = 0;
-
-        public Dictionary<int, float> allActiveEnemiesHealth;
-        public Dictionary<int, float> allActiveEnemiesHealthPrevious;
-        public Dictionary<int, string> allActiveEnemiesNames;
-
-        public Dictionary<int, string> fpElementTypeNames;
-
-        public FP2TrainerDPSTracker dpsTracker;
-
-        private FPTrainerLevelSelect fptls;
-        //private InputHandler inputHandler = null;
-
-        public static bool introSkipped = false;
-
-        private GameObject crosshair = null;
-        private GameObject stageHUD = null;
-        private GameObject stageSelectMenu = null;
-        private FPPauseMenu pauseMenu = null;
-        private List<FPHudDigit> positionDigits = null;
-
         public enum DataPage
         {
             MOVEMENT,
@@ -82,48 +38,95 @@ namespace Fp2Trainer
             BOSS,
             NONE
         }
-        
-        private DataPage currentDataPage = DataPage.MOVEMENT;
-        
-        
-        // Tilemap tm = null;
-        //private Tilemap[] tms = null;
-        //private TileBase copyTile = null;
-        private int selectedTileLayer = 0;
 
-        bool warped = false;
-        public bool showVarString = true;
+        public static MelonPreferences_Category fp2Trainer;
+        public static MelonPreferences_Entry<bool> enableWarps;
+        public static MelonPreferences_Entry<bool> showDebug;
+        public static MelonPreferences_Entry<bool> showLevelEditDebug;
 
-        string debugDisplay = "Never Updated";
-        string warpMessage = "";
+        public static MelonPreferences_Entry<string> BootupLevel;
 
-        float timeoutShowWarpInfo = 0f;
-        float howLongToShowWarpInfo = 2f;
+        public static MelonPreferences_Entry<string> inputLETileCopy;
+        public static MelonPreferences_Entry<string> inputLETilePaste;
+        public static MelonPreferences_Entry<string> inputLETileLayer;
 
-        public float dps = 0f;
-        public List<float> dpsHits;
-        public double dpsTimer = 0d;
+        public static Fp2Trainer fp2TrainerInstance;
 
-        Vector2 warpPoint = new Vector2(211f, 50f);
+        private static float fp2tDeltaTime;
+        //private InputHandler inputHandler = null;
 
-        public GameObject goFancyTextPosition;
-        public GameObject goStageHUD;
-        public TextMesh textmeshFancyTextPosition;
+        public static bool introSkipped;
 
         public static Font fpMenuFont;
         public static Material fpMenuMaterial;
 
+        public Dictionary<int, float> allActiveEnemiesHealth;
+        public Dictionary<int, float> allActiveEnemiesHealthPrevious;
+        public Dictionary<int, string> allActiveEnemiesNames;
+        private List<FPBossHud> bossHuds;
+
+        private readonly GameObject crosshair = null;
+
+        private DataPage currentDataPage = DataPage.MOVEMENT;
+
+        private string debugDisplay = "Never Updated";
+
+        public float dps;
+        public List<float> dpsHits;
+        public double dpsTimer;
+
+        public FP2TrainerDPSTracker dpsTracker;
+
+        public Dictionary<int, string> fpElementTypeNames;
+        private List<FPBaseEnemy> fpEnemies;
+
+        private FPPlayer fpplayer;
+        private List<FPPlayer> fpplayers;
+
+        private FPTrainerLevelSelect fptls;
+
+        private GameObject goDtTracker;
+
+        public GameObject goFancyTextPosition;
+        public GameObject goStageHUD;
+        private readonly float howLongToShowWarpInfo = 2f;
+
+        public List<AssetBundle> loadedAssetBundles;
+
+        private FPBaseEnemy nearestEnemy;
+        private FPBaseEnemy nearestEnemyPrevious;
+        private float nearestEnemyPreviousHP;
+        private FPPauseMenu pauseMenu;
+
+        private GameObject player;
+
         private HashSet<string> playerValuesToShow;
+        private List<FPHudDigit> positionDigits;
 
         public string sceneToLoad = "";
 
-        public List<AssetBundle> loadedAssetBundles;
+
+        // Tilemap tm = null;
+        //private Tilemap[] tms = null;
+        //private TileBase copyTile = null;
+        private int selectedTileLayer;
+        public bool showVarString = true;
+        private GameObject stageHUD;
+        private GameObject stageSelectMenu;
+        public TextMesh textmeshFancyTextPosition;
+
+        private float timeoutShowWarpInfo;
+
+        private bool warped;
+        private string warpMessage = "";
+
+        private Vector2 warpPoint = new Vector2(211f, 50f);
 
 
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
             fp2TrainerInstance = this;
-            
+
             MelonLogger.Msg("OnApplicationStart");
             MelonPreferences.Load();
             InitPrefs();
@@ -161,26 +164,28 @@ namespace Fp2Trainer
         private void InitPrefs()
         {
             fp2Trainer = MelonPreferences.CreateCategory("fp2Trainer");
-            enableWarps = (MelonPreferences_Entry<bool>)fp2Trainer.CreateEntry<bool>("enableWarps", true);
-            showDebug = (MelonPreferences_Entry<bool>)fp2Trainer.CreateEntry<bool>("showDebug", true);
-            showLevelEditDebug = (MelonPreferences_Entry<bool>)fp2Trainer.CreateEntry<bool>("showLevelEditDebug", true);
-            inputLETileCopy = (MelonPreferences_Entry<string>)fp2Trainer.CreateEntry<string>("inputLETileCopy", "<Gamepad>/buttonNorth");
-            inputLETilePaste = (MelonPreferences_Entry<string>)fp2Trainer.CreateEntry<string>("inputLETilePaste", "<Gamepad>/buttonEast");
-            inputLETileLayer = (MelonPreferences_Entry<string>)fp2Trainer.CreateEntry<string>("inputLETileLayer", "<Gamepad>/leftShoulder");
+            enableWarps = fp2Trainer.CreateEntry("enableWarps", true);
+            BootupLevel = fp2Trainer.CreateEntry("bootupLevel", "ZaoLand");
+            showDebug = fp2Trainer.CreateEntry("showDebug", true);
+            showLevelEditDebug = fp2Trainer.CreateEntry("showLevelEditDebug", true);
+            inputLETileCopy = fp2Trainer.CreateEntry("inputLETileCopy", "<Gamepad>/buttonNorth");
+            inputLETilePaste = fp2Trainer.CreateEntry("inputLETilePaste", "<Gamepad>/buttonEast");
+            inputLETileLayer = fp2Trainer.CreateEntry("inputLETileLayer", "<Gamepad>/leftShoulder");
         }
 
-        public override void OnSceneWasLoaded(int buildindex, string sceneName) // Runs when a Scene has Loaded and is passed the Scene's Build Index and Name.
+        public override void
+            OnSceneWasLoaded(int buildindex,
+                string sceneName) // Runs when a Scene has Loaded and is passed the Scene's Build Index and Name.
         {
-            MelonLogger.Msg("OnSceneWasLoaded: " + buildindex.ToString() + " | " + sceneName);
+            MelonLogger.Msg("OnSceneWasLoaded: " + buildindex + " | " + sceneName);
             ResetSceneSpecificVariables();
             AttemptToFindFPFont();
             AttemptToFindPauseMenu();
             MelonPreferences.Save();
 
-            
+
             if (goDtTracker != null)
             {
-                
             }
             else
             {
@@ -188,20 +193,19 @@ namespace Fp2Trainer
                 goDtTracker.AddComponent<FP2TrainerDTTracker>();
                 Log("Created DeltaTime tracker. Updates will occur on LateUpdate.");
             }
-            
         }
 
         private void AttemptToFindPauseMenu()
         {
             if (stageSelectMenu == null)
-            {
-                foreach (FPPauseMenu pauseMenu in Resources.FindObjectsOfTypeAll(typeof(FPPauseMenu)) as FPPauseMenu[])
+                foreach (var pauseMenu in Resources.FindObjectsOfTypeAll(typeof(FPPauseMenu)) as FPPauseMenu[])
                 {
                     this.pauseMenu = pauseMenu;
                     //stageSelectMenu = GameObject.Instantiate(pauseMenu.transform.gameObject);
                     stageSelectMenu = new GameObject("Stage Select Menu");
                     stageSelectMenu.transform.position = new Vector3(-376, -192, 0);
-                    GameObject resumeIcon = GameObject.Instantiate(this.pauseMenu.transform.Find("Pause Icon - Resume").gameObject);
+                    var resumeIcon =
+                        Object.Instantiate(this.pauseMenu.transform.Find("Pause Icon - Resume").gameObject);
                     if (resumeIcon != null)
                     {
                         resumeIcon.name = "AnnStagePlayIcon";
@@ -214,20 +218,15 @@ namespace Fp2Trainer
                     stageSelectMenu.name = "Ann Stage Select Menu";
                     break;
                 }
-            }
         }
 
         private void AttemptToFindFPFont()
         {
-            if (fpMenuFont != null)
-            {
-                return;
-            }
+            if (fpMenuFont != null) return;
 
-            foreach (UnityEngine.TextMesh textMesh in Resources.FindObjectsOfTypeAll(typeof(UnityEngine.TextMesh)) as UnityEngine.TextMesh[])
-            {
-                if (textMesh.font!= null && textMesh.font.name.Equals("FP Menu Font"))
-                //if (textMesh.font!= null && textMesh.font.name.Equals("FP Small Font Light"))
+            foreach (var textMesh in Resources.FindObjectsOfTypeAll(typeof(TextMesh)) as TextMesh[])
+                if (textMesh.font != null && textMesh.font.name.Equals("FP Menu Font"))
+                    //if (textMesh.font!= null && textMesh.font.name.Equals("FP Small Font Light"))
                 {
                     Log("Found the FP Menu Font loaded in memory. Saving reference.");
                     //Log("Found the FP Small Font loaded in memory. Saving reference.");
@@ -235,7 +234,6 @@ namespace Fp2Trainer
                     fpMenuMaterial = textMesh.GetComponent<MeshRenderer>().materials[0];
                     break;
                 }
-            }
         }
 
         private void ResetSceneSpecificVariables()
@@ -263,17 +261,14 @@ namespace Fp2Trainer
         {
             goStageHUD = GameObject.Find("Stage HUD");
             //GameObject goStageHUD = GameObject.Find("Hud Pause Menu");
-            if (goStageHUD == null)
-            {
-                return;
-            }
+            if (goStageHUD == null) return;
 
             Log("Successfully found HUD to attach text to.");
             goFancyTextPosition = GameObject.Find("Resume Text");
             if (goFancyTextPosition != null)
             {
                 Log("Found Resume Text");
-                goFancyTextPosition = GameObject.Instantiate(goFancyTextPosition);
+                goFancyTextPosition = Object.Instantiate(goFancyTextPosition);
                 goFancyTextPosition.SetActive(true);
                 textmeshFancyTextPosition = goFancyTextPosition.GetComponent<TextMesh>();
                 textmeshFancyTextPosition.font = fpMenuFont;
@@ -297,13 +292,12 @@ namespace Fp2Trainer
                     Log("This aint it.");
                     return;
                 }
-                
-                
 
-                var energyBarGraphic = UnityEngine.Object.Instantiate(temp2, temp2.transform.parent);
-                
+
+                var energyBarGraphic = Object.Instantiate(temp2, temp2.transform.parent);
+
                 energyBarGraphic.transform.localScale *= 2;
-                
+
                 goFancyTextPosition = energyBarGraphic;
                 goFancyTextPosition.SetActive(true);
                 //GameObject.Destroy(goFancyTextPosition.GetComponent<SpriteRenderer>()); // Can't have Sprite Renderer and Mesh Renderer.
@@ -313,7 +307,7 @@ namespace Fp2Trainer
 
                 goFancyTextPosition.transform.position = new Vector3(16, -80, 0);
                 goFancyTextPosition = tempGo;
-                
+
                 textmeshFancyTextPosition = goFancyTextPosition.AddComponent<TextMesh>();
                 if (textmeshFancyTextPosition != null)
                 {
@@ -322,15 +316,14 @@ namespace Fp2Trainer
                     textmeshFancyTextPosition.GetComponent<MeshRenderer>().materials[0] = fpMenuMaterial;
                     textmeshFancyTextPosition.characterSize = 10;
                     textmeshFancyTextPosition.anchor = TextAnchor.UpperLeft;
-                    textmeshFancyTextPosition.text = "I exist!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@";
+                    textmeshFancyTextPosition.text =
+                        "I exist!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@";
                     Log("Attempting to clone energyBar. Attaching to Stage HUD.");
                 }
                 else
                 {
                     Log("Tried to create textMesh but failed.");
                 }
-
-                
             }
             else
             {
@@ -340,14 +333,14 @@ namespace Fp2Trainer
                 textmeshFancyTextPosition.GetComponent<MeshRenderer>().materials[0] = fpMenuMaterial;
                 textmeshFancyTextPosition.characterSize = 10;
                 textmeshFancyTextPosition.anchor = TextAnchor.UpperLeft;
-                Log("Could not clone Resume Text or Energy Bar. Manually creating TextMesh and Attaching to Stage HUD.");
-                
-                
-                
+                Log(
+                    "Could not clone Resume Text or Energy Bar. Manually creating TextMesh and Attaching to Stage HUD.");
+
+
                 //Log("Could not clone Resume Text. Canceling.");
                 //return;
             }
-            
+
             goFancyTextPosition.transform.parent = goStageHUD.transform;
             goFancyTextPosition.transform.localPosition = new Vector3(10, 20, 0);
             UpdateFancyText();
@@ -356,24 +349,19 @@ namespace Fp2Trainer
         public void UpdateFancyText()
         {
             if (textmeshFancyTextPosition != null && showVarString)
-            {
-                textmeshFancyTextPosition.text = debugDisplay;   
-            }
-            else if (!showVarString)
-            {
-                textmeshFancyTextPosition.text = "";
-            }
+                textmeshFancyTextPosition.text = debugDisplay;
+            else if (!showVarString) textmeshFancyTextPosition.text = "";
 
             if (fpplayer != null && goFancyTextPosition != null)
-            {
                 //goFancyTextPosition.transform.position = new Vector3(fpplayer.position.x - 10, fpplayer.position.y - 10, -1);
                 goFancyTextPosition.transform.position = new Vector3(16, -80, 0);
-            }
         }
 
-        public override void OnSceneWasInitialized(int buildindex, string sceneName) // Runs when a Scene has Initialized and is passed the Scene's Build Index and Name.
+        public override void
+            OnSceneWasInitialized(int buildindex,
+                string sceneName) // Runs when a Scene has Initialized and is passed the Scene's Build Index and Name.
         {
-            MelonLogger.Msg("OnSceneWasInitialized: " + buildindex.ToString() + " | " + sceneName);
+            MelonLogger.Msg("OnSceneWasInitialized: " + buildindex + " | " + sceneName);
             SkipBootIntros();
         }
 
@@ -386,31 +374,23 @@ namespace Fp2Trainer
         public void OnGameObjectUpdate()
         {
             SkipBootIntros();
-            if (dpsTracker != null)
-            {
-                dpsTracker.Update();
-            }
+            if (dpsTracker != null) dpsTracker.Update();
 
-            if (timeoutShowWarpInfo > 0) { timeoutShowWarpInfo -= FPStage.frameTime; }
-            if (timeoutShowWarpInfo < 0) { timeoutShowWarpInfo = 0; }
+            if (timeoutShowWarpInfo > 0) timeoutShowWarpInfo -= FPStage.frameTime;
+            if (timeoutShowWarpInfo < 0) timeoutShowWarpInfo = 0;
             try
             {
-
                 if (player == null)
                 {
                     player = GetFirstPlayerGameObject();
                     fpplayer = FPStage.currentStage.GetPlayerInstance_FPPlayer();
 
                     fpplayers = GetFPPlayers();
-                    if (player != null)
-                    {
-                        MelonLogger.Msg("Trainer found a Player Object: ");
-                    }
+                    if (player != null) MelonLogger.Msg("Trainer found a Player Object: ");
                 }
 
                 if (stageHUD != null)
                 {
-                    
                 }
                 else
                 {
@@ -418,18 +398,15 @@ namespace Fp2Trainer
                     if (stageHUD != null)
                     {
                         positionDigits = new List<FPHudDigit>();
-                        for (int i = 0; i < 10; i++)
+                        for (var i = 0; i < 10; i++)
                         {
                             positionDigits.Add(stageHUD.AddComponent<FPHudDigit>());
                             if (i < 5)
-                            {
                                 positionDigits[i].transform.position = new Vector3(i * 16, 64,
                                     positionDigits[i].transform.position.z);
-                            }
                             else
-                            {
-                                positionDigits[i].transform.position = new Vector3(i*16 + 16, 64, positionDigits[i].transform.position.z);
-                            }
+                                positionDigits[i].transform.position = new Vector3(i * 16 + 16, 64,
+                                    positionDigits[i].transform.position.z);
                         }
                     }
                 }
@@ -445,114 +422,83 @@ namespace Fp2Trainer
                 }
                 */
 
-                
+
                 UpdateLevelEditingInfo();
                 //HandleTileEditControls();
-                
+
                 debugDisplay = "";
 
                 if (fpplayer != null)
                 {
                     UpdateDPS();
                     HandleWarpControls();
-                    
-                    if (timeoutShowWarpInfo > 0)
-                    {
-                        debugDisplay += warpMessage + "\n";
-                    }
-                    
+
+                    if (timeoutShowWarpInfo > 0) debugDisplay += warpMessage + "\n";
+
                     if (fptls != null)
                     {
-                        SceneNamePair snp = fptls.availableScenes[fptls.menuSelection]; 
-                        debugDisplay += "Warp to: " + fptls.menuSelection.ToString() + " | " + snp.name + "\n";
-                        debugDisplay += "Level Select Parent Pos: " + stageSelectMenu.transform.position.ToString() + "\n";
-                        GameObject tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
-                        debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position.ToString() + "\n";
-                        debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition.ToString() + "\n";
+                        var snp = fptls.availableScenes[fptls.menuSelection];
+                        debugDisplay += "Warp to: " + fptls.menuSelection + " | " + snp.name + "\n";
+                        debugDisplay += "Level Select Parent Pos: " + stageSelectMenu.transform.position + "\n";
+                        var tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
+                        debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position + "\n";
+                        debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition + "\n";
                     }
 
                     if (currentDataPage == DataPage.MOVEMENT)
                     {
                         debugDisplay += "Movement: \n";
-                        if (playerValuesToShow.Contains("Pos"))
-                        {
-                             debugDisplay += "Pos: " + fpplayer.position.ToString() + "\n";
-                        }
-                        if (playerValuesToShow.Contains("Vel"))
-                        {
-                            debugDisplay += "Vel: " + fpplayer.velocity.ToString() + "\n";
-                        }
+                        if (playerValuesToShow.Contains("Pos")) debugDisplay += "Pos: " + fpplayer.position + "\n";
+                        if (playerValuesToShow.Contains("Vel")) debugDisplay += "Vel: " + fpplayer.velocity + "\n";
                         if (playerValuesToShow.Contains("Magnitude"))
                         {
-                             debugDisplay += "Acceleration: " + fpplayer.acceleration.ToString() + "\n";
-                             debugDisplay += "Magnitude: " + fpplayer.velocity.magnitude.ToString() + "\n";
-                             debugDisplay += "Accel: " + fpplayer.acceleration.ToString() + "\n";
-                             debugDisplay += "Air Accel: " + fpplayer.airAceleration.ToString() + "\n";
-                             debugDisplay += "Air Drag: " + fpplayer.airDrag.ToString() + "\n";
+                            debugDisplay += "Acceleration: " + fpplayer.acceleration + "\n";
+                            debugDisplay += "Magnitude: " + fpplayer.velocity.magnitude + "\n";
+                            debugDisplay += "Accel: " + fpplayer.acceleration + "\n";
+                            debugDisplay += "Air Accel: " + fpplayer.airAceleration + "\n";
+                            debugDisplay += "Air Drag: " + fpplayer.airDrag + "\n";
                         }
+
                         if (playerValuesToShow.Contains("Ground Angle"))
-                        {
-                             debugDisplay += "Ground Angle: " + fpplayer.groundAngle.ToString() + "\n";
-                        }
+                            debugDisplay += "Ground Angle: " + fpplayer.groundAngle + "\n";
                         if (playerValuesToShow.Contains("Ground Velocity"))
-                        {
-                             debugDisplay += "Ground Velocity: " + fpplayer.groundVel.ToString() + "\n";
-                        }
+                            debugDisplay += "Ground Velocity: " + fpplayer.groundVel + "\n";
                         if (playerValuesToShow.Contains("Ceiling Angle"))
-                        {
-                             debugDisplay += "Ceiling Angle: " + fpplayer.ceilingAngle.ToString() + "\n";
-                        }
+                            debugDisplay += "Ceiling Angle: " + fpplayer.ceilingAngle + "\n";
                         if (playerValuesToShow.Contains("Sensor Angle"))
-                        {
-                             debugDisplay += "Sensor Angle: " + fpplayer.sensorAngle.ToString() + "\n";
-                        }
+                            debugDisplay += "Sensor Angle: " + fpplayer.sensorAngle + "\n";
                         if (playerValuesToShow.Contains("Gravity Angle"))
-                        {
-                             debugDisplay += "Gravity Angle: " + fpplayer.gravityAngle.ToString() + "\n";
-                        }
+                            debugDisplay += "Gravity Angle: " + fpplayer.gravityAngle + "\n";
                         if (playerValuesToShow.Contains("Gravity Strength"))
-                        {
-                             debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength.ToString() + "\n";
-                        }
+                            debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength + "\n";
                     }
                     else if (currentDataPage == DataPage.COMBAT)
                     {
                         debugDisplay += "Combat: \n";
-                        debugDisplay += "Health: " + fpplayer.health.ToString() + "\n";
-                        
-                        int tempDmgType = fpplayer.damageType;
-                        if (tempDmgType > 4)
-                        {
-                            tempDmgType = -1;
-                        }
+                        debugDisplay += "Health: " + fpplayer.health + "\n";
+
+                        var tempDmgType = fpplayer.damageType;
+                        if (tempDmgType > 4) tempDmgType = -1;
                         debugDisplay += "Hurt Damage Element: " + fpElementTypeNames[tempDmgType] + "\n";
 
                         if (nearestEnemy != null)
-                        {
-                            debugDisplay += nearestEnemy.name + " Health: " + nearestEnemy.health.ToString() + "\n";   
-                        }
+                            debugDisplay += nearestEnemy.name + " Health: " + nearestEnemy.health + "\n";
 
-                        if (dpsTracker != null)
-                        {
-                            debugDisplay += "DPS: " + dpsTracker.ToString() + "\n";
-                        }
+                        if (dpsTracker != null) debugDisplay += "DPS: " + dpsTracker + "\n";
 
-                        debugDisplay += "Energy: " + fpplayer.energy.ToString() + "\n";
-                        debugDisplay += "Energy Recover Current: " + fpplayer.energyRecoverRateCurrent.ToString() + "\n";
-                        debugDisplay += "Energy Recover: " + fpplayer.energyRecoverRate.ToString() + "\n";
-                        debugDisplay += "Faction: " + fpplayer.faction.ToString() + "\n";
-                        debugDisplay += "Attack Power: " + fpplayer.attackPower.ToString() + "\n";
-                        debugDisplay += "Attack Hitstun: " + fpplayer.attackHitstun.ToString() + "\n";
-                        debugDisplay += "Attack Knockback: " + fpplayer.attackKnockback.ToString() + "\n";
+                        debugDisplay += "Energy: " + fpplayer.energy + "\n";
+                        debugDisplay += "Energy Recover Current: " + fpplayer.energyRecoverRateCurrent + "\n";
+                        debugDisplay += "Energy Recover: " + fpplayer.energyRecoverRate + "\n";
+                        debugDisplay += "Faction: " + fpplayer.faction + "\n";
+                        debugDisplay += "Attack Power: " + fpplayer.attackPower + "\n";
+                        debugDisplay += "Attack Hitstun: " + fpplayer.attackHitstun + "\n";
+                        debugDisplay += "Attack Knockback: " + fpplayer.attackKnockback + "\n";
                         if (playerValuesToShow.Contains("InflictedDamage"))
-                        {
-                            debugDisplay += "InflictedDamage: " + fpplayer.damageInflicted.ToString() + "\n";
-                        }
-                        debugDisplay += "Guard Time: " + fpplayer.guardTime.ToString() + "\n";
-                        debugDisplay += "ATK NME INV TIM: " + fpplayer.attackEnemyInvTime.ToString() + "\n";
-                        debugDisplay += "Hit Stun: " + fpplayer.hitStun.ToString() + "\n";
-                        debugDisplay += "Invul Time: " + fpplayer.invincibilityTime.ToString() + "\n";
-                        
+                            debugDisplay += "InflictedDamage: " + fpplayer.damageInflicted + "\n";
+                        debugDisplay += "Guard Time: " + fpplayer.guardTime + "\n";
+                        debugDisplay += "ATK NME INV TIM: " + fpplayer.attackEnemyInvTime + "\n";
+                        debugDisplay += "Hit Stun: " + fpplayer.hitStun + "\n";
+                        debugDisplay += "Invul Time: " + fpplayer.invincibilityTime + "\n";
                     }
                     else if (currentDataPage == DataPage.DPS)
                     {
@@ -561,8 +507,8 @@ namespace Fp2Trainer
                         {
                             if (nearestEnemy != null && nearestEnemyPrevious != null)
                             {
-                                debugDisplay += "Previous Nearest Enemy: " + this.nearestEnemyPrevious.name + "\n";
-                                debugDisplay += "Prev Health: " + this.nearestEnemyPreviousHP.ToString() + "\n";
+                                debugDisplay += "Previous Nearest Enemy: " + nearestEnemyPrevious.name + "\n";
+                                debugDisplay += "Prev Health: " + nearestEnemyPreviousHP + "\n";
                             }
                             else if (nearestEnemy == null)
                             {
@@ -595,24 +541,23 @@ namespace Fp2Trainer
                     else if (currentDataPage == DataPage.BATTLESPHERE)
                     {
                         debugDisplay += "Battlesphere: \n";
-                        int tempDmgType = -1;
-                        foreach (FPPlayer mp_fpplayer in fpplayers)
+                        var tempDmgType = -1;
+                        foreach (var mp_fpplayer in fpplayers)
                         {
-                            debugDisplay += mp_fpplayer.name + " Health: " + mp_fpplayer.health.ToString() 
-                                            + " / " + mp_fpplayer.healthMax.ToString() + "\n";
-                            debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy.ToString() + "\n";
-                            
+                            debugDisplay += mp_fpplayer.name + " Health: " + mp_fpplayer.health
+                                            + " / " + mp_fpplayer.healthMax + "\n";
+                            debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy + "\n";
+
                             tempDmgType = mp_fpplayer.damageType;
-                            if (tempDmgType > 4)
-                            {
-                                tempDmgType = -1;
-                            }
-                            debugDisplay += mp_fpplayer.name + " Last Hurt Element: " + fpElementTypeNames[tempDmgType] + "\n";
+                            if (tempDmgType > 4) tempDmgType = -1;
+                            debugDisplay += mp_fpplayer.name + " Last Hurt Element: " +
+                                            fpElementTypeNames[tempDmgType] + "\n";
                             //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
                             //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
-                            debugDisplay += mp_fpplayer.name + " Attack Power: " + mp_fpplayer.attackPower.ToString() + "\n";
-                            debugDisplay += mp_fpplayer.name + " Attack Hitstun: " + mp_fpplayer.attackHitstun.ToString() + "\n";
-                            debugDisplay += mp_fpplayer.name + " Attack Knockback: " + mp_fpplayer.attackKnockback.ToString() + "\n";
+                            debugDisplay += mp_fpplayer.name + " Attack Power: " + mp_fpplayer.attackPower + "\n";
+                            debugDisplay += mp_fpplayer.name + " Attack Hitstun: " + mp_fpplayer.attackHitstun + "\n";
+                            debugDisplay += mp_fpplayer.name + " Attack Knockback: " + mp_fpplayer.attackKnockback +
+                                            "\n";
                         }
                     }
                     else if (currentDataPage == DataPage.BOSS)
@@ -627,71 +572,53 @@ namespace Fp2Trainer
                                 break;
                             }
 
-                            if (bh.targetBoss != null)
-                            {
-                                fpEnemies.Add(bh.targetBoss);
-                            }
+                            if (bh.targetBoss != null) fpEnemies.Add(bh.targetBoss);
                         }
 
                         if (fpEnemies.Count > 0)
-                        {
-                            foreach (FPBaseEnemy ene in fpEnemies)
+                            foreach (var ene in fpEnemies)
                             {
-                                if (ene == null)
-                                {
-                                    continue;
-                                }
+                                if (ene == null) continue;
 
-                                debugDisplay += ene.name + " Health: " + ene.health.ToString() + "\n";
-                                debugDisplay += ene.name + " Freeze Timer: " + ene.freezeTimer.ToString() + "\n";
+                                debugDisplay += ene.name + " Health: " + ene.health + "\n";
+                                debugDisplay += ene.name + " Freeze Timer: " + ene.freezeTimer + "\n";
                                 //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
                                 //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
-                                debugDisplay += ene.name + " Is Harmless: " + ene.isHarmless.ToString() + "\n";
-                                debugDisplay += ene.name + " Cannot Be Killed: " + ene.cannotBeKilled.ToString() + "\n";
-                                debugDisplay += ene.name + " Cannot Be Frozen: " + ene.cannotBeFrozen.ToString() + "\n";
+                                debugDisplay += ene.name + " Is Harmless: " + ene.isHarmless + "\n";
+                                debugDisplay += ene.name + " Cannot Be Killed: " + ene.cannotBeKilled + "\n";
+                                debugDisplay += ene.name + " Cannot Be Frozen: " + ene.cannotBeFrozen + "\n";
                                 debugDisplay += ene.name + " Last Received Damage: " +
-                                                ene.lastReceivedDamage.ToString() + "\n";
+                                                ene.lastReceivedDamage + "\n";
                                 debugDisplay += ene.name + " LRD (Unmodified): " +
-                                                ene.lastReceivedDamageUnmodified.ToString() + "\n";
+                                                ene.lastReceivedDamageUnmodified + "\n";
                             }
-                        }
-                        else 
-                        {
-                            debugDisplay += "Unable to find relevant enemies.\nTry switching to this view while the healthbar is visible.\n";
-                        }
+                        else
+                            debugDisplay +=
+                                "Unable to find relevant enemies.\nTry switching to this view while the healthbar is visible.\n";
                     }
                 }
 
-                    
+
                 if (goFancyTextPosition != null)
-                {
                     UpdateFancyText();
-                }
                 else
-                {
                     CreateFancyTextObjects();
-                }
             }
 
             catch (Exception e)
             {
-                Fp2Trainer.Log("Trainer Error During Update: " + e.Message + "(" + e.InnerException?.Message + ") @@" + e.StackTrace);
+                Log("Trainer Error During Update: " + e.Message + "(" + e.InnerException?.Message + ") @@" +
+                    e.StackTrace);
             }
         }
 
         public void UpdateDPS()
         {
-            if (dpsTracker != null)
-            {
-                dpsTracker.Update();
-            }
+            if (dpsTracker != null) dpsTracker.Update();
 
             UpdateDPSNearestEnemy();
 
-            if (currentDataPage == DataPage.DPS_ALL)
-            {
-                UpdateDPSALLEnemies();
-            }
+            if (currentDataPage == DataPage.DPS_ALL) UpdateDPSALLEnemies();
         }
 
         private void UpdateDPSNearestEnemy()
@@ -700,7 +627,7 @@ namespace Fp2Trainer
             if (FPStage.currentStage != null)
             {
                 //var activeEnemies = FPStage.GetActiveEnemies();
-                this.nearestEnemy = FPStage.FindNearestEnemy(fpplayer, 2000f);
+                nearestEnemy = FPStage.FindNearestEnemy(fpplayer, 2000f);
                 if (nearestEnemy != null)
                 {
                     if (nearestEnemy == nearestEnemyPrevious
@@ -729,24 +656,17 @@ namespace Fp2Trainer
                 var tempCachedEnemyList = FPStage.GetActiveEnemies();
                 InitializeActiveEnemyList();
                 PopulateTrainerActiveEnemyList(tempCachedEnemyList);
-                
-                if (allActiveEnemiesHealth != null 
-                    && allActiveEnemiesHealthPrevious != null 
+
+                if (allActiveEnemiesHealth != null
+                    && allActiveEnemiesHealthPrevious != null
                     && allActiveEnemiesHealth.Count > 0)
-                {
                     foreach (var ene in allActiveEnemiesHealth)
-                    {
                         if (allActiveEnemiesHealthPrevious.ContainsKey(ene.Key))
                         {
-                            float dmg = allActiveEnemiesHealthPrevious[ene.Key] - ene.Value;
-                            if (dmg > 0)
-                            {
-                                dpsTracker.AddDamage(dmg, allActiveEnemiesNames[ene.Key]);
-                            }
+                            var dmg = allActiveEnemiesHealthPrevious[ene.Key] - ene.Value;
+                            if (dmg > 0) dpsTracker.AddDamage(dmg, allActiveEnemiesNames[ene.Key]);
                         }
-                    }
-                }
-                
+
                 allActiveEnemiesHealthPrevious = new Dictionary<int, float>(allActiveEnemiesHealth);
             }
         }
@@ -765,7 +685,7 @@ namespace Fp2Trainer
                 allActiveEnemiesNames.Clear();
             }
             */
-            
+
             allActiveEnemiesHealth = new Dictionary<int, float>();
             allActiveEnemiesNames = new Dictionary<int, string>();
         }
@@ -773,7 +693,6 @@ namespace Fp2Trainer
         private void PopulateTrainerActiveEnemyList(List<FPBaseEnemy> tempCachedEnemyList)
         {
             foreach (var ene in tempCachedEnemyList)
-            {
                 try
                 {
                     allActiveEnemiesHealth.Add(ene.objectID, ene.health);
@@ -784,16 +703,11 @@ namespace Fp2Trainer
                     Log(e.ToString());
                     Log(e.StackTrace);
                 }
-                
-            }
         }
 
         private List<FPPlayer> GetFPPlayers()
         {
-            if (FPStage.player != null && FPStage.player.Length > 0)
-            {
-                return new List<FPPlayer>(FPStage.player);
-            }
+            if (FPStage.player != null && FPStage.player.Length > 0) return new List<FPPlayer>(FPStage.player);
 
             return null;
         }
@@ -802,16 +716,11 @@ namespace Fp2Trainer
         {
             GameObject playerGameObject = null;
             if (FPStage.player == null) return playerGameObject;
-            
-            MelonLogger.Msg("Number of Stage Players: " + FPStage.player.Length.ToString());
+
+            MelonLogger.Msg("Number of Stage Players: " + FPStage.player.Length);
             if (FPStage.currentStage != null && FPStage.currentStage.GetPlayerInstance_FPPlayer() != null)
-            {
                 playerGameObject = FPStage.currentStage.GetPlayerInstance_FPPlayer().gameObject;
-            }
-            else if (FPStage.player.Length > 0)
-            {
-                playerGameObject = FPStage.player[0].gameObject;
-            }
+            else if (FPStage.player.Length > 0) playerGameObject = FPStage.player[0].gameObject;
 
             return playerGameObject;
         }
@@ -822,61 +731,62 @@ namespace Fp2Trainer
             if (Input.GetKeyUp(KeyCode.F9))
             {
                 Log("F9 -> Load Debug Room");
-                UnityEngine.SceneManagement.SceneManager.LoadScene("StageDebugMenu", LoadSceneMode.Additive);
+                SceneManager.LoadScene("StageDebugMenu", LoadSceneMode.Additive);
             }
-            
+
             if (Input.GetKeyUp(KeyCode.F8))
             {
                 Log("F8 -> Main Menu");
                 //UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
                 GoToMainMenuNoLogos();
             }
+
             if (Input.GetKeyUp(KeyCode.F7))
             {
                 Log("F7 -> Load Asset Bundles");
                 LoadAssetBundlesFromModsFolder();
             }
+
             if (Input.GetKeyUp(KeyCode.F6))
             {
                 Log("F6 -> Level Select");
-                List<SceneNamePair> availableScenes = new List<SceneNamePair>();
-                int i = 0;
-                for (i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) 
+                var availableScenes = new List<SceneNamePair>();
+                var i = 0;
+                for (i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
                 {
-                    string sceneName =
-                        System.IO.Path.GetFileNameWithoutExtension(UnityEngine.SceneManagement.SceneUtility
+                    var sceneName =
+                        Path.GetFileNameWithoutExtension(SceneUtility
                             .GetScenePathByBuildIndex(i));
-                    availableScenes.Add(new SceneNamePair(UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(i), sceneName));
+                    availableScenes.Add(new SceneNamePair(SceneManager.GetSceneByBuildIndex(i), sceneName));
                 }
 
                 for (i = 0; i < loadedAssetBundles.Count; i++)
-                {
-                    foreach (string scenePath in loadedAssetBundles[i].GetAllScenePaths()) 
+                    foreach (var scenePath in loadedAssetBundles[i].GetAllScenePaths())
                     {
-                        var sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
-                        availableScenes.Add(new SceneNamePair(UnityEngine.SceneManagement.SceneManager.GetSceneByPath(scenePath), sceneName, scenePath));
+                        var sceneName = Path.GetFileNameWithoutExtension(scenePath);
+                        availableScenes.Add(new SceneNamePair(SceneManager.GetSceneByPath(scenePath), sceneName,
+                            scenePath));
                     }
-                }
 
-                for (i = 0; i < availableScenes.Count; i++)
-                {
-                    Log(i + " | " + availableScenes[i].name);
-                }
+                for (i = 0; i < availableScenes.Count; i++) Log(i + " | " + availableScenes[i].name);
 
                 ShowLevelSelect(availableScenes);
-                this.pauseMenu.gameObject.SetActive(false);
+                pauseMenu.gameObject.SetActive(false);
                 //GameObject.Destroy(this.pauseMenu);
             }
+
             if (Input.GetKeyUp(KeyCode.F5))
             {
                 Log("F5 -> Toggle Level Select Menu Visibility");
                 ToggleLevelSelectVisibility();
             }
+
             if (Input.GetKeyUp(KeyCode.F4))
             {
                 ToggleVariableDisplay();
                 Log("F4 -> Toggle DataPage (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
             }
+
             if (Input.GetKeyUp(KeyCode.F3))
             {
                 Log("F3 -> Load last located scene: ");
@@ -890,13 +800,14 @@ namespace Fp2Trainer
                 {
                     Log("...But the Level Selector hasn't been created yet... (Press F6?)");
                 }
-
             }
+
             if (Input.GetKeyUp(KeyCode.F2))
             {
                 Log("F2 -> Simulate DPS Damage Add: ");
                 dpsTracker.AddDamage(5, "FP2 Trainer HotKey");
             }
+
             if (Input.GetKeyUp(KeyCode.F1))
             {
                 Log("F1 -> Test Damage Number: ");
@@ -907,12 +818,12 @@ namespace Fp2Trainer
                     if (fpcam != null)
                     {
                         Log("2");
-                        Vector3 relativePos = new Vector3(fpplayer.position.x - fpcam.xpos,
+                        var relativePos = new Vector3(fpplayer.position.x - fpcam.xpos,
                             fpplayer.position.y - fpcam.ypos, fpplayer.gameObject.transform.position.z);
                         Log("3");
                         Log(relativePos.ToString());
                         Log("4");
-                        GameObject goDmgTest = FP2TrainerDamageNumber.CreateDMGNumberObject(relativePos, 5);
+                        var goDmgTest = FP2TrainerDamageNumber.CreateDMGNumberObject(relativePos, 5);
                         Log("5");
                     }
                 }
@@ -920,41 +831,36 @@ namespace Fp2Trainer
                 {
                     Log("No player???");
                 }
-
             }
+
             if (Input.GetKeyUp(KeyCode.KeypadPlus)
                 || Input.GetKeyUp(KeyCode.Plus))
             {
                 Log("Numpad Plus -> Increase Font Size: ");
-                if (textmeshFancyTextPosition != null)
-                {
-                    textmeshFancyTextPosition.characterSize++;
-                }
+                if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize++;
             }
-            if (Input.GetKeyUp(KeyCode.KeypadMinus) 
+
+            if (Input.GetKeyUp(KeyCode.KeypadMinus)
                 || Input.GetKeyUp(KeyCode.Minus))
             {
                 Log("Numpad Minus -> Decrease Font Size: ");
-                if (textmeshFancyTextPosition != null)
-                {
-                    textmeshFancyTextPosition.characterSize--;
-                }
+                if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize--;
             }
-            
-            
+
+
             if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.special))
             {
                 fpplayer.position = new Vector2(warpPoint.x, warpPoint.y);
-                Log("Hold Guard + Tap Special -> Goto Warp: " + warpPoint.ToString());
-                warpMessage = "Warping to " + warpPoint.ToString();
+                Log("Hold Guard + Tap Special -> Goto Warp: " + warpPoint);
+                warpMessage = "Warping to " + warpPoint;
                 timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
-            
+
             if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.jump))
             {
                 warpPoint = new Vector2(fpplayer.position.x, fpplayer.position.y);
-                Log("Hold Guard + Tap Jump -> Set Warp: "  + warpPoint.ToString());
-                warpMessage = "Set warp at " + warpPoint.ToString();
+                Log("Hold Guard + Tap Jump -> Set Warp: " + warpPoint);
+                warpMessage = "Set warp at " + warpPoint;
                 timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
         }
@@ -962,42 +868,26 @@ namespace Fp2Trainer
         private void ToggleVariableDisplay()
         {
             if (currentDataPage == DataPage.NONE)
-            {
                 currentDataPage = DataPage.MOVEMENT;
-            }
             else
-            {
-                currentDataPage++;   
-            }
-            
+                currentDataPage++;
+
             // After incrementing.
             if (currentDataPage == DataPage.NONE)
-            {
                 showVarString = false;
-            }
             else
-            {
                 showVarString = true;
-            }
 
-            if (currentDataPage == DataPage.BOSS)
-            {
-                ReacquireBossHuds();
-            }
-
+            if (currentDataPage == DataPage.BOSS) ReacquireBossHuds();
         }
 
         public void ReacquireBossHuds()
         {
-            bossHuds = new List<FPBossHud>(GameObject.FindObjectsOfType<FPBossHud>());
+            bossHuds = new List<FPBossHud>(Object.FindObjectsOfType<FPBossHud>());
             fpEnemies = new List<FPBaseEnemy>();
-            foreach (FPBossHud fpbh in bossHuds)
-            {
+            foreach (var fpbh in bossHuds)
                 if (fpbh != null && fpbh.targetBoss != null)
-                {
                     fpEnemies.Add(fpbh.targetBoss);
-                }
-            }
         }
 
         public void LoadAssetBundlesFromModsFolder()
@@ -1019,7 +909,7 @@ namespace Fp2Trainer
                             "and is probably not an asset bundle.");
                         continue;
                     }
-                    
+
                     var currentAB = AssetBundle.LoadFromFile(abp);
 
                     if (currentAB == null)
@@ -1027,13 +917,11 @@ namespace Fp2Trainer
                         Log("Failed to load AssetBundle. Bundle may already be loaded, or the file may be corrupt.");
                         continue;
                     }
-                    else
-                    {
-                        //currentAB.LoadAllAssets(); //Uncomment if the scenes are still unloadable?
-                    }
 
+                    //currentAB.LoadAllAssets(); //Uncomment if the scenes are still unloadable?
                     loadedAssetBundles.Add(currentAB);
-                    Log("AssetBundle loaded successfully as loadedAssetBundles[" + (loadedAssetBundles.Count - 1).ToString() + "]:");
+                    Log("AssetBundle loaded successfully as loadedAssetBundles[" + (loadedAssetBundles.Count - 1) +
+                        "]:");
                     Log("--------");
                     Log(currentAB.GetAllScenePaths().ToString());
                 }
@@ -1043,18 +931,14 @@ namespace Fp2Trainer
                 Log("Null reference exception when trying to load asset bundles for modding. Canceling.");
                 Log(e.StackTrace);
             }
-
-            
         }
 
         public void ToggleLevelSelectVisibility()
         {
             if (stageSelectMenu != null)
-            {
                 stageSelectMenu.SetActive(!stageSelectMenu.activeInHierarchy);
-                
-                // finna delete
-                /*
+            // finna delete
+            /*
                 var ssm = stageSelectMenu.GetComponent<FPPauseMenu>();
                 fptls = stageSelectMenu.AddComponent<FPTrainerLevelSelect>();
                 if (ssm != null)
@@ -1066,11 +950,8 @@ namespace Fp2Trainer
                     UnityEngine.Object.Destroy(ssm);
                 }
                 */
-            }
             else
-            {
                 Log("Attempted to toggle Level Select Visibility while it is not accessible.");
-            }
         }
 
         private void ShowLevelSelect(List<SceneNamePair> availableScenes)
@@ -1079,19 +960,16 @@ namespace Fp2Trainer
             {
                 Log("Level Select.");
                 //stageSelectMenu.SetActive(true);
-                
+
                 fptls = stageSelectMenu.AddComponent<FPTrainerLevelSelect>();
                 fptls.availableScenes = availableScenes;
                 GameObject goButton = null;
 
-                GameObject tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
-                if (tempGoButton != null)
-                {
-                    goButton = tempGoButton;
-                }
+                var tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
+                if (tempGoButton != null) goButton = tempGoButton;
 
                 int i;
-                
+
                 fptls.pfButtons = new GameObject[availableScenes.Count];
 
                 GameObject currentButton = null;
@@ -1099,9 +977,9 @@ namespace Fp2Trainer
                 MenuText mt = null;
                 for (i = 0; i < availableScenes.Count; i++)
                 {
-                    currentButton = GameObject.Instantiate(goButton, stageSelectMenu.transform);
-                    currentButton.transform.localPosition = new Vector3(0, -32 - (32 * i), 0);
-                    
+                    currentButton = Object.Instantiate(goButton, stageSelectMenu.transform);
+                    currentButton.transform.localPosition = new Vector3(0, -32 - 32 * i, 0);
+
                     tm = currentButton.GetComponent<TextMesh>();
                     mt = currentButton.GetComponent<MenuText>();
                     fptls.pfButtons.SetValue(currentButton, i);
@@ -1112,7 +990,7 @@ namespace Fp2Trainer
                     }
                 }
 
-                Log("fptls button count: " + fptls.pfButtons.Length.ToString());
+                Log("fptls button count: " + fptls.pfButtons.Length);
             }
             else
             {
@@ -1124,15 +1002,15 @@ namespace Fp2Trainer
 
         private void PauseGameWithoutPauseMenu()
         {
-            FPStage.UpdateMenuInput(pauseButtonOnly: false);
-            FPStage.SetStageRunning(pauseFlag: false);
+            FPStage.UpdateMenuInput();
+            FPStage.SetStageRunning(false);
             FPAudio.ResumeSfx();
             FPAudio.PlayMenuSfx(2);
         }
 
         public void PerformStageTransition()
         {
-            FPScreenTransition component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
+            var component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
             component.transitionType = FPTransitionTypes.LOCAL_WIPE;
             component.transitionSpeed = 48f;
             component.SetTransitionColor(0f, 0f, 0f);
@@ -1161,27 +1039,25 @@ namespace Fp2Trainer
             DrawLevelEditingInfo();
         }
 
-        void WriteSceneObjectsToFile()
+        private void WriteSceneObjectsToFile()
         {
             if (!warped)
             {
                 warped = true;
 
-                string allObjects = "";
-                UnityEngine.Object[] objs = UnityEngine.GameObject.FindObjectsOfType<GameObject>();
+                var allObjects = "";
+                Object[] objs = Object.FindObjectsOfType<GameObject>();
 
-                foreach (UnityEngine.Object obj in objs)
-                {
-                    allObjects += obj.name + "\r\n";
-                }
+                foreach (var obj in objs) allObjects += obj.name + "\r\n";
                 // UMFGUI.AddConsoleText(allObjects);
 
-                string fileName = "SceneObjects.txt";
+                var fileName = "SceneObjects.txt";
                 if (File.Exists(fileName))
                 {
                     Debug.Log(fileName + " already exists.");
                     return;
                 }
+
                 var sr = File.CreateText(fileName);
                 sr.WriteLine(allObjects);
                 sr.Close();
@@ -1192,19 +1068,16 @@ namespace Fp2Trainer
             }
         }
 
-        void WriteAllAudioclipsToFile()
+        private void WriteAllAudioclipsToFile()
         {
             if (!warped)
             {
                 warped = true;
 
-                string allAudioClips = "";
-                UnityEngine.Object[] acs = Resources.FindObjectsOfTypeAll<AudioClip>();
+                var allAudioClips = "";
+                Object[] acs = Resources.FindObjectsOfTypeAll<AudioClip>();
 
-                foreach (AudioClip ac in acs)
-                {
-                    allAudioClips += ac.name + "\r\n";
-                }
+                foreach (AudioClip ac in acs) allAudioClips += ac.name + "\r\n";
                 // UMFGUI.AddConsoleText(allObjects);
 
                 var fileName = "AllAvailableAudioClips.txt";
@@ -1213,6 +1086,7 @@ namespace Fp2Trainer
                     Debug.Log(fileName + " already exists.");
                     return;
                 }
+
                 var sr = File.CreateText(fileName);
                 sr.WriteLine(allAudioClips);
                 sr.Close();
@@ -1225,7 +1099,6 @@ namespace Fp2Trainer
 
         public void UpdateLevelEditingInfo()
         {
-            
         }
 
         private bool CrosshairIsValid()
@@ -1235,7 +1108,6 @@ namespace Fp2Trainer
 
         public void DrawLevelEditingInfo()
         {
-            
         }
 
         public void SetInputHandlerLevelEditorKeys()
@@ -1247,15 +1119,8 @@ namespace Fp2Trainer
             if (GetKeyPressed(inputLETileLayer.Value))
             {
                 // Increase and decrease layer by tapping the copy and past buttons while this is held.
-                if (GetKeyDown(inputLETileCopy.Value))
-                {
-                    selectedTileLayer += 1;
-                }
-                if (GetKeyDown(inputLETilePaste.Value))
-                {
-                    selectedTileLayer -= 1;
-                }
-
+                if (GetKeyDown(inputLETileCopy.Value)) selectedTileLayer += 1;
+                if (GetKeyDown(inputLETilePaste.Value)) selectedTileLayer -= 1;
             }
             else
             {
@@ -1271,6 +1136,7 @@ namespace Fp2Trainer
                     }
                     */
                 }
+
                 if (GetKeyDown(inputLETilePaste.Value))
                 {
                     /*
@@ -1283,15 +1149,13 @@ namespace Fp2Trainer
                     */
                 }
             }
-
-
         }
 
         public bool GetKeyPressed(string s)
         {
             try
             {
-                String sTrim = s.Split('/')[1];
+                var sTrim = s.Split('/')[1];
                 //if (inputHandler != null)
                 {
                     return false;
@@ -1314,6 +1178,7 @@ namespace Fp2Trainer
                 // I should probably do a log here.
                 MelonLogger.Msg(e.Message);
             }
+
             return false;
         }
 
@@ -1321,11 +1186,11 @@ namespace Fp2Trainer
         {
             try
             {
-                String sTrim = s.Split('/')[1];
+                var sTrim = s.Split('/')[1];
                 //if (inputHandler != null)
                 {
                     return false;
-                    
+
                     /*
                     if (s.Contains("<Mouse>"))
                     {
@@ -1346,23 +1211,21 @@ namespace Fp2Trainer
                 // I should probably do a log here.
                 MelonLogger.Msg(e.Message);
             }
+
             return false;
         }
 
         public string GetCopiedTileName()
         {
-            string result = "NULL";
+            var result = "NULL";
             //f (copyTile != null) { result = copyTile.name; }
             return result;
         }
 
         public GameObject GetStageHUD()
         {
-            GameObject goHud = GameObject.Find("Stage HUD");
-            if (goHud)
-            {
-                MelonLogger.Msg("Found a Stage HUD.");
-            }
+            var goHud = GameObject.Find("Stage HUD");
+            if (goHud) MelonLogger.Msg("Found a Stage HUD.");
             //GameObject goPauseHud = GameObject.Find("Hud Pause Menu");
 
             return goHud;
@@ -1370,7 +1233,7 @@ namespace Fp2Trainer
 
         public void SkipBootIntros()
         {
-            var splash = GameObject.FindObjectOfType<MenuSplashScreen>();
+            var splash = Object.FindObjectOfType<MenuSplashScreen>();
             /*
             if (splash != null)
             {
@@ -1381,46 +1244,56 @@ namespace Fp2Trainer
 
             if (!introSkipped)
             {
-                GoToMainMenuNoLogos();
+                string level = inputLETileCopy.Value;
+                if (level != null && !level.Equals(""))
+                {
+                    GoToMainMenuNoLogos();
+                }
+                else
+                {
+                    GoToCustomBootLevel(level);
+                }
             }
 
-            return; //This is buggy AF and I just want it off for now.
+                
         }
 
         public static void GoToMainMenuNoLogos()
         {
-            FPScreenTransition component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
+            GoToCustomBootLevel("MainMenu");
+        }
+        
+        public static void GoToCustomBootLevel(string level)
+        {
+            var component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
             if (component != null)
             {
                 component.transitionType = FPTransitionTypes.WIPE;
                 component.transitionSpeed = 48f;
-                component.sceneToLoad = "MainMenu";
+                component.sceneToLoad = level;
                 FPSaveManager.menuToLoad = 2; // This is how we skip the intros.
-                
+
                 introSkipped = true;
             }
         }
 
         private IEnumerator LoadAsyncScene()
         {
-            AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneToLoad, LoadSceneMode.Single);
-            while (!asyncLoad.isDone)
-            {
-                yield return null;
-            }
-        }
-        
-        public static void SetFP2TDeltaTime(float dt)
-        {
-            Fp2Trainer.fp2tDeltaTime = dt;
-        }
-        
-        public static float GetFP2TDeltaTime()
-        {
-            return Fp2Trainer.fp2tDeltaTime;
+            var asyncLoad = SceneManager.LoadSceneAsync(sceneToLoad, LoadSceneMode.Single);
+            while (!asyncLoad.isDone) yield return null;
         }
 
-        public static void Log(String txt)
+        public static void SetFP2TDeltaTime(float dt)
+        {
+            fp2tDeltaTime = dt;
+        }
+
+        public static float GetFP2TDeltaTime()
+        {
+            return fp2tDeltaTime;
+        }
+
+        public static void Log(string txt)
         {
             MelonLogger.Msg(txt);
         }
