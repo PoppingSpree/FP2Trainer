@@ -83,6 +83,7 @@ namespace Fp2Trainer
                 //component.sceneToLoad = GetSceneNameByIndex(menuSelection);
                 global::Fp2Trainer.Fp2Trainer.Log("Attempting to load scene: "
                                                   + component.sceneToLoad + " => " 
+                                                  + this.availableScenes[menuSelection].name + " => " 
                                                   + this.availableScenes[menuSelection].path);
                 
                 global::Fp2Trainer.Fp2Trainer.Log("Can Load?: "
