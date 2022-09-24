@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
+    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -12,7 +12,7 @@
         <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <Deterministic>true</Deterministic>
-        <TargetFrameworkProfile/>
+        <TargetFrameworkProfile />
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <DebugSymbols>false</DebugSymbols>
@@ -34,7 +34,7 @@
         <Reference Include="MelonLoader">
             <HintPath>E:\SteamLibrary\steamapps\common\Freedom Planet 2\MelonLoader\MelonLoader.dll</HintPath>
         </Reference>
-        <Reference Include="System"/>
+        <Reference Include="System" />
         <Reference Include="Unity.2D.PixelPerfect">
             <HintPath>..\..\..\..\..\Games\SAGE 2021\Starbuster Demo 2021 V1.07\UsefulReferencesForMods\Unity.2D.PixelPerfect.dll</HintPath>
         </Reference>
@@ -43,16 +43,21 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="FP2TrainerDamageNumber.cs"/>
-        <Compile Include="FP2TrainerDPSTracker.cs"/>
-        <Compile Include="FP2TrainerDTTracker.cs"/>
-        <Compile Include="FPTrainerLevelSelect.cs"/>
-        <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="FP2Trainer.cs"/>
-        <Compile Include="SceneNamePair.cs"/>
+        <Compile Include="FP2TrainerDamageNumber.cs" />
+        <Compile Include="FP2TrainerDPSTracker.cs" />
+        <Compile Include="FP2TrainerDTTracker.cs" />
+        <Compile Include="FPTrainerLevelSelect.cs" />
+        <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="FP2Trainer.cs" />
+        <Compile Include="SceneNamePair.cs" />
     </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+    <ItemGroup>
+      <Content Include="LICENSE.md" />
+      <Content Include="NOTICE.txt" />
+      <Content Include="README.md" />
+    </ItemGroup>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <Target Name="AfterBuild">
-        <Copy SourceFiles="Output\FP2Trainer.dll" DestinationFolder="E:\SteamLibrary\steamapps\common\Freedom Planet 2\Mods"/>
+        <Copy SourceFiles="Output\FP2Trainer.dll" DestinationFolder="E:\SteamLibrary\steamapps\common\Freedom Planet 2\Mods" />
     </Target>
 </Project>
