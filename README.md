@@ -11,10 +11,17 @@ Includes features such as:
 ### HOW TO INSTALL:
 
 1: Get Melon Loader https://github.com/LavaGang/MelonLoader/releases
-2: Install Melon Loader into your copy of FP2. (You may want to copy your game folder and mod the copy instead because updates are coming fast right now and mods will break.)
-3: Add the FP2Trainer.dll to your Mods folder in your modded copy of the game. (If the Mods folder didn't appear when you installed Melon Loader, try running the game again, close it, and then check if the folder has been generated.)
-4: If the version of the trainer you downloaded includes an AssetBundles folder, that entire folder and its contents goes within the Mods folder as a subfolder. <FP2InstallDir/Mods/AssetBundles/>
-5: Launch the game. After the first set of intros, the game should immediately skip to the MainMenu (Or a level of your choice, see below). Once in-level, you will see the data viewer on screen. Good luck, and happy training!
+
+2: Get FP2Trainer.dll https://github.com/PoppingSpree/FP2Trainer/releases/tag/FP2Trainer-Release
+
+3: Install Melon Loader into your copy of FP2. (You may want to copy your game folder and mod the copy instead because updates are coming fast right now and mods will break.)
+
+4: Add the FP2Trainer.dll to your Mods folder in your modded copy of the game. (If the Mods folder didn't appear when you installed Melon Loader, try running the game again, close it, and then check if the folder has been generated.)
+
+5: If the version of the trainer you downloaded includes an AssetBundles folder, that entire folder and its contents goes within the Mods folder as a subfolder. <FP2InstallDir/Mods/AssetBundles/>
+
+6: Launch the game. After the first set of intros, the game should immediately skip to the MainMenu (Or a level of your choice, see below). Once in-level, you will see the data viewer on screen. Good luck, and happy training!
+
 
 ### HOW TO USE:
 
