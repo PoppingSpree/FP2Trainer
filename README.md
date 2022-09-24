@@ -57,19 +57,28 @@ If you just want an invincible training dummy to test DPS on, set it on DPS All 
 
 ### QUESTIONS AND ANSWERS
 Q: I encountered a bug in FP2 while using this trainer. Should I report it?
+
 A: You can let me know about bugs you encounter if you believe they are trainer related and I may look into it. 
 If you think you've found a bug native to FP2 itself, you should try to reproduce the behavior with MelonLoader completely disabled before reporting it as a bug to GalaxyTrail to prevent wasting their time on bugs they're not responsible for.
 
+
 Q: Is there a quick way to disable mods when I want to do a run?
+
 A: Close the game, temporarily rename the version.dll that from MelonLoader to something else (like version.dll.off), then relaunch the game.
 
+
 Q: The game seems to be crashing more often when I have this tool installed. What happened?
+
 A: Honestly, I have no clue. Crashes more often on me too. Most likely this is an error in my own code. If you happen to have ideas on how to fix it, feel free to report the situation of the crash to me, or to code up a pull request and submit to me.
 
+
 Q: Why are there 6 listings for position and speed in the Battlesphere view?
+
 A: There's 5 slots for players in this system that seem to never be used and I have no flipping clue what's up with that.
 
+
 Q: Does this mod contain malware?
+
 A: If you got it from the PoppingSpree Github releases, it __shouldn't__ but there is always the chance that files are compromised. You should always run your own antivirus scans on mods and AssetBundles to be sure. 
 
 ### LICENSING & CREDITS:
