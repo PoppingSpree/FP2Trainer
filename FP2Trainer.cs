@@ -22,7 +22,7 @@ namespace Fp2Trainer
 
         public const string Author = "Catssandra Ann"; // Author of the Mod.  (MUST BE SET)
         public const string Company = null; // Company that made the Mod.  (Set as null if none)
-        public const string Version = "0.4.0"; // Version of the Mod.  (MUST BE SET)
+        public const string Version = "0.5.0"; // Version of the Mod.  (MUST BE SET)
         public const string DownloadLink = null; // Download Link for the Mod.  (Set as null if none)
     }
 
@@ -36,6 +36,7 @@ namespace Fp2Trainer
             DPS_ALL,
             BATTLESPHERE,
             BOSS,
+            NO_CLIP,
             NONE
         }
 
@@ -43,7 +44,8 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> enableWarps;
         public static MelonPreferences_Entry<bool> showDebug;
         public static MelonPreferences_Entry<bool> showLevelEditDebug;
-
+        public static MelonPreferences_Entry<bool> enableNoClip;
+        
         public static MelonPreferences_Entry<string> BootupLevel;
 
         public static MelonPreferences_Entry<string> inputLETileCopy;
@@ -64,6 +66,12 @@ namespace Fp2Trainer
         public Dictionary<int, float> allActiveEnemiesHealthPrevious;
         public Dictionary<int, string> allActiveEnemiesNames;
         private List<FPBossHud> bossHuds;
+
+        public bool noClip;
+        public float noClipMoveSpeed = 30f;
+        public Vector2 noClipStartPos = Vector2.zero;
+        public int noClipCollisionLayer = -999;
+        public float noClipGravityStrength = -0.7f;
 
         private readonly GameObject crosshair = null;
 
@@ -167,6 +175,7 @@ namespace Fp2Trainer
             enableWarps = fp2Trainer.CreateEntry("enableWarps", true);
             BootupLevel = fp2Trainer.CreateEntry("bootupLevel", "ZaoLand");
             showDebug = fp2Trainer.CreateEntry("showDebug", true);
+            enableNoClip = fp2Trainer.CreateEntry("enableNoClip", false);
             showLevelEditDebug = fp2Trainer.CreateEntry("showLevelEditDebug", true);
             inputLETileCopy = fp2Trainer.CreateEntry("inputLETileCopy", "<Gamepad>/buttonNorth");
             inputLETilePaste = fp2Trainer.CreateEntry("inputLETilePaste", "<Gamepad>/buttonEast");
@@ -443,6 +452,22 @@ namespace Fp2Trainer
                         var tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
                         debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position + "\n";
                         debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition + "\n";
+                    }
+
+                    
+                    if (currentDataPage == DataPage.NO_CLIP)
+                    {
+                        debugDisplay += "NoClip Enabled: " + noClip.ToString() + "\n";
+                        debugDisplay += "Position: " + fpplayer.position.ToString() + "\n";
+                        debugDisplay += "Terrain Collision: " + fpplayer.terrainCollision.ToString() + "\n";
+                        debugDisplay += "Physics Enabled: " + fpplayer.enablePhysics.ToString() + "\n";
+                        debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
+                    }
+                    
+
+                    if (noClip)
+                    {
+                        debugDisplay += "NoClip: " + fpplayer.position.ToString() + "\n";
                     }
 
                     if (currentDataPage == DataPage.MOVEMENT)
@@ -804,32 +829,17 @@ namespace Fp2Trainer
 
             if (Input.GetKeyUp(KeyCode.F2))
             {
-                Log("F2 -> Simulate DPS Damage Add: ");
-                dpsTracker.AddDamage(5, "FP2 Trainer HotKey");
+                Log("F2 -> NoClip Toggle");
+                ToggleNoClip();
             }
 
             if (Input.GetKeyUp(KeyCode.F1))
             {
-                Log("F1 -> Test Damage Number: ");
+                //TestDamageNumberPopups();
+
                 if (fpplayer != null)
                 {
-                    var fpcam = FPCamera.stageCamera;
-                    Log("1");
-                    if (fpcam != null)
-                    {
-                        Log("2");
-                        var relativePos = new Vector3(fpplayer.position.x - fpcam.xpos,
-                            fpplayer.position.y - fpcam.ypos, fpplayer.gameObject.transform.position.z);
-                        Log("3");
-                        Log(relativePos.ToString());
-                        Log("4");
-                        var goDmgTest = FP2TrainerDamageNumber.CreateDMGNumberObject(relativePos, 5);
-                        Log("5");
-                    }
-                }
-                else
-                {
-                    Log("No player???");
+                    InstaKOPlayer();
                 }
             }
 
@@ -863,6 +873,176 @@ namespace Fp2Trainer
                 warpMessage = "Set warp at " + warpPoint;
                 timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
+            
+            if (InputControl.GetButton(Controls.buttons.pause) && InputControl.GetButtonDown(Controls.buttons.special))
+            {
+                ToggleNoClip();
+            }
+            
+            if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.special))
+            {
+                ToggleNoClip();
+            }
+
+            HandleNoClip();
+        }
+
+        private void ToggleNoClip()
+        {
+            if (noClip)
+            {
+                EndNoClip();
+            }
+            else
+            {
+                noClip = true;
+                fpplayer.terrainCollision = false;
+                noClipStartPos = fpplayer.position;
+                noClipCollisionLayer = fpplayer.collisionLayer;
+                noClipGravityStrength = fpplayer.gravityStrength;
+            }
+
+            
+        }
+
+        private void InstaKOPlayer()
+        {
+            if (fpplayer)
+            {
+                fpplayer.hurtKnockbackX = fpplayer.velocity.x;
+                fpplayer.hurtKnockbackY = 0f;
+                fpplayer.nextAttack = 0;
+                fpplayer.genericTimer = -20f;
+                fpplayer.superArmor = false;
+                fpplayer.superArmorTimer = 0f;
+                fpplayer.invincibilityTime = 200f;
+                FPSaveManager.perfectRun = false;
+                FPSaveManager.KOs++;
+                fpplayer.recoveryTimer = 0f;
+                fpplayer.state = fpplayer.State_KO;
+                fpplayer.velocity.y = 8f;
+                fpplayer.velocity.x *= 2f;
+                fpplayer.Action_PlaySoundUninterruptable(fpplayer.sfxKO);
+                fpplayer.Action_PlayVoice(fpplayer.vaKO);
+            }
+        }
+
+        private void SimulateDPSDamageAdd()
+        {
+            Log("F2 -> Simulate DPS Damage Add: ");
+            dpsTracker.AddDamage(5, "FP2 Trainer HotKey");
+        }
+
+        private void TestDamageNumberPopups()
+        {
+            Log("F1 -> Test Damage Number: ");
+            if (fpplayer != null)
+            {
+                var fpcam = FPCamera.stageCamera;
+                Log("1");
+                if (fpcam != null)
+                {
+                    Log("2");
+                    var relativePos = new Vector3(fpplayer.position.x - fpcam.xpos,
+                        fpplayer.position.y - fpcam.ypos, fpplayer.gameObject.transform.position.z);
+                    Log("3");
+                    Log(relativePos.ToString());
+                    Log("4");
+                    var goDmgTest = FP2TrainerDamageNumber.CreateDMGNumberObject(relativePos, 5);
+                    Log("5");
+                }
+            }
+            else
+            {
+                Log("No player???");
+            }
+        }
+
+        private void HandleNoClip()
+        {
+            
+            //fpplayer.enablePhysics = false;
+            
+            if (noClip && fpplayer != null)
+            {
+                fpplayer.collisionLayer = -999;
+                fpplayer.invincibilityTime = 100f;
+                fpplayer.gravityStrength = 0;
+                fpplayer.hitStun = -1;
+                
+                fpplayer.velocity.x = 0;
+                fpplayer.velocity.y = 0;
+                
+                float modifiedNoClipMoveSpeed = noClipMoveSpeed;
+                if (InputControl.GetButton(Controls.buttons.special))
+                {
+                    modifiedNoClipMoveSpeed *= 4f;
+                }
+                
+                fpplayer.velocity = Vector2.zero;
+                if (fpplayer.input.up
+                    || InputControl.GetAxis(Controls.axes.vertical) > 0.2f)
+                {
+                    Log("up");
+                    fpplayer.position.y += modifiedNoClipMoveSpeed * 1;
+                }
+
+                if (fpplayer.input.down
+                    || InputControl.GetAxis(Controls.axes.vertical) < -0.2f)
+                {
+                    Log("down");
+                    fpplayer.position.y -= modifiedNoClipMoveSpeed * 1;
+                }
+                
+                if (fpplayer.input.right
+                    || InputControl.GetAxis(Controls.axes.horizontal) > 0.2f)
+                {
+                    fpplayer.position.x += modifiedNoClipMoveSpeed * 1;
+                }
+                
+                if (fpplayer.input.left
+                    || InputControl.GetAxis(Controls.axes.horizontal) < -0.2f)
+                {
+                    fpplayer.position.x -= modifiedNoClipMoveSpeed * 1;
+                }
+
+
+                if (InputControl.GetButtonDown(Controls.buttons.attack))
+                {
+                    EndNoClip();
+                }
+                
+                if (InputControl.GetButtonDown(Controls.buttons.jump))
+                {
+                    EndNoClipAndReturnToStartPosition();
+                }
+            }
+        }
+
+        private void EndNoClip()
+        {
+            fpplayer.invincibilityTime = 0f;
+            fpplayer.gravityStrength = noClipGravityStrength;
+            fpplayer.hitStun = 0f;
+            fpplayer.collisionLayer = noClipCollisionLayer;
+            fpplayer.terrainCollision = true;
+            
+            /*
+            if (currentDataPage == DataPage.NO_CLIP)
+            {
+                currentDataPage++;
+            }
+            */
+            
+            noClip = false;
+
+            //fpplayer.enablePhysics = true;
+        }
+
+        private void EndNoClipAndReturnToStartPosition()
+        {
+            fpplayer.position = noClipStartPos;
+            EndNoClip();
         }
 
         private void ToggleVariableDisplay()
@@ -1244,7 +1424,8 @@ namespace Fp2Trainer
 
             if (!introSkipped)
             {
-                string level = inputLETileCopy.Value;
+                string level = BootupLevel.Value;
+                Log("BootupLevel: " + BootupLevel.Value);
                 if (level != null && !level.Equals(""))
                 {
                     GoToMainMenuNoLogos();
@@ -1265,6 +1446,7 @@ namespace Fp2Trainer
         
         public static void GoToCustomBootLevel(string level)
         {
+            Log("Now Loading Custom Boot: " + level);
             var component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
             if (component != null)
             {
