@@ -57,7 +57,7 @@ namespace Fp2Trainer
         private static float fp2tDeltaTime;
         //private InputHandler inputHandler = null;
 
-        public static bool introSkipped;
+        public static int introSkipped = 0;
 
         public static Font fpMenuFont;
         public static Material fpMenuMaterial;
@@ -166,7 +166,7 @@ namespace Fp2Trainer
             allActiveEnemiesHealth = null;
             allActiveEnemiesHealthPrevious = null;
             dpsTracker = new FP2TrainerDPSTracker();
-            introSkipped = false;
+            introSkipped = 0;
         }
 
         private void InitPrefs()
@@ -382,7 +382,11 @@ namespace Fp2Trainer
 
         public void OnGameObjectUpdate()
         {
-            SkipBootIntros();
+            if (introSkipped < 1)
+            {
+                SkipBootIntros();
+            }
+            
             if (dpsTracker != null) dpsTracker.Update();
 
             if (timeoutShowWarpInfo > 0) timeoutShowWarpInfo -= FPStage.frameTime;
@@ -827,19 +831,39 @@ namespace Fp2Trainer
                 }
             }
 
-            if (Input.GetKeyUp(KeyCode.F2))
-            {
-                Log("F2 -> NoClip Toggle");
-                ToggleNoClip();
-            }
-
-            if (Input.GetKeyUp(KeyCode.F1))
+            if (Input.GetKeyUp(KeyCode.F1) && InputGetKeyAnyShift())
             {
                 //TestDamageNumberPopups();
 
                 if (fpplayer != null)
                 {
+                    Log("Shift + F1 -> KO the Player");
                     InstaKOPlayer();
+                }
+                else
+                {
+                    Log("Shift + F1 -> Attempted to KO the player, but no FPPlayer instance was found");
+                }
+            }
+            
+            if (Input.GetKeyUp(KeyCode.F2))
+            {
+                Log("F2 -> NoClip Toggle");
+                ToggleNoClip();
+            }
+            
+            if (Input.GetKeyUp(KeyCode.F2) && InputGetKeyAnyShift())
+            {
+                //TestDamageNumberPopups();
+
+                if (fpplayer != null)
+                {
+                    Log("Shift + F1 -> Enable 2Player");
+                    InstaKOPlayer();
+                }
+                else
+                {
+                    Log("Shift + F2 -> Attempted to start 2P but could not find 1P");
                 }
             }
 
@@ -885,6 +909,11 @@ namespace Fp2Trainer
             }
 
             HandleNoClip();
+        }
+
+        private static bool InputGetKeyAnyShift()
+        {
+            return (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
         }
 
         private void ToggleNoClip()
@@ -983,14 +1012,12 @@ namespace Fp2Trainer
                 if (fpplayer.input.up
                     || InputControl.GetAxis(Controls.axes.vertical) > 0.2f)
                 {
-                    Log("up");
                     fpplayer.position.y += modifiedNoClipMoveSpeed * 1;
                 }
 
                 if (fpplayer.input.down
                     || InputControl.GetAxis(Controls.axes.vertical) < -0.2f)
                 {
-                    Log("down");
                     fpplayer.position.y -= modifiedNoClipMoveSpeed * 1;
                 }
                 
@@ -1422,7 +1449,21 @@ namespace Fp2Trainer
                 propTimer.SetValue(splash, 9999);
             }*/
 
-            if (!introSkipped)
+            if (introSkipped < 1)
+            {
+                string level = BootupLevel.Value;
+                Log("BootupLevel: " + BootupLevel.Value);
+                if (level != null && !level.Equals(""))
+                {
+                    GoToMainMenuNoLogos();
+                }
+                else
+                {
+                    GoToCustomBootLevel(level);
+                }
+            }
+            
+            if (introSkipped == 1)
             {
                 string level = BootupLevel.Value;
                 Log("BootupLevel: " + BootupLevel.Value);
@@ -1455,7 +1496,7 @@ namespace Fp2Trainer
                 component.sceneToLoad = level;
                 FPSaveManager.menuToLoad = 2; // This is how we skip the intros.
 
-                introSkipped = true;
+                introSkipped++;
             }
         }
 
