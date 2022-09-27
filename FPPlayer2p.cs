@@ -296,6 +296,11 @@ namespace Fp2Trainer
                 Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
                 FPStage.currentStage.SetPlayerInstance(Fp2Trainer.fpplayers[currentActivePlayerInstance]);
                 FPCamera.SetCameraTarget(FPStage.currentStage.GetPlayerInstance().gameObject);
+                var stageHud = GameObject.Find("Stage HUD");
+                if (stageHud != null)
+                {
+                    stageHud.GetComponent<FPHudMaster>().targetPlayer = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+                }
             }
         }
 
@@ -379,7 +384,7 @@ namespace Fp2Trainer
             Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
             Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance().name + " joins the party!");
 
-            global::Fp2Trainer.Fp2Trainer.CloneHealthBar(newPlayer);
+            //global::Fp2Trainer.Fp2Trainer.CloneHealthBar(newPlayer);
 
             return newPlayer;
         }

@@ -141,6 +141,8 @@ namespace Fp2Trainer
         public float originalZoomMin = 0.5f;
         public float originalZoomMax = 2f;
         public float originalZoomSpeed = 0.1f;
+        public GameObject lifePetal;
+        public GameObject shield;
 
 
         public override void OnApplicationStart() // Runs after Game Initialization.
@@ -285,11 +287,18 @@ namespace Fp2Trainer
 
         public void CreateFancyTextObjects()
         {
+            
             goStageHUD = GameObject.Find("Stage HUD");
             //GameObject goStageHUD = GameObject.Find("Hud Pause Menu");
             if (goStageHUD == null) return;
 
             Log("Successfully found HUD to attach text to.");
+            
+            //Why is this here??
+            var tempHudMaster = goStageHUD.GetComponent<FPHudMaster>();
+            this.lifePetal = tempHudMaster.pfHudLifePetal;
+            this.shield = tempHudMaster.pfHudShield;
+            
             goFancyTextPosition = GameObject.Find("Resume Text");
             if (goFancyTextPosition != null)
             {
@@ -311,6 +320,7 @@ namespace Fp2Trainer
                 GameObject temp2;
                 if (temp != null)
                 {
+                    
                     temp2 = temp.pfHudEnergyBar;
                 }
                 else
