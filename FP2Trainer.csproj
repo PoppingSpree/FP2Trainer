@@ -43,6 +43,7 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="FP2TrainerCustomHotkeys.cs" />
         <Compile Include="FP2TrainerDamageNumber.cs" />
         <Compile Include="FP2TrainerDPSTracker.cs" />
         <Compile Include="FP2TrainerDTTracker.cs" />
@@ -52,6 +53,7 @@
         <Compile Include="FP2Trainer.cs" />
         <Compile Include="SceneNamePair.cs" />
         <Compile Include="TrainerPauseMenu.cs" />
+        <Compile Include="FP2TrainerYourPlayerIndicator.cs" />
     </ItemGroup>
     <ItemGroup>
       <Content Include="LICENSE.md" />

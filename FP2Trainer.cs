@@ -29,6 +29,9 @@ namespace Fp2Trainer
 
     public class Fp2Trainer : MelonMod
     {
+        public static GameObject goFP2Trainer;
+        public static GameObject goFP2TrainerYourPlayerIndicator;
+        
         public enum DataPage
         {
             MOVEMENT,
@@ -48,10 +51,48 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> enableNoClip;
 
         public static MelonPreferences_Entry<string> BootupLevel;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyToggleInstructions;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeySetWarpPoint;
+        public static MelonPreferences_Entry<string> PrefHotkeyGotoWarpPoint;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyKOCharacter;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyToggleNoClip;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeySpawnExtraChar;
+        public static MelonPreferences_Entry<string> PrefHotkeySwapBetweenSpawnedChars;
+        public static MelonPreferences_Entry<string> PrefHotkeyToggleMultiCharStart;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyGetOutGetOutGetOut;
 
-        public static MelonPreferences_Entry<string> inputLETileCopy;
-        public static MelonPreferences_Entry<string> inputLETilePaste;
-        public static MelonPreferences_Entry<string> inputLETileLayer;
+        public static MelonPreferences_Entry<string> PrefHotkeyCameraZoomIn;
+        public static MelonPreferences_Entry<string> PrefHotkeyCameraZoomOut;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyShowNextDataPage;
+        public static MelonPreferences_Entry<string> PrefHotkeyShowPreviousDataPage;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyGoToMainMenu;
+        public static MelonPreferences_Entry<string> PrefHotkeyLoadDebugRoom;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyGoToLevelSelectMenu;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyLoadAssetBundles;
+        //public static MelonPreferences_Entry<string> PrefHotkeyTogglePauseMenuOrTrainerMenu;
+        public static MelonPreferences_Entry<string> PrefHotkeyGoToLevelAtLastIndex;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyIncreaseFontSize;
+        public static MelonPreferences_Entry<string> PrefHotkeyDecreaseFontSize;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyToggleRecordGhostData;
+        public static MelonPreferences_Entry<string> PrefHotkeyToggleEnableNetworkPlayers;
+        
+        //public static MelonPreferences_Entry<string> PrefHotkey;
+        
+        // public static MelonPreferences_Entry<string> PrefHotkeySaveTrainerData;
+        // public static MelonPreferences_Entry<string> PrefHotkeyLoadTrainerData;
+        
 
         public static Fp2Trainer fp2TrainerInstance;
 
@@ -73,8 +114,6 @@ namespace Fp2Trainer
         public Vector2 noClipStartPos = Vector2.zero;
         public int noClipCollisionLayer = -999;
         public float noClipGravityStrength = -0.7f;
-
-        private readonly GameObject crosshair = null;
 
         private DataPage currentDataPage = DataPage.MOVEMENT;
         public static bool showInstructions = true;
@@ -117,12 +156,7 @@ namespace Fp2Trainer
 
         public static bool multiplayerStart = false;
         public static bool doneMultiplayerStart = false;
-
-
-        // Tilemap tm = null;
-        //private Tilemap[] tms = null;
-        //private TileBase copyTile = null;
-        private int selectedTileLayer;
+        
         public bool showVarString = true;
         private GameObject stageHUD;
         private GameObject stageSelectMenu;
@@ -196,6 +230,51 @@ namespace Fp2Trainer
             BootupLevel = fp2Trainer.CreateEntry("bootupLevel", "ZaoLand");
             showDebug = fp2Trainer.CreateEntry("showDebug", true);
             enableNoClip = fp2Trainer.CreateEntry("enableNoClip", false);
+            
+            InitPrefsCustomHotkeys();
+        }
+
+        private static void InitPrefsCustomHotkeys()
+        {
+            PrefHotkeyToggleInstructions = CreateEntryAndBindHotkey("PrefHotkeyToggleInstructions", "F1");
+
+            PrefHotkeySetWarpPoint = CreateEntryAndBindHotkey("PrefHotkeySetWarpPoint", "Shift+F4");
+            PrefHotkeyGotoWarpPoint = CreateEntryAndBindHotkey("PrefHotkeyGotoWarpPoint", "F4");
+
+            PrefHotkeyKOCharacter = CreateEntryAndBindHotkey("PrefHotkeyKOCharacter", "Shift+F1");
+
+            PrefHotkeyToggleNoClip = CreateEntryAndBindHotkey("PrefHotkeyToggleNoClip", "F2");
+
+            PrefHotkeySpawnExtraChar = CreateEntryAndBindHotkey("PrefHotkeySpawnExtraChar", "F12");
+            PrefHotkeySwapBetweenSpawnedChars = CreateEntryAndBindHotkey("PrefHotkeySwapBetweenSpawnedChars", "F11");
+            PrefHotkeyToggleMultiCharStart = CreateEntryAndBindHotkey("PrefHotkeyToggleMultiCharStart", "Shift+F12");
+
+            PrefHotkeyGetOutGetOutGetOut = CreateEntryAndBindHotkey("PrefHotkeyGetOutGetOutGetOut", "Delete");
+
+            PrefHotkeyCameraZoomIn = CreateEntryAndBindHotkey("PrefHotkeyCameraZoomIn", "KeypadPlus");
+            PrefHotkeyCameraZoomOut = CreateEntryAndBindHotkey("PrefHotkeyCameraZoomOut", "KeypadMinus");
+
+            PrefHotkeyShowNextDataPage = CreateEntryAndBindHotkey("PrefHotkeyShowNextDataPage", "PageDown");
+            PrefHotkeyShowPreviousDataPage = CreateEntryAndBindHotkey("PrefHotkeyShowPreviousDataPage", "PageUp");
+
+            PrefHotkeyGoToMainMenu = CreateEntryAndBindHotkey("PrefHotkeyGoToMainMenu", "F7");
+            PrefHotkeyLoadDebugRoom = CreateEntryAndBindHotkey("PrefHotkeyLoadDebugRoom", "F8");
+
+            PrefHotkeyGoToLevelSelectMenu = CreateEntryAndBindHotkey("PrefHotkeyGoToLevelSelectMenu", "F9");
+
+            PrefHotkeyLoadAssetBundles = CreateEntryAndBindHotkey("PrefHotkeyLoadAssetBundles", "Shift+F9");
+            //PrefHotkeyTogglePauseMenuOrTrainerMenu = CreateEntryAndBindHotkey("PrefHotkeyTogglePauseMenuOrTrainerMenu", "F1");
+            PrefHotkeyGoToLevelAtLastIndex = CreateEntryAndBindHotkey("PrefHotkeyGoToLevelAtLastIndex", "BackQuote");
+
+            //PrefHotkeyNextWarppointSaveSlot = CreateEntryAndBindHotkey("PrefHotkeyNextWarppointSaveSlot", "F10");
+            //PrefHotkeyPrevWarppointSaveSlot = CreateEntryAndBindHotkey("PrefHotkeyPrevWarppointSaveSlot", "F9");
+        }
+
+        private static MelonLoader.MelonPreferences_Entry<string> CreateEntryAndBindHotkey(string identifier, string default_value)
+        {
+            var melonPrefEntry = fp2Trainer.CreateEntry(identifier, default_value);
+            FP2TrainerCustomHotkeys.Add(melonPrefEntry);
+            return melonPrefEntry;
         }
 
         public override void
@@ -278,6 +357,18 @@ namespace Fp2Trainer
             textmeshFancyTextPosition = null;
 
             doneMultiplayerStart = false;
+
+            if (goFP2Trainer == null)
+            {
+                CreateFP2TrainerGameObject();
+            }
+        }
+
+        private static void CreateFP2TrainerGameObject()
+        {
+            goFP2Trainer = new GameObject("FP2Trainer");
+            GameObject.DontDestroyOnLoad(goFP2Trainer);
+            goFP2Trainer.AddComponent<FP2TrainerCustomHotkeys>();
         }
 
         public static Font GetFPMenuFont()
@@ -418,6 +509,27 @@ namespace Fp2Trainer
             SkipBootIntros();
             GrabAndTweakPauseMenu();
             GrabAndUpdateCameraDetails();
+            VisualizePlaneSwitchers();
+
+            if (goFP2TrainerYourPlayerIndicator == null)
+            {
+                goFP2TrainerYourPlayerIndicator = FP2TrainerYourPlayerIndicator.CreateFPYourPlayerIndicator(
+            "YourPlayer", Vector3.zero, Quaternion.identity, goFP2Trainer.transform);
+            }
+
+            
+        }
+
+        private void VisualizePlaneSwitchers()
+        {
+            List<PlaneSwitcher> planeSwitchers;
+            planeSwitchers = new List<PlaneSwitcher>((GameObject.FindObjectsOfType<PlaneSwitcher>()));
+            Log(String.Format("Found {0} PlaneSwitchers. Attempting to visualize.\n", planeSwitchers.Count));
+            foreach (PlaneSwitcher ps in planeSwitchers)
+            {
+                Log(String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
+            }
+
         }
 
         public override void OnApplicationQuit() // Runs when the Game is told to Close.
@@ -468,21 +580,6 @@ namespace Fp2Trainer
                         }
                     }
                 }
-
-                /*
-                if (inputHandler == null)
-                {
-                    inputHandler = LevelManager.currentLevel.GetComponent<InputHandler>();
-                    if (inputHandler != null)
-                    {
-                        MelonLogger.Msg("Trainer found the Input Handler.");
-                    }
-                }
-                */
-
-
-                UpdateLevelEditingInfo();
-                //HandleTileEditControls();
 
                 debugDisplay = "";
 
@@ -714,6 +811,7 @@ namespace Fp2Trainer
             instructions += "Instructions:\n";
             string txtInstructionsToggle = "F1";
             instructions += String.Format("Press {0} to toggle the Instructions on or off.\n", txtInstructionsToggle);
+            instructions += FP2TrainerCustomHotkeys.GetBindingString();
 
             return instructions;
         }
@@ -1391,27 +1489,6 @@ namespace Fp2Trainer
             FPAudio.PlayMenuSfx(3);
         }
 
-        public override void OnGUI() // Can run multiple times per frame. Mostly used for Unity's IMGUI.
-        {
-            /*
-            if (showDebug.Value)
-            {
-                Rect r = new Rect(10, 110, 500, 200);
-                GUI.Box(r, debugDisplay);
-            }
-            */
-
-            /*
-            if (timeoutShowWarpInfo > 0)
-            {
-                Rect r = new Rect(10, 10, 200, 32);
-                GUI.Box(r, warpMessage);
-            }
-            */
-
-            DrawLevelEditingInfo();
-        }
-
         private void WriteSceneObjectsToFile()
         {
             if (!warped)
@@ -1467,60 +1544,6 @@ namespace Fp2Trainer
             else
             {
                 MelonLogger.Msg("Warped already...");
-            }
-        }
-
-        public void UpdateLevelEditingInfo()
-        {
-        }
-
-        private bool CrosshairIsValid()
-        {
-            return crosshair != null && crosshair.transform != null && crosshair.transform.position != null;
-        }
-
-        public void DrawLevelEditingInfo()
-        {
-        }
-
-        public void SetInputHandlerLevelEditorKeys()
-        {
-        }
-
-        public void HandleLevelEditorInputs()
-        {
-            if (GetKeyPressed(inputLETileLayer.Value))
-            {
-                // Increase and decrease layer by tapping the copy and past buttons while this is held.
-                if (GetKeyDown(inputLETileCopy.Value)) selectedTileLayer += 1;
-                if (GetKeyDown(inputLETilePaste.Value)) selectedTileLayer -= 1;
-            }
-            else
-            {
-                // Copy and paste tiles when the Layer button is not held.
-                if (GetKeyDown(inputLETileCopy.Value))
-                {
-                    /*
-                    if (crosshair != null && crosshair.transform != null)
-                    {
-                        Vector3Int cellPosition = tms[selectedTileLayer].WorldToCell(crosshair.transform.position);
-                        //String tileName = "NULL";
-                        copyTile = tms[selectedTileLayer].GetTile(cellPosition);
-                    }
-                    */
-                }
-
-                if (GetKeyDown(inputLETilePaste.Value))
-                {
-                    /*
-                    if (crosshair != null && crosshair.transform != null)
-                    {
-                        Vector3Int cellPosition = tms[selectedTileLayer].WorldToCell(crosshair.transform.position);
-                        //String tileName = "NULL";
-                        tms[selectedTileLayer].SetTile(cellPosition, copyTile);
-                    }
-                    */
-                }
             }
         }
 

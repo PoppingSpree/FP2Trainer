@@ -6,7 +6,6 @@ namespace Fp2Trainer
 {
     public class FPPlayer2p : FPPlayer
     {
-
         public int maxCharacterID = 4;
         public static int extraPlayerCount = 1;
         public static int currentActivePlayerInstance = 0;
@@ -21,7 +20,7 @@ namespace Fp2Trainer
         protected new void Start()
         {
             InitCustomControls();
-            
+
             base.Start();
             this.name = "Player " + extraPlayerCount.ToString();
             Fp2Trainer.Log("Added " + this.name);
@@ -218,19 +217,19 @@ namespace Fp2Trainer
         {
             //Button 5: Saturn Z
             // Button 7: Saturn R
-            
+
             customControls = new Dictionary<string, KeyMapping>();
-            customControls.Add("CharTeamSwap", 
+            customControls.Add("CharTeamSwap",
                 InputControl.setKey("CharTeamSwap", new JoystickInput(JoystickButton.Button8),
                     KeyCode.None, KeyCode.None));
-            customControls.Add("CharTeamSpawn", 
+            customControls.Add("CharTeamSpawn",
                 InputControl.setKey("CharTeamSpawn", new JoystickInput(JoystickButton.Button6),
                     KeyCode.None, KeyCode.None));
         }
 
         public static void ShowPressedButtons()
         {
-            foreach(KeyCode kcode in Enum.GetValues(typeof(KeyCode)))
+            foreach (KeyCode kcode in Enum.GetValues(typeof(KeyCode)))
             {
                 if (Input.GetKeyDown(kcode))
                     global::Fp2Trainer.Fp2Trainer.Log("KeyCode down: " + kcode);
@@ -257,19 +256,18 @@ namespace Fp2Trainer
 
         public void GetInputFromPlayer2()
         {
-            
         }
 
         public void SwapCharacter(FPCharacterID charID)
         {
             this.characterID = charID;
         }
-        
+
         public void SwapCharacterFromInt(int charID)
         {
             this.characterID = (FPCharacterID)charID;
         }
-        
+
         public void SwapCharacter()
         {
             this.characterID++;
@@ -283,23 +281,33 @@ namespace Fp2Trainer
         {
             if (Fp2Trainer.fpplayers != null && Fp2Trainer.fpplayers.Count > 0)
             {
-                Fp2Trainer.Log("NumPlayers: " + Fp2Trainer.fpplayers.Count.ToString());
-                Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
                 currentActivePlayerInstance++;
-                Fp2Trainer.Log("NumPlayers: " + Fp2Trainer.fpplayers.Count.ToString());
-                Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
                 if (currentActivePlayerInstance >= Fp2Trainer.fpplayers.Count)
                 {
                     currentActivePlayerInstance = 0;
                 }
+
                 Fp2Trainer.Log("NumPlayers: " + Fp2Trainer.fpplayers.Count.ToString());
                 Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
                 FPStage.currentStage.SetPlayerInstance(Fp2Trainer.fpplayers[currentActivePlayerInstance]);
-                FPCamera.SetCameraTarget(FPStage.currentStage.GetPlayerInstance_FPPlayer().gameObject);
+
+                var fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+
+                FPCamera.SetCameraTarget(fppi.gameObject);
+                fppi.Action_PlayVoiceArray("Clear");
+                if (Fp2Trainer.goFP2TrainerYourPlayerIndicator != null)
+                {
+                    Fp2Trainer.goFP2Trainer.transform.position =
+                        new Vector3(fppi.transform.position.x,
+                            fppi.transform.position.y,
+                            Fp2Trainer.goFP2Trainer.transform.position.z);
+                }
+
                 var stageHud = GameObject.Find("Stage HUD");
                 if (stageHud != null)
                 {
-                    stageHud.GetComponent<FPHudMaster>().targetPlayer = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+                    stageHud.GetComponent<FPHudMaster>().targetPlayer =
+                        FPStage.currentStage.GetPlayerInstance_FPPlayer();
                 }
             }
         }
@@ -311,35 +319,34 @@ namespace Fp2Trainer
             {
                 var DestroyThese = new List<FPPlayer>();
                 foreach (FPPlayer fpp in Fp2Trainer.fpplayers)
-                 {
-                     if (Vector2.Distance(fppi.transform.position, 
-                             fpp.transform.position) >= catchupDistance)
-                     {
-                         fpp.transform.position =
-                             fppi.transform.position 
-                             + new Vector3(catchupOffset.x, catchupOffset.y, fpp.transform.position.z);
-                         fpp.position = fppi.position + catchupOffset;
-                     }
-                     
-                     // This section should probably be in a dedicated update...
-                     if (fpp.state == new FPObjectState(fpp.State_KO) || fpp.state == new FPObjectState(fpp.State_CrushKO))
-                     {
-                         if (fpp.genericTimer < 10f && fpp.genericTimer > -1f)
-                         {
-                             if (Fp2Trainer.fpplayers.Count > 1)
-                             {
-                                 //FPStage.DestroyStageObject(fpp); // Remember not to destroy in a foreach.
-                                 DestroyThese.Add(fpp);
-                                 if (fpp == fppi)
-                                 {
-                                     SwapBetweenActiveCharacters();
-                                 }
-                             }
-                         }
+                {
+                    if (Vector2.Distance(fppi.transform.position,
+                            fpp.transform.position) >= catchupDistance)
+                    {
+                        fpp.transform.position =
+                            fppi.transform.position
+                            + new Vector3(catchupOffset.x, catchupOffset.y, fpp.transform.position.z);
+                        fpp.position = fppi.position + catchupOffset;
+                    }
 
-                         
-                     }
-                 }
+                    // This section should probably be in a dedicated update...
+                    if (fpp.state == new FPObjectState(fpp.State_KO) ||
+                        fpp.state == new FPObjectState(fpp.State_CrushKO))
+                    {
+                        if (fpp.genericTimer < 10f && fpp.genericTimer > -1f)
+                        {
+                            if (Fp2Trainer.fpplayers.Count > 1)
+                            {
+                                //FPStage.DestroyStageObject(fpp); // Remember not to destroy in a foreach.
+                                DestroyThese.Add(fpp);
+                                if (fpp == fppi)
+                                {
+                                    SwapBetweenActiveCharacters();
+                                }
+                            }
+                        }
+                    }
+                }
 
                 for (int i = 0; i < DestroyThese.Count; i++)
                 {
@@ -351,13 +358,13 @@ namespace Fp2Trainer
                 }
             }
 
-            
-            
+
             //This last bit is more suited for a separate update method:
             if (InputControl.GetButtonDown(customControls["CharTeamSpawn"]))
             {
                 SpawnExtraCharacter();
             }
+
             if (InputControl.GetButtonDown(customControls["CharTeamSwap"]))
             {
                 SwapBetweenActiveCharacters();
@@ -371,13 +378,17 @@ namespace Fp2Trainer
             FPPlayer fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
             bool playerObjectValidated = false;
             int playerNumModulus = extraPlayerCount % 5;
-            newPlayer = FPStage.InstantiateFPBaseObject(FPStage.player[(int)(playerNumModulus)], out playerObjectValidated);
-            
+            newPlayer = FPStage.InstantiateFPBaseObject(FPStage.player[(int)(playerNumModulus)],
+                out playerObjectValidated);
+
             newPlayer.position = fppi.position + (spawnOffset * (playerNumModulus + 1));
-            newPlayer.gameObject.transform.position = fppi.transform.position + new Vector3(spawnOffset.x, spawnOffset.y, 0);
+            newPlayer.gameObject.transform.position =
+                fppi.transform.position + new Vector3(spawnOffset.x, spawnOffset.y, 0);
             //newPlayer.position = FPStage.currentStage.GetPlayerInstance_FPPlayer().position;
-            
-            newPlayer.inputMethod = newPlayer.GetInputFromPlayer1; // So... you can totally just replace the input method here to control the character with anything we want.
+
+            newPlayer.inputMethod =
+                newPlayer
+                    .GetInputFromPlayer1; // So... you can totally just replace the input method here to control the character with anything we want.
             newPlayer.collisionLayer = fppi.collisionLayer;
 
             newPlayer.name = String.Format("Player {0}", extraPlayerCount);
@@ -387,7 +398,7 @@ namespace Fp2Trainer
             {
                 extraPlayerCount++;
             }
-            
+
             Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
             Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance_FPPlayer().name + " joins the party!");
 
@@ -405,16 +416,19 @@ namespace Fp2Trainer
             {
                 Destroy(trig);
             }
+
             trig = GameObject.Find("Cutscene_Carol");
             if (trig != null)
             {
                 Destroy(trig);
             }
+
             trig = GameObject.Find("Cutscene_Milla");
             if (trig != null)
             {
                 Destroy(trig);
             }
+
             trig = GameObject.Find("Cutscene_Neera");
             if (trig != null)
             {
