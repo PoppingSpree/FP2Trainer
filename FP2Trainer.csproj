@@ -46,6 +46,7 @@
         <Compile Include="FP2TrainerDamageNumber.cs" />
         <Compile Include="FP2TrainerDPSTracker.cs" />
         <Compile Include="FP2TrainerDTTracker.cs" />
+        <Compile Include="FPPlayer2p.cs" />
         <Compile Include="FPTrainerLevelSelect.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="FP2Trainer.cs" />
@@ -53,6 +54,7 @@
     </ItemGroup>
     <ItemGroup>
       <Content Include="LICENSE.md" />
+      <Content Include="MiscNotes" />
       <Content Include="NOTICE.txt" />
       <Content Include="README.md" />
     </ItemGroup>
