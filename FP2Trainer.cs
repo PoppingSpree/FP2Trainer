@@ -34,7 +34,7 @@ namespace Fp2Trainer
             COMBAT,
             DPS,
             DPS_ALL,
-            BATTLESPHERE,
+            MULTIPLAYER_DEBUG,
             BOSS,
             NO_CLIP,
             NONE
@@ -89,7 +89,7 @@ namespace Fp2Trainer
         private List<FPBaseEnemy> fpEnemies;
 
         private FPPlayer fpplayer;
-        private List<FPPlayer> fpplayers;
+        public static List<FPPlayer> fpplayers;
 
         private FPTrainerLevelSelect fptls;
 
@@ -112,6 +112,9 @@ namespace Fp2Trainer
         private List<FPHudDigit> positionDigits;
 
         public string sceneToLoad = "";
+
+        public static bool multiplayerStart = true;
+        public static bool doneMultiplayerStart = false;
 
 
         // Tilemap tm = null;
@@ -176,6 +179,8 @@ namespace Fp2Trainer
             allActiveEnemiesHealthPrevious = null;
             dpsTracker = new FP2TrainerDPSTracker();
             introSkipped = 0;
+
+            FPPlayer2p.InitCustomControls();
         }
 
         private void InitPrefs()
@@ -269,6 +274,8 @@ namespace Fp2Trainer
             goFancyTextPosition = null;
             goStageHUD = null;
             textmeshFancyTextPosition = null;
+
+            doneMultiplayerStart = false;
         }
 
         public static Font GetFPMenuFont()
@@ -365,6 +372,27 @@ namespace Fp2Trainer
             UpdateFancyText();
         }
 
+        public static GameObject CloneHealthBar(FPPlayer targetPlayer)
+        {
+            
+            GameObject newHud = null;
+            var huds = GameObject.FindObjectsOfType<FPHudMaster>();
+            if (huds.Length > 0)
+            {
+                newHud = GameObject.Instantiate(huds[0].gameObject,
+                    (huds[0].transform.position + new Vector3(0f, -128f, 0f)), huds[0].transform.rotation);
+                newHud.name = "Stage HUD " + huds.Length.ToString();
+                
+                var hudScript = newHud.GetComponent<FPHudMaster>();
+                            //hudScript.onlyShowHealth = true;
+                            hudScript.targetPlayer = targetPlayer;
+            }
+
+            
+
+            return newHud;
+        }
+
         public void UpdateFancyText()
         {
             if (textmeshFancyTextPosition != null && showVarString)
@@ -409,8 +437,7 @@ namespace Fp2Trainer
                 {
                     player = GetFirstPlayerGameObject();
                     fpplayer = FPStage.currentStage.GetPlayerInstance_FPPlayer();
-
-                    fpplayers = GetFPPlayers();
+                    
                     if (player != null) MelonLogger.Msg("Trainer found a Player Object: ");
                 }
 
@@ -455,6 +482,13 @@ namespace Fp2Trainer
 
                 if (fpplayer != null)
                 {
+                    if (multiplayerStart && !doneMultiplayerStart)
+                    {
+                        currentDataPage = DataPage.MULTIPLAYER_DEBUG;
+                        FPPlayer2p.SpawnExtraCharacter();
+                        doneMultiplayerStart = true;
+                    }
+
                     UpdateDPS();
                     HandleWarpControls();
 
@@ -579,26 +613,29 @@ namespace Fp2Trainer
                             debugDisplay += "No DPS Tracker found?";
                         }
                     }
-                    else if (currentDataPage == DataPage.BATTLESPHERE)
+                    else if (currentDataPage == DataPage.MULTIPLAYER_DEBUG)
                     {
-                        debugDisplay += "Battlesphere: \n";
+                        debugDisplay += "Multiplayer Debug: \n";
                         var tempDmgType = -1;
+                        string isLeader = "";
                         foreach (var mp_fpplayer in fpplayers)
                         {
-                            debugDisplay += mp_fpplayer.name + " Health: " + mp_fpplayer.health
-                                            + " / " + mp_fpplayer.healthMax + "\n";
-                            debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy + "\n";
+                            if (mp_fpplayer == FPStage.currentStage.GetPlayerInstance())
+                            {
+                                isLeader = " - Leader";
+                            }
+                            else
+                            {
+                                isLeader = "";
+                            }
 
-                            tempDmgType = mp_fpplayer.damageType;
-                            if (tempDmgType > 4) tempDmgType = -1;
-                            debugDisplay += mp_fpplayer.name + " Last Hurt Element: " +
-                                            fpElementTypeNames[tempDmgType] + "\n";
-                            //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
-                            //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
-                            debugDisplay += mp_fpplayer.name + " Attack Power: " + mp_fpplayer.attackPower + "\n";
-                            debugDisplay += mp_fpplayer.name + " Attack Hitstun: " + mp_fpplayer.attackHitstun + "\n";
-                            debugDisplay += mp_fpplayer.name + " Attack Knockback: " + mp_fpplayer.attackKnockback +
-                                            "\n";
+                            debugDisplay += mp_fpplayer.name + isLeader + "\n";
+                            debugDisplay += String.Format("{0:000.00}/{1:000.00} HP {2:000.00}/{3:000.00} EN\n",
+                                mp_fpplayer.health, mp_fpplayer.healthMax,
+                                mp_fpplayer.energy, 100f);
+
+                            debugDisplay += mp_fpplayer.position.ToString() + "\n";
+                            //debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy + "\n";
                         }
                     }
                     else if (currentDataPage == DataPage.BOSS)
@@ -637,6 +674,9 @@ namespace Fp2Trainer
                             debugDisplay +=
                                 "Unable to find relevant enemies.\nTry switching to this view while the healthbar is visible.\n";
                     }
+
+                    FPPlayer2p.CatchupIfPlayerTooFarAway();
+                    //FPPlayer2p.ShowPressedButtons();
                 }
 
 
@@ -746,11 +786,9 @@ namespace Fp2Trainer
                 }
         }
 
-        private List<FPPlayer> GetFPPlayers()
+        public static List<FPPlayer> GetFPPlayers()
         {
-            if (FPStage.player != null && FPStage.player.Length > 0) return new List<FPPlayer>(FPStage.player);
-
-            return null;
+            return new List<FPPlayer>(GameObject.FindObjectsOfType<FPPlayer>());
         }
 
         private GameObject GetFirstPlayerGameObject()
@@ -822,10 +860,14 @@ namespace Fp2Trainer
                 ToggleLevelSelectVisibility();
             }
 
-            if (Input.GetKeyUp(KeyCode.F4))
+            if (Input.GetKeyUp(KeyCode.F4) && !InputGetKeyAnyShift())
             {
                 ToggleVariableDisplay();
                 Log("F4 -> Toggle DataPage (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
+            }
+            else if (Input.GetKeyUp(KeyCode.F4) && InputGetKeyAnyShift())
+            {
+                FPPlayer2p.SwapBetweenActiveCharacters();
             }
 
             if (Input.GetKeyUp(KeyCode.F3))
@@ -920,6 +962,8 @@ namespace Fp2Trainer
                     */
 
                     FPPlayer2p.SpawnExtraCharacter();
+                    fpplayers = GetFPPlayers();
+                    currentDataPage = DataPage.MULTIPLAYER_DEBUG;
 
                 }
                 else
@@ -1166,6 +1210,10 @@ namespace Fp2Trainer
                 showVarString = true;
 
             if (currentDataPage == DataPage.BOSS) ReacquireBossHuds();
+            if (currentDataPage == DataPage.MULTIPLAYER_DEBUG)
+            {
+                fpplayers = GetFPPlayers();
+            }
         }
 
         public void ReacquireBossHuds()
@@ -1679,7 +1727,37 @@ namespace Fp2Trainer
                 
             }*/
         }
-        
+
+
+        public static void StartMultiplayerHud(FPPlayer fpp)
+        {
+            //This SHOULD work with some tweaking. Dummied out so I can go to sleep.
+            
+            /*
+            var gameObject = fpp.gameObject;
+            var num = 0f;
+            var maxPetals = Mathf.FloorToInt(fpp.healthMax);
+            var hudLifePetals = new FPHudDigit[maxPetals];
+            var isHudPetalFlashing = new bool[maxPetals];
+            for (int i = 0; i < hudLifePetals.Length; i++)
+            {
+                gameObject = UnityEngine.Object.Instantiate(pfHudLifePetal, new Vector3(num, -31f, 0f), default(Quaternion));
+                gameObject.transform.parent = base.transform; //Base in this case refers to the HUD Base.
+                hudLifePetals[i] = gameObject.GetComponent<FPHudDigit>();
+                num += 36f - (float)maxPetals * 2f;
+            }
+            float num2 = 88f - (float)maxPetals * 5f;
+            var maxShields = maxPetals * 2;
+            var hudShields = new FPHudDigit[maxShields];
+            for (int j = 0; j < hudShields.Length; j++)
+            {
+                gameObject = UnityEngine.Object.Instantiate(pfHudShield, new Vector3(num2, -31f, -1f - (float)j * 0.1f), default(Quaternion));
+                gameObject.transform.parent = base.transform;
+                hudShields[j] = gameObject.GetComponent<FPHudDigit>();
+                num2 += 18f - (float)maxPetals * 1f;
+            }
+            */
+        }
 
         public static void Log(string txt)
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Fp2Trainer
@@ -8,8 +9,19 @@ namespace Fp2Trainer
 
         public int maxCharacterID = 4;
         public static int extraPlayerCount = 1;
+        public static int currentActivePlayerInstance = 0;
+        public static Vector2 spawnOffset = new Vector2(-64, 0);
+        public static Vector2 catchupOffset = new Vector2(32, 128);
+
+        public static float catchupDistance = 512f;
+
+        public static Dictionary<string, KeyMapping> customControls;
+
+
         protected new void Start()
         {
+            InitCustomControls();
+            
             base.Start();
             this.name = "Player " + extraPlayerCount.ToString();
             Fp2Trainer.Log("Added " + this.name);
@@ -201,7 +213,30 @@ namespace Fp2Trainer
             }
             */
         }
-        
+
+        public static void InitCustomControls()
+        {
+            //Button 5: Saturn Z
+            // Button 7: Saturn R
+            
+            customControls = new Dictionary<string, KeyMapping>();
+            customControls.Add("CharTeamSwap", 
+                InputControl.setKey("CharTeamSwap", new JoystickInput(JoystickButton.Button8),
+                    KeyCode.None, KeyCode.None));
+            customControls.Add("CharTeamSpawn", 
+                InputControl.setKey("CharTeamSpawn", new JoystickInput(JoystickButton.Button6),
+                    KeyCode.None, KeyCode.None));
+        }
+
+        public static void ShowPressedButtons()
+        {
+            foreach(KeyCode kcode in Enum.GetValues(typeof(KeyCode)))
+            {
+                if (Input.GetKeyDown(kcode))
+                    global::Fp2Trainer.Fp2Trainer.Log("KeyCode down: " + kcode);
+            }
+        }
+
         public new void GetInputFromPlayer1()
         {
             /*
@@ -244,14 +279,108 @@ namespace Fp2Trainer
             }
         }
 
+        public static void SwapBetweenActiveCharacters()
+        {
+            if (Fp2Trainer.fpplayers != null && Fp2Trainer.fpplayers.Count > 0)
+            {
+                Fp2Trainer.Log("NumPlayers: " + Fp2Trainer.fpplayers.Count.ToString());
+                Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
+                currentActivePlayerInstance++;
+                Fp2Trainer.Log("NumPlayers: " + Fp2Trainer.fpplayers.Count.ToString());
+                Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
+                if (currentActivePlayerInstance >= Fp2Trainer.fpplayers.Count)
+                {
+                    currentActivePlayerInstance = 0;
+                }
+                Fp2Trainer.Log("NumPlayers: " + Fp2Trainer.fpplayers.Count.ToString());
+                Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
+                FPStage.currentStage.SetPlayerInstance(Fp2Trainer.fpplayers[currentActivePlayerInstance]);
+                FPCamera.SetCameraTarget(FPStage.currentStage.GetPlayerInstance().gameObject);
+            }
+        }
+
+        public static void CatchupIfPlayerTooFarAway()
+        {
+            var fppi = FPStage.currentStage.GetPlayerInstance();
+            if (fppi != null)
+            {
+                var DestroyThese = new List<FPPlayer>();
+                foreach (FPPlayer fpp in Fp2Trainer.fpplayers)
+                 {
+                     if (Vector2.Distance(fppi.transform.position, 
+                             fpp.transform.position) >= catchupDistance)
+                     {
+                         fpp.transform.position =
+                             fppi.transform.position 
+                             + new Vector3(catchupOffset.x, catchupOffset.y, fpp.transform.position.z);
+                         fpp.position = fppi.position + catchupOffset;
+                     }
+                     
+                     // This section should probably be in a dedicated update...
+                     if (fpp.state == new FPObjectState(fpp.State_KO) || fpp.state == new FPObjectState(fpp.State_CrushKO))
+                     {
+                         if (fpp.genericTimer < 10f && fpp.genericTimer > -1f)
+                         {
+                             if (Fp2Trainer.fpplayers.Count > 1)
+                             {
+                                 FPStage.DestroyStageObject(fpp); // Remember not to destroy in a foreach.
+                                 Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
+                             }
+                         }
+
+                         
+                     }
+                 }
+
+                for (int i = 0; i < DestroyThese.Count; i++)
+                {
+                    FPStage.DestroyStageObject(DestroyThese[i]);
+                    DestroyThese.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            
+            
+            //This last bit is more suited for a separate update method:
+            if (InputControl.GetButtonDown(customControls["CharTeamSpawn"]))
+            {
+                SpawnExtraCharacter();
+            }
+            if (InputControl.GetButtonDown(customControls["CharTeamSwap"]))
+            {
+                SwapBetweenActiveCharacters();
+                Fp2Trainer.Log("Switching control to " + FPStage.currentStage.GetPlayerInstance().name);
+            }
+        }
+
         public static FPPlayer SpawnExtraCharacter()
         {
             FPPlayer newPlayer = null;
+            FPPlayer fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
             bool playerObjectValidated = false;
             newPlayer = FPStage.InstantiateFPBaseObject(FPStage.player[(int)(extraPlayerCount % 5)], out playerObjectValidated);
-            newPlayer.position = FPStage.currentStage.GetPlayerInstance_FPPlayer().position + new Vector2(-64, 0);
+            
+            newPlayer.position = fppi.position + spawnOffset;
+            newPlayer.gameObject.transform.position = fppi.transform.position + new Vector3(spawnOffset.x, spawnOffset.y, 0);
+            //newPlayer.position = FPStage.currentStage.GetPlayerInstance_FPPlayer().position;
+            
+            newPlayer.inputMethod = newPlayer.GetInputFromPlayer1; // So... you can totally just replace the input method here to control the character with anything we want.
+            newPlayer.collisionLayer = fppi.collisionLayer;
+
+            newPlayer.name = String.Format("Player {0}", extraPlayerCount);
 
             extraPlayerCount++;
+            if (extraPlayerCount % 5 == 2)
+            {
+                extraPlayerCount++;
+            }
+            
+            Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
+            Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance().name + " joins the party!");
+
+            global::Fp2Trainer.Fp2Trainer.CloneHealthBar(newPlayer);
+
             return newPlayer;
         }
 
