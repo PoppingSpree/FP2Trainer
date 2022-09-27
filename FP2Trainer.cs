@@ -129,6 +129,15 @@ namespace Fp2Trainer
         private string warpMessage = "";
 
         private Vector2 warpPoint = new Vector2(211f, 50f);
+        
+        public float trainerZoomMin = 0.05f;
+        public float trainerZoomMax = 1000f;
+        public float trainerZoomSpeed = 0.1f;
+        public float trainerRequestZoomValue = 1f;
+        
+        public float originalZoomMin = 0.5f;
+        public float originalZoomMax = 2f;
+        public float originalZoomSpeed = 0.1f;
 
 
         public override void OnApplicationStart() // Runs after Game Initialization.
@@ -372,6 +381,7 @@ namespace Fp2Trainer
         {
             MelonLogger.Msg("OnSceneWasInitialized: " + buildindex + " | " + sceneName);
             SkipBootIntros();
+            GrabAndUpdateCameraDetails();
         }
 
         public override void OnApplicationQuit() // Runs when the Game is told to Close.
@@ -852,34 +862,15 @@ namespace Fp2Trainer
                 ToggleNoClip();
             }
             
-            if (Input.GetKeyUp(KeyCode.F2) && InputGetKeyAnyShift())
+            if (Input.GetKeyUp(KeyCode.Delete))
             {
-                //TestDamageNumberPopups();
-
-                if (fpplayer != null)
-                {
-                    Log("Shift + F1 -> Enable 2Player");
-                    InstaKOPlayer();
-                }
-                else
-                {
-                    Log("Shift + F2 -> Attempted to start 2P but could not find 1P");
-                }
+                Log("GET OUT DEL GET OUT ETE GET OUT");
+                SpawnSpoilerBoss();
             }
-
-            if (Input.GetKeyUp(KeyCode.KeypadPlus)
-                || Input.GetKeyUp(KeyCode.Plus))
-            {
-                Log("Numpad Plus -> Increase Font Size: ");
-                if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize++;
-            }
-
-            if (Input.GetKeyUp(KeyCode.KeypadMinus)
-                || Input.GetKeyUp(KeyCode.Minus))
-            {
-                Log("Numpad Minus -> Decrease Font Size: ");
-                if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize--;
-            }
+            
+            HandleMultiplayerSpawnHotkeys();
+            HandleResizeFontHotkeys();
+            HandleCameraHotkeys();
 
 
             if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.special))
@@ -909,6 +900,84 @@ namespace Fp2Trainer
             }
 
             HandleNoClip();
+        }
+
+        private void HandleMultiplayerSpawnHotkeys()
+        {
+            if (Input.GetKeyUp(KeyCode.F2) && InputGetKeyAnyShift())
+            {
+                //TestDamageNumberPopups();
+
+                if (fpplayer != null)
+                {
+                    Log("Shift + F1 -> Enable 2Player");
+                    InstaKOPlayer();
+                }
+                else
+                {
+                    Log("Shift + F2 -> Attempted to start 2P but could not find 1P");
+                }
+            }
+        }
+
+        private void HandleResizeFontHotkeys()
+        {
+            if (InputGetKeyAnyShift() &&
+                (Input.GetKeyUp(KeyCode.KeypadPlus)
+                 || Input.GetKeyUp(KeyCode.Plus))
+               )
+            {
+                Log("Shift + Plus -> Increase Font Size: ");
+                if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize++;
+            }
+
+            if (InputGetKeyAnyShift() &&
+                (Input.GetKeyUp(KeyCode.KeypadMinus)
+                 || Input.GetKeyUp(KeyCode.Minus))
+               )
+            {
+                Log("Shift + Minus -> Decrease Font Size: ");
+                if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize--;
+            }
+        }
+
+        private void HandleCameraHotkeys()
+        {
+            if (!InputGetKeyAnyShift() &&
+                (Input.GetKey(KeyCode.KeypadMinus)
+                 || Input.GetKey(KeyCode.Minus))
+               )
+            {
+                Log("Minus -> Camera Zoom Out: ");
+                if (FPCamera.stageCamera != null)
+                {
+                    trainerRequestZoomValue -= 1.0f;
+                    FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
+                }
+            }
+
+            if (!InputGetKeyAnyShift() &&
+                (Input.GetKey(KeyCode.KeypadPlus)
+                 || Input.GetKey(KeyCode.Plus))
+               )
+            {
+                Log("Minus -> Camera Zoom Out: ");
+                if (FPCamera.stageCamera != null)
+                {
+                    trainerRequestZoomValue += 1.0f;
+                    FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
+                }
+            }
+
+            if (Input.GetKey(KeyCode.KeypadPeriod))
+            {
+                Log("Numpad Period . -> Camera Reset: ");
+                if (FPCamera.stageCamera != null)
+                {
+                    trainerRequestZoomValue = 1f;
+                    FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
+                }
+            }
         }
 
         private static bool InputGetKeyAnyShift()
@@ -1515,6 +1584,22 @@ namespace Fp2Trainer
         {
             return fp2tDeltaTime;
         }
+
+        public void GrabAndUpdateCameraDetails()
+        {
+            if (FPCamera.stageCamera != null)
+            {
+                originalZoomMin = FPCamera.stageCamera.zoomMin;
+                originalZoomMax = FPCamera.stageCamera.zoomMax;
+                originalZoomSpeed = FPCamera.stageCamera.zoomSpeed;
+            }
+        }
+
+        public void SpawnSpoilerBoss()
+        {
+            
+        }
+        
 
         public static void Log(string txt)
         {
