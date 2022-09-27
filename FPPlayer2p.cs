@@ -7,7 +7,7 @@ namespace Fp2Trainer
     {
 
         public int maxCharacterID = 4;
-        int extraPlayerCount = 1;
+        public static int extraPlayerCount = 1;
         protected new void Start()
         {
             base.Start();
@@ -244,11 +244,14 @@ namespace Fp2Trainer
             }
         }
 
-        public FPPlayer SpawnExtraCharacter()
+        public static FPPlayer SpawnExtraCharacter()
         {
-            FPPlayer newPlayer = new FPPlayer();
+            FPPlayer newPlayer = null;
+            bool playerObjectValidated = false;
+            newPlayer = FPStage.InstantiateFPBaseObject(FPStage.player[(int)(extraPlayerCount % 5)], out playerObjectValidated);
+            newPlayer.position = FPStage.currentStage.GetPlayerInstance_FPPlayer().position + new Vector2(-64, 0);
+
             extraPlayerCount++;
-            extraPlayerCount %= 5;
             return newPlayer;
         }
 

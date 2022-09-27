@@ -51,15 +51,19 @@
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="FP2Trainer.cs" />
         <Compile Include="SceneNamePair.cs" />
+        <Compile Include="TrainerPauseMenu.cs" />
     </ItemGroup>
     <ItemGroup>
       <Content Include="LICENSE.md" />
       <Content Include="MiscNotes" />
       <Content Include="NOTICE.txt" />
       <Content Include="README.md" />
+      <Content Include="StartFP2.bat" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <Target Name="AfterBuild">
         <Copy SourceFiles="Output\FP2Trainer.dll" DestinationFolder="E:\SteamLibrary\steamapps\common\Freedom Planet 2\Mods" />
+        <!--<Exec Command="E:\SteamLibrary\steamapps\common\Freedom Planet 2\FP2.exe" WorkingDirectory="E:\SteamLibrary\steamapps\common\Freedom Planet 2\" />-->
+        <Exec Command="StartFP2.bat" />
     </Target>
 </Project>

@@ -131,7 +131,7 @@ namespace Fp2Trainer
         private Vector2 warpPoint = new Vector2(211f, 50f);
         
         public float trainerZoomMin = 0.05f;
-        public float trainerZoomMax = 1000f;
+        public float trainerZoomMax = 100f;
         public float trainerZoomSpeed = 0.1f;
         public float trainerRequestZoomValue = 1f;
         
@@ -199,6 +199,7 @@ namespace Fp2Trainer
             ResetSceneSpecificVariables();
             AttemptToFindFPFont();
             AttemptToFindPauseMenu();
+            GrabAndTweakPauseMenu();
             MelonPreferences.Save();
 
 
@@ -381,6 +382,7 @@ namespace Fp2Trainer
         {
             MelonLogger.Msg("OnSceneWasInitialized: " + buildindex + " | " + sceneName);
             SkipBootIntros();
+            GrabAndTweakPauseMenu();
             GrabAndUpdateCameraDetails();
         }
 
@@ -856,7 +858,7 @@ namespace Fp2Trainer
                 }
             }
             
-            if (Input.GetKeyUp(KeyCode.F2))
+            if (Input.GetKeyUp(KeyCode.F2) && !InputGetKeyAnyShift())
             {
                 Log("F2 -> NoClip Toggle");
                 ToggleNoClip();
@@ -910,8 +912,15 @@ namespace Fp2Trainer
 
                 if (fpplayer != null)
                 {
-                    Log("Shift + F1 -> Enable 2Player");
-                    InstaKOPlayer();
+                    Log("Shift + F2 -> Enable 2Player");
+                    /*
+                    var goNewPlayer = GameObject.Instantiate(fpplayer.gameObject);
+                    goNewPlayer.transform.position = new Vector3(fpplayer.position.x - 64, fpplayer.position.y,
+                        fpplayer.gameObject.transform.position.z);
+                    */
+
+                    FPPlayer2p.SpawnExtraCharacter();
+
                 }
                 else
                 {
@@ -951,7 +960,7 @@ namespace Fp2Trainer
                 Log("Minus -> Camera Zoom Out: ");
                 if (FPCamera.stageCamera != null)
                 {
-                    trainerRequestZoomValue -= 1.0f;
+                    trainerRequestZoomValue -= 0.1f;
                     FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
                 }
             }
@@ -961,10 +970,10 @@ namespace Fp2Trainer
                  || Input.GetKey(KeyCode.Plus))
                )
             {
-                Log("Minus -> Camera Zoom Out: ");
+                Log("Minus -> Camera Zoom In: ");
                 if (FPCamera.stageCamera != null)
                 {
-                    trainerRequestZoomValue += 1.0f;
+                    trainerRequestZoomValue += 0.1f;
                     FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
                 }
             }
@@ -978,6 +987,8 @@ namespace Fp2Trainer
                     FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
                 }
             }
+            
+            FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
         }
 
         private static bool InputGetKeyAnyShift()
@@ -1524,27 +1535,33 @@ namespace Fp2Trainer
                 Log("BootupLevel: " + BootupLevel.Value);
                 if (level != null && !level.Equals(""))
                 {
-                    GoToMainMenuNoLogos();
+                    GoToCustomBootLevelImmediate(level);
                 }
                 else
                 {
-                    GoToCustomBootLevel(level);
+                    GoToMainMenuNoLogos();
                 }
             }
             
+            /*
             if (introSkipped == 1)
             {
                 string level = BootupLevel.Value;
                 Log("BootupLevel: " + BootupLevel.Value);
+                Log("level: " + level);
                 if (level != null && !level.Equals(""))
                 {
-                    GoToMainMenuNoLogos();
+                    Log("1");
+                    GoToCustomBootLevelImmediate(level);
+                    
                 }
                 else
                 {
-                    GoToCustomBootLevel(level);
+                    Log("2");
+                    GoToMainMenuNoLogos();
                 }
             }
+            */
 
                 
         }
@@ -1564,6 +1581,23 @@ namespace Fp2Trainer
                 component.transitionSpeed = 48f;
                 component.sceneToLoad = level;
                 FPSaveManager.menuToLoad = 2; // This is how we skip the intros.
+
+                introSkipped++;
+            }
+        }
+        
+        public static void GoToCustomBootLevelImmediate(string level)
+        {
+            Log("Now Loading Custom Boot Immediate: " + level);
+            var component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
+            if (component != null)
+            {
+                //component.transitionType = FPTransitionTypes.WIPE;
+                //component.transitionSpeed = 48f;
+                //component.sceneToLoad = level;
+                //FPSaveManager.menuToLoad = 2; // This is how we skip the intros.
+                
+                SceneManager.LoadSceneAsync(level);
 
                 introSkipped++;
             }
@@ -1592,12 +1626,58 @@ namespace Fp2Trainer
                 originalZoomMin = FPCamera.stageCamera.zoomMin;
                 originalZoomMax = FPCamera.stageCamera.zoomMax;
                 originalZoomSpeed = FPCamera.stageCamera.zoomSpeed;
+                
+                FPCamera.stageCamera.zoomMin = trainerZoomMin;
+                FPCamera.stageCamera.zoomMax = trainerZoomMax;
+                FPCamera.stageCamera.zoomSpeed = trainerZoomSpeed;
             }
         }
 
-        public void SpawnSpoilerBoss()
+        public void GrabAndTweakPauseMenu()
         {
-            
+            TrainerPauseMenu.GrabAndTweakPauseMenu();
+        }
+
+        public IEnumerator SpawnSpoilerBoss()
+        {
+            var bk5 = SceneManager.GetSceneByName("Bakunawa5");
+            if (!bk5.isLoaded)
+            {
+                AsyncOperation scene = SceneManager.LoadSceneAsync("Bakunawa5", LoadSceneMode.Additive);
+                while (!scene.isDone)
+                {
+                    yield return null;
+                }
+            }
+
+            GameObject goHunter = GameObject.Find("Syntax Hunter");
+            GameObject goHunterKO = GameObject.Find("HunterKOScreen");
+            GameObject goArc = GameObject.Find("arc");
+            GameObject goMeter = GameObject.Find("Hud Stealth Meter");
+
+            if (goHunter != null)
+            {
+                Log("See you.");
+                SceneManager.MoveGameObjectToScene(goHunter, SceneManager.GetActiveScene());
+                SceneManager.MoveGameObjectToScene(goHunterKO, SceneManager.GetActiveScene());
+                SceneManager.MoveGameObjectToScene(goArc, SceneManager.GetActiveScene());
+                SceneManager.MoveGameObjectToScene(goMeter, SceneManager.GetActiveScene());
+            }
+
+            if (bk5.isLoaded)
+            {
+                SceneManager.UnloadSceneAsync(bk5);
+                Log("P for Perish");
+            }
+
+            /*
+            var goSyntaxHunter = new GameObject();
+            if (fpplayer != null)
+            {
+                goSyntaxHunter.transform.position = new Vector3(fpplayer.position.x, fpplayer.position.y, goSyntaxHunter.transform.position.z);
+                goSyntaxHunter.AddComponent<BFSyntaxHunt>();
+                
+            }*/
         }
         
 
