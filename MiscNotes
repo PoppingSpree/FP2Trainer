@@ -1,0 +1,8 @@
+MonoBehaviors
+
+FPBaseObject: Every active FP game object is based on this. Player, Enemy, Boss, or otherwise. Because of this, if you can achieve everything you need with this type, you can downcast those other types and use this.
+FPPlayer: Handles implemention of character actions and state machines.
+FPStage: Basically the "director" of gameplay, it controls the camera, it keeps track of the player, bosses, game state and is responsible for calling for most save/load data.
+PlayerSpawnPoint: Has all the properties for spawning in a player after the FPStage starts, as well as setting debug mode flags for the character and the position the character will be placed at.
+
+Stage Setup: This is the Game Object that will contain the FPStage script and is necessary for stages to function.
