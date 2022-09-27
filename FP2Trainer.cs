@@ -6,6 +6,7 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
+
 //using UnityEngine.InputSystem.Controls;
 //using UnityEngine.InputSystem;
 
@@ -45,7 +46,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> showDebug;
         public static MelonPreferences_Entry<bool> showLevelEditDebug;
         public static MelonPreferences_Entry<bool> enableNoClip;
-        
+
         public static MelonPreferences_Entry<string> BootupLevel;
 
         public static MelonPreferences_Entry<string> inputLETileCopy;
@@ -76,6 +77,7 @@ namespace Fp2Trainer
         private readonly GameObject crosshair = null;
 
         private DataPage currentDataPage = DataPage.MOVEMENT;
+        public static bool showInstructions = true;
 
         private string debugDisplay = "Never Updated";
 
@@ -132,17 +134,19 @@ namespace Fp2Trainer
         private string warpMessage = "";
 
         private Vector2 warpPoint = new Vector2(211f, 50f);
-        
+
         public float trainerZoomMin = 0.05f;
         public float trainerZoomMax = 100f;
         public float trainerZoomSpeed = 0.1f;
         public float trainerRequestZoomValue = 1f;
-        
+
         public float originalZoomMin = 0.5f;
         public float originalZoomMax = 2f;
         public float originalZoomSpeed = 0.1f;
         public GameObject lifePetal;
         public GameObject shield;
+
+        public static Dictionary<string, KeyMapping> customHotkeys;
 
 
         public override void OnApplicationStart() // Runs after Game Initialization.
@@ -192,10 +196,6 @@ namespace Fp2Trainer
             BootupLevel = fp2Trainer.CreateEntry("bootupLevel", "ZaoLand");
             showDebug = fp2Trainer.CreateEntry("showDebug", true);
             enableNoClip = fp2Trainer.CreateEntry("enableNoClip", false);
-            showLevelEditDebug = fp2Trainer.CreateEntry("showLevelEditDebug", true);
-            inputLETileCopy = fp2Trainer.CreateEntry("inputLETileCopy", "<Gamepad>/buttonNorth");
-            inputLETilePaste = fp2Trainer.CreateEntry("inputLETilePaste", "<Gamepad>/buttonEast");
-            inputLETileLayer = fp2Trainer.CreateEntry("inputLETileLayer", "<Gamepad>/leftShoulder");
         }
 
         public override void
@@ -287,18 +287,17 @@ namespace Fp2Trainer
 
         public void CreateFancyTextObjects()
         {
-            
             goStageHUD = GameObject.Find("Stage HUD");
             //GameObject goStageHUD = GameObject.Find("Hud Pause Menu");
             if (goStageHUD == null) return;
 
             Log("Successfully found HUD to attach text to.");
-            
+
             //Why is this here??
             var tempHudMaster = goStageHUD.GetComponent<FPHudMaster>();
             this.lifePetal = tempHudMaster.pfHudLifePetal;
             this.shield = tempHudMaster.pfHudShield;
-            
+
             goFancyTextPosition = GameObject.Find("Resume Text");
             if (goFancyTextPosition != null)
             {
@@ -320,7 +319,6 @@ namespace Fp2Trainer
                 GameObject temp2;
                 if (temp != null)
                 {
-                    
                     temp2 = temp.pfHudEnergyBar;
                 }
                 else
@@ -384,7 +382,6 @@ namespace Fp2Trainer
 
         public static GameObject CloneHealthBar(FPPlayer targetPlayer)
         {
-            
             GameObject newHud = null;
             var huds = GameObject.FindObjectsOfType<FPHudMaster>();
             if (huds.Length > 0)
@@ -392,13 +389,12 @@ namespace Fp2Trainer
                 newHud = GameObject.Instantiate(huds[0].gameObject,
                     (huds[0].transform.position + new Vector3(0f, -128f, 0f)), huds[0].transform.rotation);
                 newHud.name = "Stage HUD " + huds.Length.ToString();
-                
+
                 var hudScript = newHud.GetComponent<FPHudMaster>();
-                            //hudScript.onlyShowHealth = true;
-                            hudScript.targetPlayer = targetPlayer;
+                //hudScript.onlyShowHealth = true;
+                hudScript.targetPlayer = targetPlayer;
             }
 
-            
 
             return newHud;
         }
@@ -436,7 +432,7 @@ namespace Fp2Trainer
             {
                 SkipBootIntros();
             }
-            
+
             if (dpsTracker != null) dpsTracker.Update();
 
             if (timeoutShowWarpInfo > 0) timeoutShowWarpInfo -= FPStage.frameTime;
@@ -447,7 +443,7 @@ namespace Fp2Trainer
                 {
                     player = GetFirstPlayerGameObject();
                     fpplayer = FPStage.currentStage.GetPlayerInstance_FPPlayer();
-                    
+
                     if (player != null) MelonLogger.Msg("Trainer found a Player Object: ");
                 }
 
@@ -492,201 +488,210 @@ namespace Fp2Trainer
 
                 if (fpplayer != null)
                 {
-                    if (multiplayerStart && !doneMultiplayerStart)
+                    if (showInstructions)
                     {
-                        currentDataPage = DataPage.MULTIPLAYER_DEBUG;
-                        FPPlayer2p.SpawnExtraCharacter();
-                        doneMultiplayerStart = true;
+                        debugDisplay = GetInstructionsText();
                     }
 
-                    UpdateDPS();
-                    HandleWarpControls();
-
-                    if (timeoutShowWarpInfo > 0) debugDisplay += warpMessage + "\n";
-
-                    if (fptls != null)
+                    else
                     {
-                        var snp = fptls.availableScenes[fptls.menuSelection];
-                        debugDisplay += "Warp to: " + fptls.menuSelection + " | " + snp.name + "\n";
-                        debugDisplay += "Level Select Parent Pos: " + stageSelectMenu.transform.position + "\n";
-                        var tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
-                        debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position + "\n";
-                        debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition + "\n";
-                    }
-
-                    
-                    if (currentDataPage == DataPage.NO_CLIP)
-                    {
-                        debugDisplay += "NoClip Enabled: " + noClip.ToString() + "\n";
-                        debugDisplay += "Position: " + fpplayer.position.ToString() + "\n";
-                        debugDisplay += "Terrain Collision: " + fpplayer.terrainCollision.ToString() + "\n";
-                        debugDisplay += "Physics Enabled: " + fpplayer.enablePhysics.ToString() + "\n";
-                        debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
-                    }
-                    
-
-                    if (noClip)
-                    {
-                        debugDisplay += "NoClip: " + fpplayer.position.ToString() + "\n";
-                    }
-
-                    if (currentDataPage == DataPage.MOVEMENT)
-                    {
-                        debugDisplay += "Movement: \n";
-                        if (playerValuesToShow.Contains("Pos")) debugDisplay += "Pos: " + fpplayer.position + "\n";
-                        if (playerValuesToShow.Contains("Vel")) debugDisplay += "Vel: " + fpplayer.velocity + "\n";
-                        if (playerValuesToShow.Contains("Magnitude"))
+                        if (multiplayerStart && !doneMultiplayerStart)
                         {
-                            debugDisplay += "Acceleration: " + fpplayer.acceleration + "\n";
-                            debugDisplay += "Magnitude: " + fpplayer.velocity.magnitude + "\n";
-                            debugDisplay += "Accel: " + fpplayer.acceleration + "\n";
-                            debugDisplay += "Air Accel: " + fpplayer.airAceleration + "\n";
-                            debugDisplay += "Air Drag: " + fpplayer.airDrag + "\n";
+                            currentDataPage = DataPage.MULTIPLAYER_DEBUG;
+                            FPPlayer2p.SpawnExtraCharacter();
+                            doneMultiplayerStart = true;
                         }
 
-                        if (playerValuesToShow.Contains("Ground Angle"))
-                            debugDisplay += "Ground Angle: " + fpplayer.groundAngle + "\n";
-                        if (playerValuesToShow.Contains("Ground Velocity"))
-                            debugDisplay += "Ground Velocity: " + fpplayer.groundVel + "\n";
-                        if (playerValuesToShow.Contains("Ceiling Angle"))
-                            debugDisplay += "Ceiling Angle: " + fpplayer.ceilingAngle + "\n";
-                        if (playerValuesToShow.Contains("Sensor Angle"))
-                            debugDisplay += "Sensor Angle: " + fpplayer.sensorAngle + "\n";
-                        if (playerValuesToShow.Contains("Gravity Angle"))
-                            debugDisplay += "Gravity Angle: " + fpplayer.gravityAngle + "\n";
-                        if (playerValuesToShow.Contains("Gravity Strength"))
-                            debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength + "\n";
-                    }
-                    else if (currentDataPage == DataPage.COMBAT)
-                    {
-                        debugDisplay += "Combat: \n";
-                        debugDisplay += "Health: " + fpplayer.health + "\n";
+                        UpdateDPS();
+                        HandleWarpControls();
 
-                        var tempDmgType = fpplayer.damageType;
-                        if (tempDmgType > 4) tempDmgType = -1;
-                        debugDisplay += "Hurt Damage Element: " + fpElementTypeNames[tempDmgType] + "\n";
+                        if (timeoutShowWarpInfo > 0) debugDisplay += warpMessage + "\n";
 
-                        if (nearestEnemy != null)
-                            debugDisplay += nearestEnemy.name + " Health: " + nearestEnemy.health + "\n";
-
-                        if (dpsTracker != null) debugDisplay += "DPS: " + dpsTracker + "\n";
-
-                        debugDisplay += "Energy: " + fpplayer.energy + "\n";
-                        debugDisplay += "Energy Recover Current: " + fpplayer.energyRecoverRateCurrent + "\n";
-                        debugDisplay += "Energy Recover: " + fpplayer.energyRecoverRate + "\n";
-                        debugDisplay += "Faction: " + fpplayer.faction + "\n";
-                        debugDisplay += "Attack Power: " + fpplayer.attackPower + "\n";
-                        debugDisplay += "Attack Hitstun: " + fpplayer.attackHitstun + "\n";
-                        debugDisplay += "Attack Knockback: " + fpplayer.attackKnockback + "\n";
-                        if (playerValuesToShow.Contains("InflictedDamage"))
-                            debugDisplay += "InflictedDamage: " + fpplayer.damageInflicted + "\n";
-                        debugDisplay += "Guard Time: " + fpplayer.guardTime + "\n";
-                        debugDisplay += "ATK NME INV TIM: " + fpplayer.attackEnemyInvTime + "\n";
-                        debugDisplay += "Hit Stun: " + fpplayer.hitStun + "\n";
-                        debugDisplay += "Invul Time: " + fpplayer.invincibilityTime + "\n";
-                    }
-                    else if (currentDataPage == DataPage.DPS)
-                    {
-                        debugDisplay += "DPS: \n";
-                        if (dpsTracker != null)
+                        if (fptls != null)
                         {
-                            if (nearestEnemy != null && nearestEnemyPrevious != null)
+                            var snp = fptls.availableScenes[fptls.menuSelection];
+                            debugDisplay += "Warp to: " + fptls.menuSelection + " | " + snp.name + "\n";
+                            debugDisplay += "Level Select Parent Pos: " + stageSelectMenu.transform.position + "\n";
+                            var tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
+                            debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position + "\n";
+                            debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition +
+                                            "\n";
+                        }
+
+
+                        if (currentDataPage == DataPage.NO_CLIP)
+                        {
+                            debugDisplay += "NoClip Enabled: " + noClip.ToString() + "\n";
+                            debugDisplay += "Position: " + fpplayer.position.ToString() + "\n";
+                            debugDisplay += "Terrain Collision: " + fpplayer.terrainCollision.ToString() + "\n";
+                            debugDisplay += "Physics Enabled: " + fpplayer.enablePhysics.ToString() + "\n";
+                            debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
+                        }
+
+
+                        if (noClip)
+                        {
+                            debugDisplay += "NoClip: " + fpplayer.position.ToString() + "\n";
+                        }
+
+                        if (currentDataPage == DataPage.MOVEMENT)
+                        {
+                            debugDisplay += "Movement: \n";
+                            if (playerValuesToShow.Contains("Pos")) debugDisplay += "Pos: " + fpplayer.position + "\n";
+                            if (playerValuesToShow.Contains("Vel")) debugDisplay += "Vel: " + fpplayer.velocity + "\n";
+                            if (playerValuesToShow.Contains("Magnitude"))
                             {
-                                debugDisplay += "Previous Nearest Enemy: " + nearestEnemyPrevious.name + "\n";
-                                debugDisplay += "Prev Health: " + nearestEnemyPreviousHP + "\n";
-                            }
-                            else if (nearestEnemy == null)
-                            {
-                                debugDisplay += "Nearest Enemy Not Found\n";
-                            }
-                            else if (nearestEnemy == null)
-                            {
-                                debugDisplay += "Previous Nearest Enemy Not Found\n";
+                                debugDisplay += "Acceleration: " + fpplayer.acceleration + "\n";
+                                debugDisplay += "Magnitude: " + fpplayer.velocity.magnitude + "\n";
+                                debugDisplay += "Accel: " + fpplayer.acceleration + "\n";
+                                debugDisplay += "Air Accel: " + fpplayer.airAceleration + "\n";
+                                debugDisplay += "Air Drag: " + fpplayer.airDrag + "\n";
                             }
 
-                            debugDisplay += dpsTracker.GetDPSBreakdownString();
+                            if (playerValuesToShow.Contains("Ground Angle"))
+                                debugDisplay += "Ground Angle: " + fpplayer.groundAngle + "\n";
+                            if (playerValuesToShow.Contains("Ground Velocity"))
+                                debugDisplay += "Ground Velocity: " + fpplayer.groundVel + "\n";
+                            if (playerValuesToShow.Contains("Ceiling Angle"))
+                                debugDisplay += "Ceiling Angle: " + fpplayer.ceilingAngle + "\n";
+                            if (playerValuesToShow.Contains("Sensor Angle"))
+                                debugDisplay += "Sensor Angle: " + fpplayer.sensorAngle + "\n";
+                            if (playerValuesToShow.Contains("Gravity Angle"))
+                                debugDisplay += "Gravity Angle: " + fpplayer.gravityAngle + "\n";
+                            if (playerValuesToShow.Contains("Gravity Strength"))
+                                debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength + "\n";
                         }
-                        else
+                        else if (currentDataPage == DataPage.COMBAT)
                         {
-                            debugDisplay += "No DPS Tracker found?";
+                            debugDisplay += "Combat: \n";
+                            debugDisplay += "Health: " + fpplayer.health + "\n";
+
+                            var tempDmgType = fpplayer.damageType;
+                            if (tempDmgType > 4) tempDmgType = -1;
+                            debugDisplay += "Hurt Damage Element: " + fpElementTypeNames[tempDmgType] + "\n";
+
+                            if (nearestEnemy != null)
+                                debugDisplay += nearestEnemy.name + " Health: " + nearestEnemy.health + "\n";
+
+                            if (dpsTracker != null) debugDisplay += "DPS: " + dpsTracker + "\n";
+
+                            debugDisplay += "Energy: " + fpplayer.energy + "\n";
+                            debugDisplay += "Energy Recover Current: " + fpplayer.energyRecoverRateCurrent + "\n";
+                            debugDisplay += "Energy Recover: " + fpplayer.energyRecoverRate + "\n";
+                            debugDisplay += "Faction: " + fpplayer.faction + "\n";
+                            debugDisplay += "Attack Power: " + fpplayer.attackPower + "\n";
+                            debugDisplay += "Attack Hitstun: " + fpplayer.attackHitstun + "\n";
+                            debugDisplay += "Attack Knockback: " + fpplayer.attackKnockback + "\n";
+                            if (playerValuesToShow.Contains("InflictedDamage"))
+                                debugDisplay += "InflictedDamage: " + fpplayer.damageInflicted + "\n";
+                            debugDisplay += "Guard Time: " + fpplayer.guardTime + "\n";
+                            debugDisplay += "ATK NME INV TIM: " + fpplayer.attackEnemyInvTime + "\n";
+                            debugDisplay += "Hit Stun: " + fpplayer.hitStun + "\n";
+                            debugDisplay += "Invul Time: " + fpplayer.invincibilityTime + "\n";
                         }
-                    }
-                    else if (currentDataPage == DataPage.DPS_ALL)
-                    {
-                        if (dpsTracker != null)
+                        else if (currentDataPage == DataPage.DPS)
                         {
-                            debugDisplay += "DPS ALL: \n";
-                            debugDisplay += dpsTracker.GetDPSBreakdownString();
-                        }
-                        else
-                        {
-                            debugDisplay += "No DPS Tracker found?";
-                        }
-                    }
-                    else if (currentDataPage == DataPage.MULTIPLAYER_DEBUG)
-                    {
-                        debugDisplay += "Multiplayer Debug: \n";
-                        var tempDmgType = -1;
-                        string isLeader = "";
-                        foreach (var mp_fpplayer in fpplayers)
-                        {
-                            if (mp_fpplayer == FPStage.currentStage.GetPlayerInstance())
+                            debugDisplay += "DPS: \n";
+                            if (dpsTracker != null)
                             {
-                                isLeader = " - Leader";
+                                if (nearestEnemy != null && nearestEnemyPrevious != null)
+                                {
+                                    debugDisplay += "Previous Nearest Enemy: " + nearestEnemyPrevious.name + "\n";
+                                    debugDisplay += "Prev Health: " + nearestEnemyPreviousHP + "\n";
+                                }
+                                else if (nearestEnemy == null)
+                                {
+                                    debugDisplay += "Nearest Enemy Not Found\n";
+                                }
+                                else if (nearestEnemy == null)
+                                {
+                                    debugDisplay += "Previous Nearest Enemy Not Found\n";
+                                }
+
+                                debugDisplay += dpsTracker.GetDPSBreakdownString();
                             }
                             else
                             {
-                                isLeader = "";
+                                debugDisplay += "No DPS Tracker found?";
                             }
-
-                            debugDisplay += mp_fpplayer.name + isLeader + "\n";
-                            debugDisplay += String.Format("{0:000.00}/{1:000.00} HP {2:000.00}/{3:000.00} EN\n",
-                                mp_fpplayer.health, mp_fpplayer.healthMax,
-                                mp_fpplayer.energy, 100f);
-
-                            debugDisplay += mp_fpplayer.position.ToString() + "\n";
-                            //debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy + "\n";
                         }
-                    }
-                    else if (currentDataPage == DataPage.BOSS)
-                    {
-                        debugDisplay += "Boss: \n";
-                        fpEnemies.Clear();
-                        foreach (var bh in bossHuds)
+                        else if (currentDataPage == DataPage.DPS_ALL)
                         {
-                            if (!bh.transform.gameObject.activeInHierarchy)
+                            if (dpsTracker != null)
                             {
-                                ReacquireBossHuds();
-                                break;
+                                debugDisplay += "DPS ALL: \n";
+                                debugDisplay += dpsTracker.GetDPSBreakdownString();
+                            }
+                            else
+                            {
+                                debugDisplay += "No DPS Tracker found?";
+                            }
+                        }
+                        else if (currentDataPage == DataPage.MULTIPLAYER_DEBUG)
+                        {
+                            debugDisplay += "Multiplayer Debug: \n";
+                            var tempDmgType = -1;
+                            string isLeader = "";
+                            foreach (var mp_fpplayer in fpplayers)
+                            {
+                                if (mp_fpplayer == FPStage.currentStage.GetPlayerInstance_FPPlayer())
+                                {
+                                    isLeader = " - Leader";
+                                }
+                                else
+                                {
+                                    isLeader = "";
+                                }
+
+                                debugDisplay += mp_fpplayer.name + isLeader + "\n";
+                                debugDisplay += String.Format("{0:000.00}/{1:000.00} HP {2:000.00}/{3:000.00} EN\n",
+                                    mp_fpplayer.health, mp_fpplayer.healthMax,
+                                    mp_fpplayer.energy, 100f);
+
+                                debugDisplay += mp_fpplayer.position.ToString() + "\n";
+                                //debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy + "\n";
+                            }
+                        }
+                        else if (currentDataPage == DataPage.BOSS)
+                        {
+                            debugDisplay += "Boss: \n";
+                            fpEnemies.Clear();
+                            foreach (var bh in bossHuds)
+                            {
+                                if (!bh.transform.gameObject.activeInHierarchy)
+                                {
+                                    ReacquireBossHuds();
+                                    break;
+                                }
+
+                                if (bh.targetBoss != null) fpEnemies.Add(bh.targetBoss);
                             }
 
-                            if (bh.targetBoss != null) fpEnemies.Add(bh.targetBoss);
+                            if (fpEnemies.Count > 0)
+                                foreach (var ene in fpEnemies)
+                                {
+                                    if (ene == null) continue;
+
+                                    debugDisplay += ene.name + " Health: " + ene.health + "\n";
+                                    debugDisplay += ene.name + " Freeze Timer: " + ene.freezeTimer + "\n";
+                                    //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
+                                    //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
+                                    debugDisplay += ene.name + " Is Harmless: " + ene.isHarmless + "\n";
+                                    debugDisplay += ene.name + " Cannot Be Killed: " + ene.cannotBeKilled + "\n";
+                                    debugDisplay += ene.name + " Cannot Be Frozen: " + ene.cannotBeFrozen + "\n";
+                                    debugDisplay += ene.name + " Last Received Damage: " +
+                                                    ene.lastReceivedDamage + "\n";
+                                    debugDisplay += ene.name + " LRD (Unmodified): " +
+                                                    ene.lastReceivedDamageUnmodified + "\n";
+                                }
+                            else
+                                debugDisplay +=
+                                    "Unable to find relevant enemies.\nTry switching to this view while the healthbar is visible.\n";
                         }
 
-                        if (fpEnemies.Count > 0)
-                            foreach (var ene in fpEnemies)
-                            {
-                                if (ene == null) continue;
-
-                                debugDisplay += ene.name + " Health: " + ene.health + "\n";
-                                debugDisplay += ene.name + " Freeze Timer: " + ene.freezeTimer + "\n";
-                                //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
-                                //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
-                                debugDisplay += ene.name + " Is Harmless: " + ene.isHarmless + "\n";
-                                debugDisplay += ene.name + " Cannot Be Killed: " + ene.cannotBeKilled + "\n";
-                                debugDisplay += ene.name + " Cannot Be Frozen: " + ene.cannotBeFrozen + "\n";
-                                debugDisplay += ene.name + " Last Received Damage: " +
-                                                ene.lastReceivedDamage + "\n";
-                                debugDisplay += ene.name + " LRD (Unmodified): " +
-                                                ene.lastReceivedDamageUnmodified + "\n";
-                            }
-                        else
-                            debugDisplay +=
-                                "Unable to find relevant enemies.\nTry switching to this view while the healthbar is visible.\n";
+                        FPPlayer2p.CatchupIfPlayerTooFarAway();
+                        //FPPlayer2p.ShowPressedButtons();
                     }
-
-                    FPPlayer2p.CatchupIfPlayerTooFarAway();
-                    //FPPlayer2p.ShowPressedButtons();
                 }
 
 
@@ -701,6 +706,16 @@ namespace Fp2Trainer
                 Log("Trainer Error During Update: " + e.Message + "(" + e.InnerException?.Message + ") @@" +
                     e.StackTrace);
             }
+        }
+
+        private string GetInstructionsText()
+        {
+            string instructions = "";
+            instructions += "Instructions:\n";
+            string txtInstructionsToggle = "F1";
+            instructions += String.Format("Press {0} to toggle the Instructions on or off.\n", txtInstructionsToggle);
+
+            return instructions;
         }
 
         public void UpdateDPS()
@@ -910,24 +925,35 @@ namespace Fp2Trainer
                 }
             }
             
+            if (Input.GetKeyUp(KeyCode.F1) && !InputGetKeyAnyShift())
+            {
+                //TestDamageNumberPopups();
+
+                if (fpplayer != null)
+                {
+                    Log(String.Format("F1 -> Toggle Instructions: ({0}) -> ({1})", showInstructions, !showInstructions));
+                    showInstructions = !showInstructions;
+                }
+            }
+
             if (Input.GetKeyUp(KeyCode.F2) && !InputGetKeyAnyShift())
             {
                 Log("F2 -> NoClip Toggle");
                 ToggleNoClip();
             }
-            
+
             if (Input.GetKeyUp(KeyCode.Delete))
             {
                 Log("GET OUT DEL GET OUT ETE GET OUT");
                 SpawnSpoilerBoss();
             }
-            
+
             if (Input.GetKeyUp(KeyCode.F12) && !InputGetKeyAnyShift())
             {
                 multiplayerStart = !multiplayerStart;
                 Log(String.Format("F12 -> Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
             }
-            
+
             HandleMultiplayerSpawnHotkeys();
             HandleResizeFontHotkeys();
             HandleCameraHotkeys();
@@ -948,12 +974,12 @@ namespace Fp2Trainer
                 warpMessage = "Set warp at " + warpPoint;
                 timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
-            
+
             if (InputControl.GetButton(Controls.buttons.pause) && InputControl.GetButtonDown(Controls.buttons.special))
             {
                 ToggleNoClip();
             }
-            
+
             if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.special))
             {
                 ToggleNoClip();
@@ -980,7 +1006,6 @@ namespace Fp2Trainer
                     FPPlayer2p.SpawnExtraCharacter();
                     fpplayers = GetFPPlayers();
                     currentDataPage = DataPage.MULTIPLAYER_DEBUG;
-
                 }
                 else
                 {
@@ -1047,7 +1072,7 @@ namespace Fp2Trainer
                     FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
                 }
             }
-            
+
             FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
         }
 
@@ -1070,8 +1095,6 @@ namespace Fp2Trainer
                 noClipCollisionLayer = fpplayer.collisionLayer;
                 noClipGravityStrength = fpplayer.gravityStrength;
             }
-
-            
         }
 
         private void InstaKOPlayer()
@@ -1129,25 +1152,24 @@ namespace Fp2Trainer
 
         private void HandleNoClip()
         {
-            
             //fpplayer.enablePhysics = false;
-            
+
             if (noClip && fpplayer != null)
             {
                 fpplayer.collisionLayer = -999;
                 fpplayer.invincibilityTime = 100f;
                 fpplayer.gravityStrength = 0;
                 fpplayer.hitStun = -1;
-                
+
                 fpplayer.velocity.x = 0;
                 fpplayer.velocity.y = 0;
-                
+
                 float modifiedNoClipMoveSpeed = noClipMoveSpeed;
                 if (InputControl.GetButton(Controls.buttons.special))
                 {
                     modifiedNoClipMoveSpeed *= 4f;
                 }
-                
+
                 fpplayer.velocity = Vector2.zero;
                 if (fpplayer.input.up
                     || InputControl.GetAxis(Controls.axes.vertical) > 0.2f)
@@ -1160,13 +1182,13 @@ namespace Fp2Trainer
                 {
                     fpplayer.position.y -= modifiedNoClipMoveSpeed * 1;
                 }
-                
+
                 if (fpplayer.input.right
                     || InputControl.GetAxis(Controls.axes.horizontal) > 0.2f)
                 {
                     fpplayer.position.x += modifiedNoClipMoveSpeed * 1;
                 }
-                
+
                 if (fpplayer.input.left
                     || InputControl.GetAxis(Controls.axes.horizontal) < -0.2f)
                 {
@@ -1178,7 +1200,7 @@ namespace Fp2Trainer
                 {
                     EndNoClip();
                 }
-                
+
                 if (InputControl.GetButtonDown(Controls.buttons.jump))
                 {
                     EndNoClipAndReturnToStartPosition();
@@ -1193,14 +1215,14 @@ namespace Fp2Trainer
             fpplayer.hitStun = 0f;
             fpplayer.collisionLayer = noClipCollisionLayer;
             fpplayer.terrainCollision = true;
-            
+
             /*
             if (currentDataPage == DataPage.NO_CLIP)
             {
                 currentDataPage++;
             }
             */
-            
+
             noClip = false;
 
             //fpplayer.enablePhysics = true;
@@ -1606,7 +1628,7 @@ namespace Fp2Trainer
                     GoToMainMenuNoLogos();
                 }
             }
-            
+
             /*
             if (introSkipped == 1)
             {
@@ -1626,15 +1648,13 @@ namespace Fp2Trainer
                 }
             }
             */
-
-                
         }
 
         public static void GoToMainMenuNoLogos()
         {
             GoToCustomBootLevel("MainMenu");
         }
-        
+
         public static void GoToCustomBootLevel(string level)
         {
             Log("Now Loading Custom Boot: " + level);
@@ -1649,7 +1669,7 @@ namespace Fp2Trainer
                 introSkipped++;
             }
         }
-        
+
         public static void GoToCustomBootLevelImmediate(string level)
         {
             Log("Now Loading Custom Boot Immediate: " + level);
@@ -1660,7 +1680,7 @@ namespace Fp2Trainer
                 //component.transitionSpeed = 48f;
                 //component.sceneToLoad = level;
                 //FPSaveManager.menuToLoad = 2; // This is how we skip the intros.
-                
+
                 SceneManager.LoadSceneAsync(level);
 
                 introSkipped++;
@@ -1690,7 +1710,7 @@ namespace Fp2Trainer
                 originalZoomMin = FPCamera.stageCamera.zoomMin;
                 originalZoomMax = FPCamera.stageCamera.zoomMax;
                 originalZoomSpeed = FPCamera.stageCamera.zoomSpeed;
-                
+
                 FPCamera.stageCamera.zoomMin = trainerZoomMin;
                 FPCamera.stageCamera.zoomMax = trainerZoomMax;
                 FPCamera.stageCamera.zoomSpeed = trainerZoomSpeed;
@@ -1748,7 +1768,7 @@ namespace Fp2Trainer
         public static void StartMultiplayerHud(FPPlayer fpp)
         {
             //This SHOULD work with some tweaking. Dummied out so I can go to sleep.
-            
+
             /*
             var gameObject = fpp.gameObject;
             var num = 0f;

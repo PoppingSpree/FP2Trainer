@@ -295,7 +295,7 @@ namespace Fp2Trainer
                 Fp2Trainer.Log("NumPlayers: " + Fp2Trainer.fpplayers.Count.ToString());
                 Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
                 FPStage.currentStage.SetPlayerInstance(Fp2Trainer.fpplayers[currentActivePlayerInstance]);
-                FPCamera.SetCameraTarget(FPStage.currentStage.GetPlayerInstance().gameObject);
+                FPCamera.SetCameraTarget(FPStage.currentStage.GetPlayerInstance_FPPlayer().gameObject);
                 var stageHud = GameObject.Find("Stage HUD");
                 if (stageHud != null)
                 {
@@ -306,7 +306,7 @@ namespace Fp2Trainer
 
         public static void CatchupIfPlayerTooFarAway()
         {
-            var fppi = FPStage.currentStage.GetPlayerInstance();
+            var fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
             if (fppi != null)
             {
                 var DestroyThese = new List<FPPlayer>();
@@ -361,7 +361,7 @@ namespace Fp2Trainer
             if (InputControl.GetButtonDown(customControls["CharTeamSwap"]))
             {
                 SwapBetweenActiveCharacters();
-                Fp2Trainer.Log("Switching control to " + FPStage.currentStage.GetPlayerInstance().name);
+                Fp2Trainer.Log("Switching control to " + FPStage.currentStage.GetPlayerInstance_FPPlayer().name);
             }
         }
 
@@ -389,7 +389,7 @@ namespace Fp2Trainer
             }
             
             Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
-            Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance().name + " joins the party!");
+            Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance_FPPlayer().name + " joins the party!");
 
             //global::Fp2Trainer.Fp2Trainer.CloneHealthBar(newPlayer);
 
