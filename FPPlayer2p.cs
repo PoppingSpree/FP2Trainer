@@ -328,9 +328,12 @@ namespace Fp2Trainer
                          {
                              if (Fp2Trainer.fpplayers.Count > 1)
                              {
-                                 FPStage.DestroyStageObject(fpp); // Remember not to destroy in a foreach.
-                                 Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
-                                 FPStage.SetGameSpeed(1f);
+                                 //FPStage.DestroyStageObject(fpp); // Remember not to destroy in a foreach.
+                                 DestroyThese.Add(fpp);
+                                 if (fpp == fppi)
+                                 {
+                                     SwapBetweenActiveCharacters();
+                                 }
                              }
                          }
 
@@ -342,6 +345,8 @@ namespace Fp2Trainer
                 {
                     FPStage.DestroyStageObject(DestroyThese[i]);
                     DestroyThese.RemoveAt(i);
+                    Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
+                    FPStage.SetGameSpeed(1f);
                     i--;
                 }
             }
