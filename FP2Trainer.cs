@@ -113,7 +113,7 @@ namespace Fp2Trainer
 
         public string sceneToLoad = "";
 
-        public static bool multiplayerStart = true;
+        public static bool multiplayerStart = false;
         public static bool doneMultiplayerStart = false;
 
 
@@ -920,6 +920,12 @@ namespace Fp2Trainer
             {
                 Log("GET OUT DEL GET OUT ETE GET OUT");
                 SpawnSpoilerBoss();
+            }
+            
+            if (Input.GetKeyUp(KeyCode.F12) && !InputGetKeyAnyShift())
+            {
+                multiplayerStart = !multiplayerStart;
+                Log(String.Format("F12 -> Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
             }
             
             HandleMultiplayerSpawnHotkeys();

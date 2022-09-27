@@ -330,6 +330,7 @@ namespace Fp2Trainer
                              {
                                  FPStage.DestroyStageObject(fpp); // Remember not to destroy in a foreach.
                                  Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
+                                 FPStage.SetGameSpeed(1f);
                              }
                          }
 
@@ -364,9 +365,10 @@ namespace Fp2Trainer
             FPPlayer newPlayer = null;
             FPPlayer fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
             bool playerObjectValidated = false;
-            newPlayer = FPStage.InstantiateFPBaseObject(FPStage.player[(int)(extraPlayerCount % 5)], out playerObjectValidated);
+            int playerNumModulus = extraPlayerCount % 5;
+            newPlayer = FPStage.InstantiateFPBaseObject(FPStage.player[(int)(playerNumModulus)], out playerObjectValidated);
             
-            newPlayer.position = fppi.position + spawnOffset;
+            newPlayer.position = fppi.position + (spawnOffset * (playerNumModulus + 1));
             newPlayer.gameObject.transform.position = fppi.transform.position + new Vector3(spawnOffset.x, spawnOffset.y, 0);
             //newPlayer.position = FPStage.currentStage.GetPlayerInstance_FPPlayer().position;
             
@@ -386,7 +388,33 @@ namespace Fp2Trainer
 
             //global::Fp2Trainer.Fp2Trainer.CloneHealthBar(newPlayer);
 
+            DestroyMergaCutsceneTriggers();
+
             return newPlayer;
+        }
+
+        private static void DestroyMergaCutsceneTriggers()
+        {
+            var trig = GameObject.Find("Cutscene_Lilac");
+            if (trig != null)
+            {
+                Destroy(trig);
+            }
+            trig = GameObject.Find("Cutscene_Carol");
+            if (trig != null)
+            {
+                Destroy(trig);
+            }
+            trig = GameObject.Find("Cutscene_Milla");
+            if (trig != null)
+            {
+                Destroy(trig);
+            }
+            trig = GameObject.Find("Cutscene_Neera");
+            if (trig != null)
+            {
+                Destroy(trig);
+            }
         }
 
         /*

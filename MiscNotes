@@ -6,3 +6,12 @@ FPStage: Basically the "director" of gameplay, it controls the camera, it keeps 
 PlayerSpawnPoint: Has all the properties for spawning in a player after the FPStage starts, as well as setting debug mode flags for the character and the position the character will be placed at.
 
 Stage Setup: This is the Game Object that will contain the FPStage script and is necessary for stages to function.
+
+---
+
+
+private void OnDrawGizmos()
+	{
+		Gizmos.color = new Color(0f, 0f, 0f, 0.25f);
+		Gizmos.DrawCube(base.transform.position, new Vector3(32f, 32f, 1f));
+	}
