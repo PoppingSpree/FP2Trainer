@@ -26,6 +26,33 @@ namespace Fp2Trainer
             
             DictHotkeyPrefToKeyMappings.Add(mpe, InputControl.setKey(mpe.Value, KeyboardInputFromString(mpe.Value)));
         }
+        
+        public static bool GetButtonDown(MelonPreferences_Entry<string> mpe)
+        {
+            if (mpe == null)
+            {
+                Fp2Trainer.Log(String.Format("mpe appears to be null: {0}", mpe));
+                return false;
+            }
+            else if (mpe.Value == null)
+            {
+                Fp2Trainer.Log(String.Format("mpe's is set, but value appears to be null: {0} -> {1}", mpe.Identifier, mpe.Value));
+                return false;
+            }
+
+            if (InputControl.GetButtonDown(DictHotkeyPrefToKeyMappings[mpe]))
+            {
+                Fp2Trainer.Log(String.Format("Button {0} just pressed.", mpe.Value));
+            }
+
+            return InputControl.GetButtonDown(DictHotkeyPrefToKeyMappings[mpe]);
+        }
+        
+        public static bool GetButton(MelonPreferences_Entry<string> mpe)
+        {
+            
+            return InputControl.GetButton(DictHotkeyPrefToKeyMappings[mpe]);
+        }
 
         public static KeyboardInput KeyboardInputFromString(string value)
         {
@@ -62,20 +89,40 @@ namespace Fp2Trainer
         public static KeyModifier ModifiersFromString(string value)
         {
             KeyModifier keyMod = KeyModifier.NoModifier;
-            Fp2Trainer.Log("1");
 
-            // KeyModifier modifiers = CustomInput.modifiersFromString(value);
-            // Can't call this directly because it's protected. So we're gonna use Reflection.
+            if (value == null)
+            {
+                return keyMod;
+            }
+
+            int maxModifiers = 7;
+            var strCtrlP = "Ctrl+";
+            var strAltP = "Alt+";
+            var strShiftP = "Shift+";
             
-            Type customInputType = typeof(CustomInput);
-            Fp2Trainer.Log("2");
-            MethodInfo miModifiersFromString = customInputType.GetMethod("modifiersFromString", BindingFlags.NonPublic);
-            Fp2Trainer.Log("3b miModifiersFromString NotNull: " + (miModifiersFromString != null).ToString());
-            Fp2Trainer.Log("3b miModifiersFromSTring " + miModifiersFromString.ToString());
-            Fp2Trainer.Log("3c value " + value);
-            keyMod = (KeyModifier)(miModifiersFromString.Invoke(null, new object[] { value }));
-            Fp2Trainer.Log("4");
-            
+            for (int i = 0; i < maxModifiers; i++)
+            {
+                if (value.Contains(strCtrlP))
+                {
+                    value = value.Replace(strCtrlP, "");
+                    keyMod |= KeyModifier.Ctrl;
+                    continue;
+                }
+                if (value.Contains(strAltP))
+                {
+                    value = value.Replace(strAltP, "");
+                    keyMod |= KeyModifier.Alt;
+                    continue;
+                }
+                if (value.Contains(strShiftP))
+                {
+                    value = value.Replace(strShiftP, "");
+                    keyMod |= KeyModifier.Shift;
+                    continue;
+                }
+                break;
+            }
+
             return keyMod;
         }
 

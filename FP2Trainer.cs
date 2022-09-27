@@ -69,6 +69,7 @@ namespace Fp2Trainer
 
         public static MelonPreferences_Entry<string> PrefHotkeyCameraZoomIn;
         public static MelonPreferences_Entry<string> PrefHotkeyCameraZoomOut;
+        public static MelonPreferences_Entry<string> PrefHotkeyCameraZoomReset;
         
         public static MelonPreferences_Entry<string> PrefHotkeyShowNextDataPage;
         public static MelonPreferences_Entry<string> PrefHotkeyShowPreviousDataPage;
@@ -87,6 +88,10 @@ namespace Fp2Trainer
         
         public static MelonPreferences_Entry<string> PrefHotkeyToggleRecordGhostData;
         public static MelonPreferences_Entry<string> PrefHotkeyToggleEnableNetworkPlayers;
+        
+        public static MelonPreferences_Entry<string> PrefHotkeyRebindAllHotkeys;
+
+        public static bool hotkeysLoaded = false;
         
         //public static MelonPreferences_Entry<string> PrefHotkey;
         
@@ -253,6 +258,7 @@ namespace Fp2Trainer
 
             PrefHotkeyCameraZoomIn = CreateEntryAndBindHotkey("PrefHotkeyCameraZoomIn", "KeypadPlus");
             PrefHotkeyCameraZoomOut = CreateEntryAndBindHotkey("PrefHotkeyCameraZoomOut", "KeypadMinus");
+            PrefHotkeyCameraZoomReset = CreateEntryAndBindHotkey("PrefHotkeyCameraZoomReset", "KeypadPeriod");
 
             PrefHotkeyShowNextDataPage = CreateEntryAndBindHotkey("PrefHotkeyShowNextDataPage", "PageDown");
             PrefHotkeyShowPreviousDataPage = CreateEntryAndBindHotkey("PrefHotkeyShowPreviousDataPage", "PageUp");
@@ -265,9 +271,16 @@ namespace Fp2Trainer
             PrefHotkeyLoadAssetBundles = CreateEntryAndBindHotkey("PrefHotkeyLoadAssetBundles", "Shift+F9");
             //PrefHotkeyTogglePauseMenuOrTrainerMenu = CreateEntryAndBindHotkey("PrefHotkeyTogglePauseMenuOrTrainerMenu", "F1");
             PrefHotkeyGoToLevelAtLastIndex = CreateEntryAndBindHotkey("PrefHotkeyGoToLevelAtLastIndex", "BackQuote");
+            
+            PrefHotkeyIncreaseFontSize = CreateEntryAndBindHotkey("PrefHotkeyIncreaseFontSize", "Shift+KeypadPlus");
+            PrefHotkeyDecreaseFontSize = CreateEntryAndBindHotkey("PrefHotkeyDecreaseFontSize", "Shift+KeypadMinus");
 
             //PrefHotkeyNextWarppointSaveSlot = CreateEntryAndBindHotkey("PrefHotkeyNextWarppointSaveSlot", "F10");
             //PrefHotkeyPrevWarppointSaveSlot = CreateEntryAndBindHotkey("PrefHotkeyPrevWarppointSaveSlot", "F9");
+            
+            PrefHotkeyRebindAllHotkeys = CreateEntryAndBindHotkey("PrefHotkeyRebindAllHotkeys", "Pause");
+
+            hotkeysLoaded = true;
         }
 
         private static MelonLoader.MelonPreferences_Entry<string> CreateEntryAndBindHotkey(string identifier, string default_value)
@@ -527,7 +540,7 @@ namespace Fp2Trainer
             Log(String.Format("Found {0} PlaneSwitchers. Attempting to visualize.\n", planeSwitchers.Count));
             foreach (PlaneSwitcher ps in planeSwitchers)
             {
-                Log(String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
+                //Log(String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
             }
 
         }
@@ -585,6 +598,11 @@ namespace Fp2Trainer
 
                 if (fpplayer != null)
                 {
+                    if (hotkeysLoaded)
+                    {
+                        HandleHotkeys();   
+                    }
+
                     if (showInstructions)
                     {
                         debugDisplay = GetInstructionsText();
@@ -600,8 +618,6 @@ namespace Fp2Trainer
                         }
 
                         UpdateDPS();
-                        HandleWarpControls();
-
                         if (timeoutShowWarpInfo > 0) debugDisplay += warpMessage + "\n";
 
                         if (fptls != null)
@@ -927,29 +943,29 @@ namespace Fp2Trainer
             return playerGameObject;
         }
 
-        public void HandleWarpControls()
+        public void HandleHotkeys()
         {
             //if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.attack))
-            if (Input.GetKeyUp(KeyCode.F9))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyLoadDebugRoom))
             {
                 Log("F9 -> Load Debug Room");
                 SceneManager.LoadScene("StageDebugMenu", LoadSceneMode.Additive);
             }
 
-            if (Input.GetKeyUp(KeyCode.F8))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGoToMainMenu))
             {
                 Log("F8 -> Main Menu");
                 //UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
                 GoToMainMenuNoLogos();
             }
 
-            if (Input.GetKeyUp(KeyCode.F7))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyLoadAssetBundles))
             {
                 Log("F7 -> Load Asset Bundles");
                 LoadAssetBundlesFromModsFolder();
             }
 
-            if (Input.GetKeyUp(KeyCode.F6))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGoToLevelSelectMenu))
             {
                 Log("F6 -> Level Select");
                 var availableScenes = new List<SceneNamePair>();
@@ -977,23 +993,29 @@ namespace Fp2Trainer
                 //GameObject.Destroy(this.pauseMenu);
             }
 
-            if (Input.GetKeyUp(KeyCode.F5))
+            if (false /*FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyasdfasfd)*/)
             {
                 Log("F5 -> Toggle Level Select Menu Visibility");
                 ToggleLevelSelectVisibility();
             }
 
-            if (Input.GetKeyUp(KeyCode.F4) && !InputGetKeyAnyShift())
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyShowNextDataPage))
             {
                 ToggleVariableDisplay();
                 Log("F4 -> Toggle DataPage (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
             }
-            else if (Input.GetKeyUp(KeyCode.F4) && InputGetKeyAnyShift())
+
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyShowPreviousDataPage))
+            {
+                ToggleVariableDisplayPrevious();
+            }
+
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeySwapBetweenSpawnedChars))
             {
                 FPPlayer2p.SwapBetweenActiveCharacters();
             }
 
-            if (Input.GetKeyUp(KeyCode.F3))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGoToLevelAtLastIndex))
             {
                 Log("F3 -> Load last located scene: ");
                 if (fptls != null)
@@ -1008,7 +1030,7 @@ namespace Fp2Trainer
                 }
             }
 
-            if (Input.GetKeyUp(KeyCode.F1) && InputGetKeyAnyShift())
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyKOCharacter))
             {
                 //TestDamageNumberPopups();
 
@@ -1023,7 +1045,7 @@ namespace Fp2Trainer
                 }
             }
             
-            if (Input.GetKeyUp(KeyCode.F1) && !InputGetKeyAnyShift())
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyToggleInstructions))
             {
                 //TestDamageNumberPopups();
 
@@ -1034,19 +1056,19 @@ namespace Fp2Trainer
                 }
             }
 
-            if (Input.GetKeyUp(KeyCode.F2) && !InputGetKeyAnyShift())
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyToggleNoClip))
             {
                 Log("F2 -> NoClip Toggle");
                 ToggleNoClip();
             }
 
-            if (Input.GetKeyUp(KeyCode.Delete))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGetOutGetOutGetOut))
             {
                 Log("GET OUT DEL GET OUT ETE GET OUT");
                 SpawnSpoilerBoss();
             }
 
-            if (Input.GetKeyUp(KeyCode.F12) && !InputGetKeyAnyShift())
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyToggleMultiCharStart))
             {
                 multiplayerStart = !multiplayerStart;
                 Log(String.Format("F12 -> Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
@@ -1057,7 +1079,7 @@ namespace Fp2Trainer
             HandleCameraHotkeys();
 
 
-            if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.special))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGotoWarpPoint))
             {
                 fpplayer.position = new Vector2(warpPoint.x, warpPoint.y);
                 Log("Hold Guard + Tap Special -> Goto Warp: " + warpPoint);
@@ -1065,7 +1087,7 @@ namespace Fp2Trainer
                 timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
 
-            if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.jump))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeySetWarpPoint))
             {
                 warpPoint = new Vector2(fpplayer.position.x, fpplayer.position.y);
                 Log("Hold Guard + Tap Jump -> Set Warp: " + warpPoint);
@@ -1073,6 +1095,9 @@ namespace Fp2Trainer
                 timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
 
+            // I'd like to preserve the gamepad version of this somehow...
+            
+            /*
             if (InputControl.GetButton(Controls.buttons.pause) && InputControl.GetButtonDown(Controls.buttons.special))
             {
                 ToggleNoClip();
@@ -1082,19 +1107,20 @@ namespace Fp2Trainer
             {
                 ToggleNoClip();
             }
+            */
 
             HandleNoClip();
         }
 
         private void HandleMultiplayerSpawnHotkeys()
         {
-            if (Input.GetKeyUp(KeyCode.F2) && InputGetKeyAnyShift())
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeySpawnExtraChar))
             {
                 //TestDamageNumberPopups();
 
                 if (fpplayer != null)
                 {
-                    Log("Shift + F2 -> Enable 2Player");
+                    Log("Shift + F2 -> Enable MultiCharacter");
                     /*
                     var goNewPlayer = GameObject.Instantiate(fpplayer.gameObject);
                     goNewPlayer.transform.position = new Vector3(fpplayer.position.x - 64, fpplayer.position.y,
@@ -1114,19 +1140,13 @@ namespace Fp2Trainer
 
         private void HandleResizeFontHotkeys()
         {
-            if (InputGetKeyAnyShift() &&
-                (Input.GetKeyUp(KeyCode.KeypadPlus)
-                 || Input.GetKeyUp(KeyCode.Plus))
-               )
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyIncreaseFontSize))
             {
                 Log("Shift + Plus -> Increase Font Size: ");
                 if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize++;
             }
 
-            if (InputGetKeyAnyShift() &&
-                (Input.GetKeyUp(KeyCode.KeypadMinus)
-                 || Input.GetKeyUp(KeyCode.Minus))
-               )
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyDecreaseFontSize))
             {
                 Log("Shift + Minus -> Decrease Font Size: ");
                 if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize--;
@@ -1135,10 +1155,7 @@ namespace Fp2Trainer
 
         private void HandleCameraHotkeys()
         {
-            if (!InputGetKeyAnyShift() &&
-                (Input.GetKey(KeyCode.KeypadMinus)
-                 || Input.GetKey(KeyCode.Minus))
-               )
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyCameraZoomOut))
             {
                 Log("Minus -> Camera Zoom Out: ");
                 if (FPCamera.stageCamera != null)
@@ -1148,10 +1165,7 @@ namespace Fp2Trainer
                 }
             }
 
-            if (!InputGetKeyAnyShift() &&
-                (Input.GetKey(KeyCode.KeypadPlus)
-                 || Input.GetKey(KeyCode.Plus))
-               )
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyCameraZoomIn))
             {
                 Log("Minus -> Camera Zoom In: ");
                 if (FPCamera.stageCamera != null)
@@ -1161,7 +1175,7 @@ namespace Fp2Trainer
                 }
             }
 
-            if (Input.GetKey(KeyCode.KeypadPeriod))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyCameraZoomReset))
             {
                 Log("Numpad Period . -> Camera Reset: ");
                 if (FPCamera.stageCamera != null)
@@ -1339,6 +1353,21 @@ namespace Fp2Trainer
             else
                 currentDataPage++;
 
+            UpdateAfterDataPageChange();
+        }
+        
+        private void ToggleVariableDisplayPrevious()
+        {
+            if (currentDataPage == DataPage.MOVEMENT)
+                currentDataPage = DataPage.NONE;
+            else
+                currentDataPage--;
+
+            UpdateAfterDataPageChange();
+        }
+
+        private void UpdateAfterDataPageChange()
+        {
             // After incrementing.
             if (currentDataPage == DataPage.NONE)
                 showVarString = false;

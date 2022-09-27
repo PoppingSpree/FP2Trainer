@@ -15,3 +15,29 @@ private void OnDrawGizmos()
 		Gizmos.color = new Color(0f, 0f, 0f, 0.25f);
 		Gizmos.DrawCube(base.transform.position, new Vector3(32f, 32f, 1f));
 	}
+--
+
+If "pf" is at the front of a name, it's probably short for "Prefab". Feel free to copy these references.
+	
+	
+	
+--
+a 12 frame windup on actions gives plenty of room for network communication while still looking kinda convincing... but might not work for FP.
+
+--
+
+/*
+if (value.StartsWith("Shift+"))
+{
+    value = value.Substring(6);
+    keyModifier |= KeyModifier.Shift;
+    continue;
+}
+---
+
+public override float getInputDown(bool exactKeyModifiers = false, string axis = "", InputDevice device = InputDevice.Any)
+	{
+		if ((device != 0 && device != InputDevice.KeyboardAndMouse) || !checkModifiersForKeys(exactKeyModifiers))
+*/
+
+checkModifiersForKeys // probablyh wanna pass in true
