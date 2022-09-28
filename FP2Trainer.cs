@@ -2124,30 +2124,122 @@ namespace Fp2Trainer
         {
             Scene currentScene = SceneManager.GetActiveScene();
             SceneManager.LoadScene("Bakunawa5", LoadSceneMode.Additive);
+            //SceneManager.SetActiveScene(currentScene);
+
+            Log("@@@@@1");
+            ListScenesToLog();
+            Log("@@@@@2");
+
             GameObject goHunter = GameObject.Find("Syntax Hunter");
             GameObject goHunterKO = GameObject.Find("HunterKOScreen");
             GameObject goArc = GameObject.Find("arc");
             GameObject goMeter = GameObject.Find("Hud Stealth Meter");
 
-            cacheGameObjectHunter = new GameObject("cacheHunter");
+            Log(String.Format("Gimmick Objects: ({0},{1},{2},{3})\n", goHunter, goHunterKO, goArc, goMeter));
 
+            cacheGameObjectHunter = new GameObject("cacheHunter");
+            
+            Log("@@@@@3");
             if (goHunter != null)
             {
                 Log("See you.");
+                /*
                 SceneManager.MoveGameObjectToScene(goHunter, SceneManager.GetActiveScene());
                 SceneManager.MoveGameObjectToScene(goHunterKO, SceneManager.GetActiveScene());
                 SceneManager.MoveGameObjectToScene(goArc, SceneManager.GetActiveScene());
                 SceneManager.MoveGameObjectToScene(goMeter, SceneManager.GetActiveScene());
+                */
+                
+                GameObject.DontDestroyOnLoad(goHunter);
+                GameObject.DontDestroyOnLoad(goHunterKO);
+                GameObject.DontDestroyOnLoad(goArc);
+                GameObject.DontDestroyOnLoad(goMeter);
 
                 goHunter.transform.parent = cacheGameObjectHunter.transform;
                 goHunterKO.transform.parent = cacheGameObjectHunter.transform;
                 goArc.transform.parent = cacheGameObjectHunter.transform;
                 goMeter.transform.parent = cacheGameObjectHunter.transform;
             }
+            else
+            {
+                Log("@@@@@4");
+                Log("Didn't find Hunter. Trying Approach 2.\n");
+                foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
+                {
+                    if (go.name.Equals("Syntax Hunter"))
+                    {
+                        Log("Found Hunter.");
+                        goHunter = go;
+                    }
+                    else if (go.name.Equals("HunterKOScreen"))
+                    {
+                        Log("Found HunterKO.");
+                        goHunterKO = go;
+                    }
+                    else if (go.name.Equals("arc"))
+                    {
+                        Log("Found arc.");
+                        goArc = go;
+                    }
+                    else if (go.name.Equals("Hud Stealth Meter"))
+                    {
+                        Log("Found Meter.");
+                        goMeter = go;
+                    }
 
-            SceneManager.SetActiveScene(currentScene);
-            SceneManager.UnloadSceneAsync("Bakunawa5");
-            Log("P for Perish");
+                    if (goHunter && goHunterKO && goArc && goMeter)
+                    {
+                        Log("Found all.");
+                        break;
+                    }
+                }
+                Log("@@@@@5");
+                Log(String.Format("Gimmick Objects: ({0},{1},{2},{3})\n", goHunter, goHunterKO, goArc, goMeter));
+                Log("@@@@@6");
+            }
+
+            Log("@@@@7");
+            var zxcv = Suffering().GetEnumerator();
+            zxcv.MoveNext();
+
+            
+            Log("@@@@@8");
+            zxcv.MoveNext();
+            Log("@@@@@9");
+            
+            /*
+            //Log("@@@@@" + unloading.progress);
+            //Log("@@@@@" + unloading.isDone);
+            Log("@@@@@8b");
+            while ((SceneManager.sceneCount > 1) && !SceneManager.GetSceneAt(1).name.Equals("Bakunawa5"))
+            {
+                Log("P for Perish ");
+            }
+            Log("@@@@@9");
+            */
+
+            ListScenesToLog();
+        }
+
+        private static IEnumerable Suffering()
+        {
+            Log("tired");
+            var ao = SceneManager.UnloadSceneAsync("Bakunawa5");
+            yield return ao;
+            Cursor.visible = false;
+            //GameControl.player.SetActive(true);
+            Log("Still Tired.");
+            ListScenesToLog();
+        }
+
+        private static void ListScenesToLog()
+        {
+            Log("Scenes: vv look below vv");
+            var qwer = SceneManager.sceneCount;
+            for (int asdf = 0; asdf < qwer; asdf++)
+            {
+                Log(SceneManager.GetSceneAt(asdf).name);
+            }
         }
 
 
