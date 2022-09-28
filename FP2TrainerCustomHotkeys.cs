@@ -40,18 +40,23 @@ namespace Fp2Trainer
                 return false;
             }
 
-            if (InputControl.GetButtonDown(DictHotkeyPrefToKeyMappings[mpe]))
-            {
-                Fp2Trainer.Log(String.Format("Button {0} just pressed.", mpe.Value));
-            }
-
-            return InputControl.GetButtonDown(DictHotkeyPrefToKeyMappings[mpe]);
+            return InputControl.GetButtonDown(DictHotkeyPrefToKeyMappings[mpe], true);
         }
         
         public static bool GetButton(MelonPreferences_Entry<string> mpe)
         {
-            
-            return InputControl.GetButton(DictHotkeyPrefToKeyMappings[mpe]);
+            if (mpe == null)
+            {
+                Fp2Trainer.Log(String.Format("mpe appears to be null: {0}", mpe));
+                return false;
+            }
+            else if (mpe.Value == null)
+            {
+                Fp2Trainer.Log(String.Format("mpe's is set, but value appears to be null: {0} -> {1}", mpe.Identifier, mpe.Value));
+                return false;
+            }
+
+            return InputControl.GetButton(DictHotkeyPrefToKeyMappings[mpe], true);
         }
 
         public static KeyboardInput KeyboardInputFromString(string value)
@@ -131,9 +136,27 @@ namespace Fp2Trainer
             string strControlListing = "Current Hotkey Bindings:\n";
             
             // Optimization option: Possible optimization by caching a List version of these pairs instead of using the dictionary.
-            foreach (var kvPair in DictHotkeyPrefToKeyMappings)
+            foreach (var configBinding in DictHotkeyPrefToKeyMappings.Keys)
             {
-                strControlListing += String.Format("{0} -> {1}\n", kvPair.Key.Value, kvPair.Value);
+                strControlListing += String.Format("{0} -> {1}\n", configBinding.Value, configBinding.Identifier);
+            }
+
+            return strControlListing;
+        }
+        
+        public static string GetBindingString(int start, int end)
+        {
+            string strControlListing = "Current Hotkey Bindings:\n";
+            int lineCount = 1;
+            // Optimization option: Possible optimization by caching a List version of these pairs instead of using the dictionary.
+            foreach (var configBinding in DictHotkeyPrefToKeyMappings.Keys)
+            {
+                if (lineCount >= start && lineCount <= end)
+                {
+                    strControlListing += String.Format("{0} -> {1}\n", configBinding.Value, configBinding.Identifier);
+                }
+
+                lineCount++;
             }
 
             return strControlListing;

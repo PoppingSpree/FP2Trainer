@@ -26,7 +26,7 @@ Includes features such as:
 ### HOW TO USE:
 
 **WARNING:** Use of this Trainer has the potential to corrupt your game save data depending on how you use it. Because of this, I highly recommend you backup your save data and the entire game folder before using this.
-Typically, the save files will be at C:\Users\<YOUR username here>\AppData\LocalLow\GalaxyTrail\Freedom Planet 2
+Typically, the save files will be at ```C:\Users\<YOUR username here>\AppData\LocalLow\GalaxyTrail\Freedom Planet 2```
 The files 1.json, 2.json, 3.json are your save slots from the main menu. The global.json contains things that apply regardless of which slot you pick. I recommend backing these up.
 
 + Warps: Hold Guard and tap Jump to set a warp point. Hold Guard and tap Special to warp to it. I don't have a way to bind these to unique buttons from the options yet. It might make more sense if I bind those to function keys on the keyboard or something.

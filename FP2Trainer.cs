@@ -43,6 +43,22 @@ namespace Fp2Trainer
             NO_CLIP,
             NONE
         }
+        
+        public enum InstructionPage
+        {
+            BASICS,
+            BACKUPS,
+            SPEEDRUN,
+            NO_CLIP,
+            MULTICHARACTER,
+            //NETPLAY,
+            BUGS,
+            HOTKEYS_1,
+            HOTKEYS_2,
+            HOTKEYS_3,
+            QUICKBOOT,
+            NONE
+        }
 
         public static MelonPreferences_Category fp2Trainer;
         public static MelonPreferences_Entry<bool> enableWarps;
@@ -52,51 +68,51 @@ namespace Fp2Trainer
 
         public static MelonPreferences_Entry<string> BootupLevel;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyToggleInstructions;
+        public static MelonPreferences_Entry<string> PHKToggleInstructions;
         
-        public static MelonPreferences_Entry<string> PrefHotkeySetWarpPoint;
-        public static MelonPreferences_Entry<string> PrefHotkeyGotoWarpPoint;
+        public static MelonPreferences_Entry<string> PHKSetWarpPoint;
+        public static MelonPreferences_Entry<string> PHKGotoWarpPoint;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyKOCharacter;
+        public static MelonPreferences_Entry<string> PHKKOCharacter;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyToggleNoClip;
+        public static MelonPreferences_Entry<string> PHKToggleNoClip;
         
-        public static MelonPreferences_Entry<string> PrefHotkeySpawnExtraChar;
-        public static MelonPreferences_Entry<string> PrefHotkeySwapBetweenSpawnedChars;
-        public static MelonPreferences_Entry<string> PrefHotkeyToggleMultiCharStart;
+        public static MelonPreferences_Entry<string> PHKSpawnExtraChar;
+        public static MelonPreferences_Entry<string> PHKSwapBetweenSpawnedChars;
+        public static MelonPreferences_Entry<string> PHKToggleMultiCharStart;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyGetOutGetOutGetOut;
+        public static MelonPreferences_Entry<string> PHKGetOutGetOutGetOut;
 
-        public static MelonPreferences_Entry<string> PrefHotkeyCameraZoomIn;
-        public static MelonPreferences_Entry<string> PrefHotkeyCameraZoomOut;
-        public static MelonPreferences_Entry<string> PrefHotkeyCameraZoomReset;
+        public static MelonPreferences_Entry<string> PHKCameraZoomIn;
+        public static MelonPreferences_Entry<string> PHKCameraZoomOut;
+        public static MelonPreferences_Entry<string> PHKCameraZoomReset;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyShowNextDataPage;
-        public static MelonPreferences_Entry<string> PrefHotkeyShowPreviousDataPage;
+        public static MelonPreferences_Entry<string> PHKShowNextDataPage;
+        public static MelonPreferences_Entry<string> PHKShowPreviousDataPage;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyGoToMainMenu;
-        public static MelonPreferences_Entry<string> PrefHotkeyLoadDebugRoom;
+        public static MelonPreferences_Entry<string> PHKGoToMainMenu;
+        public static MelonPreferences_Entry<string> PHKLoadDebugRoom;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyGoToLevelSelectMenu;
+        public static MelonPreferences_Entry<string> PHKGoToLevelSelectMenu;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyLoadAssetBundles;
-        //public static MelonPreferences_Entry<string> PrefHotkeyTogglePauseMenuOrTrainerMenu;
-        public static MelonPreferences_Entry<string> PrefHotkeyGoToLevelAtLastIndex;
+        public static MelonPreferences_Entry<string> PHKLoadAssetBundles;
+        //public static MelonPreferences_Entry<string> PHKTogglePauseMenuOrTrainerMenu;
+        public static MelonPreferences_Entry<string> PHKGoToLevelAtLastIndex;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyIncreaseFontSize;
-        public static MelonPreferences_Entry<string> PrefHotkeyDecreaseFontSize;
+        public static MelonPreferences_Entry<string> PHKIncreaseFontSize;
+        public static MelonPreferences_Entry<string> PHKDecreaseFontSize;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyToggleRecordGhostData;
-        public static MelonPreferences_Entry<string> PrefHotkeyToggleEnableNetworkPlayers;
+        public static MelonPreferences_Entry<string> PHKToggleRecordGhostData;
+        public static MelonPreferences_Entry<string> PHKToggleEnableNetworkPlayers;
         
-        public static MelonPreferences_Entry<string> PrefHotkeyRebindAllHotkeys;
+        public static MelonPreferences_Entry<string> PHKRebindAllHotkeys;
 
         public static bool hotkeysLoaded = false;
         
-        //public static MelonPreferences_Entry<string> PrefHotkey;
+        //public static MelonPreferences_Entry<string> PHK;
         
-        // public static MelonPreferences_Entry<string> PrefHotkeySaveTrainerData;
-        // public static MelonPreferences_Entry<string> PrefHotkeyLoadTrainerData;
+        // public static MelonPreferences_Entry<string> PHKSaveTrainerData;
+        // public static MelonPreferences_Entry<string> PHKLoadTrainerData;
         
 
         public static Fp2Trainer fp2TrainerInstance;
@@ -117,10 +133,11 @@ namespace Fp2Trainer
         public bool noClip;
         public float noClipMoveSpeed = 30f;
         public Vector2 noClipStartPos = Vector2.zero;
-        public int noClipCollisionLayer = -999;
+        public int noClipCollisionLayer = -0;
         public float noClipGravityStrength = -0.7f;
 
         private DataPage currentDataPage = DataPage.MOVEMENT;
+        private InstructionPage currentInstructionPage = InstructionPage.BASICS;
         public static bool showInstructions = true;
 
         private string debugDisplay = "Never Updated";
@@ -175,7 +192,7 @@ namespace Fp2Trainer
         private Vector2 warpPoint = new Vector2(211f, 50f);
 
         public float trainerZoomMin = 0.05f;
-        public float trainerZoomMax = 100f;
+        public float trainerZoomMax = 10f;
         public float trainerZoomSpeed = 0.1f;
         public float trainerRequestZoomValue = 1f;
 
@@ -232,7 +249,7 @@ namespace Fp2Trainer
         {
             fp2Trainer = MelonPreferences.CreateCategory("fp2Trainer");
             enableWarps = fp2Trainer.CreateEntry("enableWarps", true);
-            BootupLevel = fp2Trainer.CreateEntry("bootupLevel", "ZaoLand");
+            BootupLevel = fp2Trainer.CreateEntry("bootupLevel", "");
             showDebug = fp2Trainer.CreateEntry("showDebug", true);
             enableNoClip = fp2Trainer.CreateEntry("enableNoClip", false);
             
@@ -241,44 +258,44 @@ namespace Fp2Trainer
 
         private static void InitPrefsCustomHotkeys()
         {
-            PrefHotkeyToggleInstructions = CreateEntryAndBindHotkey("PrefHotkeyToggleInstructions", "F1");
+            PHKToggleInstructions = CreateEntryAndBindHotkey("PHKToggleInstructions", "F1");
 
-            PrefHotkeySetWarpPoint = CreateEntryAndBindHotkey("PrefHotkeySetWarpPoint", "Shift+F4");
-            PrefHotkeyGotoWarpPoint = CreateEntryAndBindHotkey("PrefHotkeyGotoWarpPoint", "F4");
+            PHKSetWarpPoint = CreateEntryAndBindHotkey("PHKSetWarpPoint", "Shift+F4");
+            PHKGotoWarpPoint = CreateEntryAndBindHotkey("PHKGotoWarpPoint", "F4");
 
-            PrefHotkeyKOCharacter = CreateEntryAndBindHotkey("PrefHotkeyKOCharacter", "Shift+F1");
+            PHKKOCharacter = CreateEntryAndBindHotkey("PHKKOCharacter", "Shift+F1");
 
-            PrefHotkeyToggleNoClip = CreateEntryAndBindHotkey("PrefHotkeyToggleNoClip", "F2");
+            PHKToggleNoClip = CreateEntryAndBindHotkey("PHKToggleNoClip", "F2");
 
-            PrefHotkeySpawnExtraChar = CreateEntryAndBindHotkey("PrefHotkeySpawnExtraChar", "F12");
-            PrefHotkeySwapBetweenSpawnedChars = CreateEntryAndBindHotkey("PrefHotkeySwapBetweenSpawnedChars", "F11");
-            PrefHotkeyToggleMultiCharStart = CreateEntryAndBindHotkey("PrefHotkeyToggleMultiCharStart", "Shift+F12");
+            PHKSpawnExtraChar = CreateEntryAndBindHotkey("PHKSpawnExtraChar", "F12");
+            PHKSwapBetweenSpawnedChars = CreateEntryAndBindHotkey("PHKSwapBetweenSpawnedChars", "F11");
+            PHKToggleMultiCharStart = CreateEntryAndBindHotkey("PHKToggleMultiCharStart", "Shift+F12");
 
-            PrefHotkeyGetOutGetOutGetOut = CreateEntryAndBindHotkey("PrefHotkeyGetOutGetOutGetOut", "Delete");
+            PHKGetOutGetOutGetOut = CreateEntryAndBindHotkey("PHKGetOutGetOutGetOut", "Delete");
 
-            PrefHotkeyCameraZoomIn = CreateEntryAndBindHotkey("PrefHotkeyCameraZoomIn", "KeypadPlus");
-            PrefHotkeyCameraZoomOut = CreateEntryAndBindHotkey("PrefHotkeyCameraZoomOut", "KeypadMinus");
-            PrefHotkeyCameraZoomReset = CreateEntryAndBindHotkey("PrefHotkeyCameraZoomReset", "KeypadPeriod");
+            PHKCameraZoomIn = CreateEntryAndBindHotkey("PHKCameraZoomIn", "KeypadPlus");
+            PHKCameraZoomOut = CreateEntryAndBindHotkey("PHKCameraZoomOut", "KeypadMinus");
+            PHKCameraZoomReset = CreateEntryAndBindHotkey("PHKCameraZoomReset", "KeypadPeriod");
 
-            PrefHotkeyShowNextDataPage = CreateEntryAndBindHotkey("PrefHotkeyShowNextDataPage", "PageDown");
-            PrefHotkeyShowPreviousDataPage = CreateEntryAndBindHotkey("PrefHotkeyShowPreviousDataPage", "PageUp");
+            PHKShowNextDataPage = CreateEntryAndBindHotkey("PHKShowNextDataPage", "PageDown");
+            PHKShowPreviousDataPage = CreateEntryAndBindHotkey("PHKShowPreviousDataPage", "PageUp");
 
-            PrefHotkeyGoToMainMenu = CreateEntryAndBindHotkey("PrefHotkeyGoToMainMenu", "F7");
-            PrefHotkeyLoadDebugRoom = CreateEntryAndBindHotkey("PrefHotkeyLoadDebugRoom", "F8");
+            PHKGoToMainMenu = CreateEntryAndBindHotkey("PHKGoToMainMenu", "F7");
+            PHKLoadDebugRoom = CreateEntryAndBindHotkey("PHKLoadDebugRoom", "F8");
 
-            PrefHotkeyGoToLevelSelectMenu = CreateEntryAndBindHotkey("PrefHotkeyGoToLevelSelectMenu", "F9");
+            PHKGoToLevelSelectMenu = CreateEntryAndBindHotkey("PHKGoToLevelSelectMenu", "F9");
 
-            PrefHotkeyLoadAssetBundles = CreateEntryAndBindHotkey("PrefHotkeyLoadAssetBundles", "Shift+F9");
-            //PrefHotkeyTogglePauseMenuOrTrainerMenu = CreateEntryAndBindHotkey("PrefHotkeyTogglePauseMenuOrTrainerMenu", "F1");
-            PrefHotkeyGoToLevelAtLastIndex = CreateEntryAndBindHotkey("PrefHotkeyGoToLevelAtLastIndex", "BackQuote");
+            PHKLoadAssetBundles = CreateEntryAndBindHotkey("PHKLoadAssetBundles", "Shift+F9");
+            //PHKTogglePauseMenuOrTrainerMenu = CreateEntryAndBindHotkey("PHKTogglePauseMenuOrTrainerMenu", "F1");
+            PHKGoToLevelAtLastIndex = CreateEntryAndBindHotkey("PHKGoToLevelAtLastIndex", "BackQuote");
             
-            PrefHotkeyIncreaseFontSize = CreateEntryAndBindHotkey("PrefHotkeyIncreaseFontSize", "Shift+KeypadPlus");
-            PrefHotkeyDecreaseFontSize = CreateEntryAndBindHotkey("PrefHotkeyDecreaseFontSize", "Shift+KeypadMinus");
+            PHKIncreaseFontSize = CreateEntryAndBindHotkey("PHKIncreaseFontSize", "Shift+KeypadPlus");
+            PHKDecreaseFontSize = CreateEntryAndBindHotkey("PHKDecreaseFontSize", "Shift+KeypadMinus");
 
-            //PrefHotkeyNextWarppointSaveSlot = CreateEntryAndBindHotkey("PrefHotkeyNextWarppointSaveSlot", "F10");
-            //PrefHotkeyPrevWarppointSaveSlot = CreateEntryAndBindHotkey("PrefHotkeyPrevWarppointSaveSlot", "F9");
+            //PHKNextWarppointSaveSlot = CreateEntryAndBindHotkey("PHKNextWarppointSaveSlot", "F10");
+            //PHKPrevWarppointSaveSlot = CreateEntryAndBindHotkey("PHKPrevWarppointSaveSlot", "F9");
             
-            PrefHotkeyRebindAllHotkeys = CreateEntryAndBindHotkey("PrefHotkeyRebindAllHotkeys", "Pause");
+            PHKRebindAllHotkeys = CreateEntryAndBindHotkey("PHKRebindAllHotkeys", "Pause");
 
             hotkeysLoaded = true;
         }
@@ -605,7 +622,7 @@ namespace Fp2Trainer
 
                     if (showInstructions)
                     {
-                        debugDisplay = GetInstructionsText();
+                        HandleInstructionPageDisplay();
                     }
 
                     else
@@ -632,179 +649,10 @@ namespace Fp2Trainer
                         }
 
 
-                        if (currentDataPage == DataPage.NO_CLIP)
-                        {
-                            debugDisplay += "NoClip Enabled: " + noClip.ToString() + "\n";
-                            debugDisplay += "Position: " + fpplayer.position.ToString() + "\n";
-                            debugDisplay += "Terrain Collision: " + fpplayer.terrainCollision.ToString() + "\n";
-                            debugDisplay += "Physics Enabled: " + fpplayer.enablePhysics.ToString() + "\n";
-                            debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
-                        }
-
-
-                        if (noClip)
-                        {
-                            debugDisplay += "NoClip: " + fpplayer.position.ToString() + "\n";
-                        }
-
-                        if (currentDataPage == DataPage.MOVEMENT)
-                        {
-                            debugDisplay += "Movement: \n";
-                            if (playerValuesToShow.Contains("Pos")) debugDisplay += "Pos: " + fpplayer.position + "\n";
-                            if (playerValuesToShow.Contains("Vel")) debugDisplay += "Vel: " + fpplayer.velocity + "\n";
-                            if (playerValuesToShow.Contains("Magnitude"))
-                            {
-                                debugDisplay += "Acceleration: " + fpplayer.acceleration + "\n";
-                                debugDisplay += "Magnitude: " + fpplayer.velocity.magnitude + "\n";
-                                debugDisplay += "Accel: " + fpplayer.acceleration + "\n";
-                                debugDisplay += "Air Accel: " + fpplayer.airAceleration + "\n";
-                                debugDisplay += "Air Drag: " + fpplayer.airDrag + "\n";
-                            }
-
-                            if (playerValuesToShow.Contains("Ground Angle"))
-                                debugDisplay += "Ground Angle: " + fpplayer.groundAngle + "\n";
-                            if (playerValuesToShow.Contains("Ground Velocity"))
-                                debugDisplay += "Ground Velocity: " + fpplayer.groundVel + "\n";
-                            if (playerValuesToShow.Contains("Ceiling Angle"))
-                                debugDisplay += "Ceiling Angle: " + fpplayer.ceilingAngle + "\n";
-                            if (playerValuesToShow.Contains("Sensor Angle"))
-                                debugDisplay += "Sensor Angle: " + fpplayer.sensorAngle + "\n";
-                            if (playerValuesToShow.Contains("Gravity Angle"))
-                                debugDisplay += "Gravity Angle: " + fpplayer.gravityAngle + "\n";
-                            if (playerValuesToShow.Contains("Gravity Strength"))
-                                debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength + "\n";
-                        }
-                        else if (currentDataPage == DataPage.COMBAT)
-                        {
-                            debugDisplay += "Combat: \n";
-                            debugDisplay += "Health: " + fpplayer.health + "\n";
-
-                            var tempDmgType = fpplayer.damageType;
-                            if (tempDmgType > 4) tempDmgType = -1;
-                            debugDisplay += "Hurt Damage Element: " + fpElementTypeNames[tempDmgType] + "\n";
-
-                            if (nearestEnemy != null)
-                                debugDisplay += nearestEnemy.name + " Health: " + nearestEnemy.health + "\n";
-
-                            if (dpsTracker != null) debugDisplay += "DPS: " + dpsTracker + "\n";
-
-                            debugDisplay += "Energy: " + fpplayer.energy + "\n";
-                            debugDisplay += "Energy Recover Current: " + fpplayer.energyRecoverRateCurrent + "\n";
-                            debugDisplay += "Energy Recover: " + fpplayer.energyRecoverRate + "\n";
-                            debugDisplay += "Faction: " + fpplayer.faction + "\n";
-                            debugDisplay += "Attack Power: " + fpplayer.attackPower + "\n";
-                            debugDisplay += "Attack Hitstun: " + fpplayer.attackHitstun + "\n";
-                            debugDisplay += "Attack Knockback: " + fpplayer.attackKnockback + "\n";
-                            if (playerValuesToShow.Contains("InflictedDamage"))
-                                debugDisplay += "InflictedDamage: " + fpplayer.damageInflicted + "\n";
-                            debugDisplay += "Guard Time: " + fpplayer.guardTime + "\n";
-                            debugDisplay += "ATK NME INV TIM: " + fpplayer.attackEnemyInvTime + "\n";
-                            debugDisplay += "Hit Stun: " + fpplayer.hitStun + "\n";
-                            debugDisplay += "Invul Time: " + fpplayer.invincibilityTime + "\n";
-                        }
-                        else if (currentDataPage == DataPage.DPS)
-                        {
-                            debugDisplay += "DPS: \n";
-                            if (dpsTracker != null)
-                            {
-                                if (nearestEnemy != null && nearestEnemyPrevious != null)
-                                {
-                                    debugDisplay += "Previous Nearest Enemy: " + nearestEnemyPrevious.name + "\n";
-                                    debugDisplay += "Prev Health: " + nearestEnemyPreviousHP + "\n";
-                                }
-                                else if (nearestEnemy == null)
-                                {
-                                    debugDisplay += "Nearest Enemy Not Found\n";
-                                }
-                                else if (nearestEnemy == null)
-                                {
-                                    debugDisplay += "Previous Nearest Enemy Not Found\n";
-                                }
-
-                                debugDisplay += dpsTracker.GetDPSBreakdownString();
-                            }
-                            else
-                            {
-                                debugDisplay += "No DPS Tracker found?";
-                            }
-                        }
-                        else if (currentDataPage == DataPage.DPS_ALL)
-                        {
-                            if (dpsTracker != null)
-                            {
-                                debugDisplay += "DPS ALL: \n";
-                                debugDisplay += dpsTracker.GetDPSBreakdownString();
-                            }
-                            else
-                            {
-                                debugDisplay += "No DPS Tracker found?";
-                            }
-                        }
-                        else if (currentDataPage == DataPage.MULTIPLAYER_DEBUG)
-                        {
-                            debugDisplay += "Multiplayer Debug: \n";
-                            var tempDmgType = -1;
-                            string isLeader = "";
-                            foreach (var mp_fpplayer in fpplayers)
-                            {
-                                if (mp_fpplayer == FPStage.currentStage.GetPlayerInstance_FPPlayer())
-                                {
-                                    isLeader = " - Leader";
-                                }
-                                else
-                                {
-                                    isLeader = "";
-                                }
-
-                                debugDisplay += mp_fpplayer.name + isLeader + "\n";
-                                debugDisplay += String.Format("{0:000.00}/{1:000.00} HP {2:000.00}/{3:000.00} EN\n",
-                                    mp_fpplayer.health, mp_fpplayer.healthMax,
-                                    mp_fpplayer.energy, 100f);
-
-                                debugDisplay += mp_fpplayer.position.ToString() + "\n";
-                                //debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy + "\n";
-                            }
-                        }
-                        else if (currentDataPage == DataPage.BOSS)
-                        {
-                            debugDisplay += "Boss: \n";
-                            fpEnemies.Clear();
-                            foreach (var bh in bossHuds)
-                            {
-                                if (!bh.transform.gameObject.activeInHierarchy)
-                                {
-                                    ReacquireBossHuds();
-                                    break;
-                                }
-
-                                if (bh.targetBoss != null) fpEnemies.Add(bh.targetBoss);
-                            }
-
-                            if (fpEnemies.Count > 0)
-                                foreach (var ene in fpEnemies)
-                                {
-                                    if (ene == null) continue;
-
-                                    debugDisplay += ene.name + " Health: " + ene.health + "\n";
-                                    debugDisplay += ene.name + " Freeze Timer: " + ene.freezeTimer + "\n";
-                                    //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
-                                    //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
-                                    debugDisplay += ene.name + " Is Harmless: " + ene.isHarmless + "\n";
-                                    debugDisplay += ene.name + " Cannot Be Killed: " + ene.cannotBeKilled + "\n";
-                                    debugDisplay += ene.name + " Cannot Be Frozen: " + ene.cannotBeFrozen + "\n";
-                                    debugDisplay += ene.name + " Last Received Damage: " +
-                                                    ene.lastReceivedDamage + "\n";
-                                    debugDisplay += ene.name + " LRD (Unmodified): " +
-                                                    ene.lastReceivedDamageUnmodified + "\n";
-                                }
-                            else
-                                debugDisplay +=
-                                    "Unable to find relevant enemies.\nTry switching to this view while the healthbar is visible.\n";
-                        }
-
-                        FPPlayer2p.CatchupIfPlayerTooFarAway();
+                        HandleDataPageDisplay();
                         //FPPlayer2p.ShowPressedButtons();
                     }
+                    FPPlayer2p.CatchupIfPlayerTooFarAway();
                 }
 
 
@@ -821,15 +669,297 @@ namespace Fp2Trainer
             }
         }
 
-        private string GetInstructionsText()
+        private void HandleDataPageDisplay()
         {
-            string instructions = "";
-            instructions += "Instructions:\n";
-            string txtInstructionsToggle = "F1";
-            instructions += String.Format("Press {0} to toggle the Instructions on or off.\n", txtInstructionsToggle);
-            instructions += FP2TrainerCustomHotkeys.GetBindingString();
+            if (currentDataPage == DataPage.NO_CLIP)
+            {
+                debugDisplay += "NoClip Enabled: " + noClip.ToString() + "\n";
+                debugDisplay += "Position: " + fpplayer.position.ToString() + "\n";
+                debugDisplay += "Terrain Collision: " + fpplayer.terrainCollision.ToString() + "\n";
+                debugDisplay += "Physics Enabled: " + fpplayer.enablePhysics.ToString() + "\n";
+                debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
+            }
 
-            return instructions;
+
+            if (noClip)
+            {
+                debugDisplay += "NoClip: " + fpplayer.position.ToString() + "\n";
+            }
+
+            if (currentDataPage == DataPage.MOVEMENT)
+            {
+                debugDisplay += "Movement: \n";
+                if (playerValuesToShow.Contains("Pos")) debugDisplay += "Pos: " + fpplayer.position + "\n";
+                if (playerValuesToShow.Contains("Vel")) debugDisplay += "Vel: " + fpplayer.velocity + "\n";
+                if (playerValuesToShow.Contains("Magnitude"))
+                {
+                    debugDisplay += "Acceleration: " + fpplayer.acceleration + "\n";
+                    debugDisplay += "Magnitude: " + fpplayer.velocity.magnitude + "\n";
+                    debugDisplay += "Accel: " + fpplayer.acceleration + "\n";
+                    debugDisplay += "Air Accel: " + fpplayer.airAceleration + "\n";
+                    debugDisplay += "Air Drag: " + fpplayer.airDrag + "\n";
+                }
+
+                if (playerValuesToShow.Contains("Ground Angle"))
+                    debugDisplay += "Ground Angle: " + fpplayer.groundAngle + "\n";
+                if (playerValuesToShow.Contains("Ground Velocity"))
+                    debugDisplay += "Ground Velocity: " + fpplayer.groundVel + "\n";
+                if (playerValuesToShow.Contains("Ceiling Angle"))
+                    debugDisplay += "Ceiling Angle: " + fpplayer.ceilingAngle + "\n";
+                if (playerValuesToShow.Contains("Sensor Angle"))
+                    debugDisplay += "Sensor Angle: " + fpplayer.sensorAngle + "\n";
+                if (playerValuesToShow.Contains("Gravity Angle"))
+                    debugDisplay += "Gravity Angle: " + fpplayer.gravityAngle + "\n";
+                if (playerValuesToShow.Contains("Gravity Strength"))
+                    debugDisplay += "Gravity Strength: " + fpplayer.gravityStrength + "\n";
+            }
+            else if (currentDataPage == DataPage.COMBAT)
+            {
+                debugDisplay += "Combat: \n";
+                debugDisplay += "Health: " + fpplayer.health + "\n";
+
+                var tempDmgType = fpplayer.damageType;
+                if (tempDmgType > 4) tempDmgType = -1;
+                debugDisplay += "Hurt Damage Element: " + fpElementTypeNames[tempDmgType] + "\n";
+
+                if (nearestEnemy != null)
+                    debugDisplay += nearestEnemy.name + " Health: " + nearestEnemy.health + "\n";
+
+                if (dpsTracker != null) debugDisplay += "DPS: " + dpsTracker + "\n";
+
+                debugDisplay += "Energy: " + fpplayer.energy + "\n";
+                debugDisplay += "Energy Recover Current: " + fpplayer.energyRecoverRateCurrent + "\n";
+                debugDisplay += "Energy Recover: " + fpplayer.energyRecoverRate + "\n";
+                debugDisplay += "Faction: " + fpplayer.faction + "\n";
+                debugDisplay += "Attack Power: " + fpplayer.attackPower + "\n";
+                debugDisplay += "Attack Hitstun: " + fpplayer.attackHitstun + "\n";
+                debugDisplay += "Attack Knockback: " + fpplayer.attackKnockback + "\n";
+                if (playerValuesToShow.Contains("InflictedDamage"))
+                    debugDisplay += "InflictedDamage: " + fpplayer.damageInflicted + "\n";
+                debugDisplay += "Guard Time: " + fpplayer.guardTime + "\n";
+                debugDisplay += "ATK NME INV TIM: " + fpplayer.attackEnemyInvTime + "\n";
+                debugDisplay += "Hit Stun: " + fpplayer.hitStun + "\n";
+                debugDisplay += "Invul Time: " + fpplayer.invincibilityTime + "\n";
+            }
+            else if (currentDataPage == DataPage.DPS)
+            {
+                debugDisplay += "DPS: \n";
+                if (dpsTracker != null)
+                {
+                    if (nearestEnemy != null && nearestEnemyPrevious != null)
+                    {
+                        debugDisplay += "Previous Nearest Enemy: " + nearestEnemyPrevious.name + "\n";
+                        debugDisplay += "Prev Health: " + nearestEnemyPreviousHP + "\n";
+                    }
+                    else if (nearestEnemy == null)
+                    {
+                        debugDisplay += "Nearest Enemy Not Found\n";
+                    }
+                    else if (nearestEnemy == null)
+                    {
+                        debugDisplay += "Previous Nearest Enemy Not Found\n";
+                    }
+
+                    debugDisplay += dpsTracker.GetDPSBreakdownString();
+                }
+                else
+                {
+                    debugDisplay += "No DPS Tracker found?";
+                }
+            }
+            else if (currentDataPage == DataPage.DPS_ALL)
+            {
+                if (dpsTracker != null)
+                {
+                    debugDisplay += "DPS ALL: \n";
+                    debugDisplay += dpsTracker.GetDPSBreakdownString();
+                }
+                else
+                {
+                    debugDisplay += "No DPS Tracker found?";
+                }
+            }
+            else if (currentDataPage == DataPage.MULTIPLAYER_DEBUG)
+            {
+                debugDisplay += "Multiplayer Debug: \n";
+                var tempDmgType = -1;
+                string isLeader = "";
+                foreach (var mp_fpplayer in fpplayers)
+                {
+                    if (mp_fpplayer == FPStage.currentStage.GetPlayerInstance_FPPlayer())
+                    {
+                        isLeader = " - Leader";
+                    }
+                    else
+                    {
+                        isLeader = "";
+                    }
+
+                    debugDisplay += mp_fpplayer.name + isLeader + "\n";
+                    debugDisplay += String.Format("{0:000.00}/{1:000.00} HP {2:000.00}/{3:000.00} EN\n",
+                        mp_fpplayer.health, mp_fpplayer.healthMax,
+                        mp_fpplayer.energy, 100f);
+
+                    debugDisplay += mp_fpplayer.position.ToString() + "\n";
+                    //debugDisplay += mp_fpplayer.name + " Energy: " + mp_fpplayer.energy + "\n";
+                }
+            }
+            else if (currentDataPage == DataPage.BOSS)
+            {
+                debugDisplay += "Boss: \n";
+                fpEnemies.Clear();
+                foreach (var bh in bossHuds)
+                {
+                    if (!bh.transform.gameObject.activeInHierarchy)
+                    {
+                        ReacquireBossHuds();
+                        break;
+                    }
+
+                    if (bh.targetBoss != null) fpEnemies.Add(bh.targetBoss);
+                }
+
+                if (fpEnemies.Count > 0)
+                    foreach (var ene in fpEnemies)
+                    {
+                        if (ene == null) continue;
+
+                        debugDisplay += ene.name + " Health: " + ene.health + "\n";
+                        debugDisplay += ene.name + " Freeze Timer: " + ene.freezeTimer + "\n";
+                        //debugDisplay += mp_fpplayer.name + " Energy Recover: " + mp_fpplayer.energyRecoverRate.ToString() + "\n";
+                        //debugDisplay += mp_fpplayer.name + " Energy Recover Current: " + mp_fpplayer.energyRecoverRateCurrent.ToString() + "\n";
+                        debugDisplay += ene.name + " Is Harmless: " + ene.isHarmless + "\n";
+                        debugDisplay += ene.name + " Cannot Be Killed: " + ene.cannotBeKilled + "\n";
+                        debugDisplay += ene.name + " Cannot Be Frozen: " + ene.cannotBeFrozen + "\n";
+                        debugDisplay += ene.name + " Last Received Damage: " +
+                                        ene.lastReceivedDamage + "\n";
+                        debugDisplay += ene.name + " LRD (Unmodified): " +
+                                        ene.lastReceivedDamageUnmodified + "\n";
+                    }
+                else
+                    debugDisplay +=
+                        "Unable to find relevant enemies.\nTry switching to this view while the healthbar is visible.\n";
+            }
+        }
+
+        public void HandleInstructionPageDisplay()
+        {
+            int numHotkeyLinesPerPage = 7;
+            debugDisplay += String.Format("Instructions: ({0} / {1})\n", (int)currentInstructionPage, (int)InstructionPage.NONE);
+            
+            debugDisplay += String.Format("Press {0} or {1} to view the Next / Previous page.\nPress {2} to toggle the Instructions on or off.\n", 
+                PHKToggleInstructions.Value, PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value);
+            switch (currentInstructionPage)
+            {
+                /*
+                 *"\"Milla's Toybox\" (or \"FP2 Trainer\" if you prefer),\n"
+                 * This particular example line is roughly 48 characters long,
+                 * any longer than that, and the text won't fit on-screen.
+                 */
+                case InstructionPage.BASICS:
+                    debugDisplay += "**Basics**\n" +
+                                    "\"Milla's Toybox\" (or \"FP2 Trainer\" if you prefer),\n" +
+                                    "is a speedrun-focused trainer toolkit \nmod for Freedom Planet 2.\n" +
+                                    "It is primarily used for gaining \nadditional information about how the game works\n" +
+                                    "and experimenting with the physics and \nmechanics of the game to find new\n" +
+                                    "techniques in the pursuit of going FAST.\n" +
+                                    "But of course, there's other toys too. But first...\n" +
+                                    String.Format("(Press {0} to continue)", PHKShowNextDataPage.Value);
+                    break;
+                case InstructionPage.BACKUPS:
+                    debugDisplay += "**Backups**\n" +
+                                    "It's highly recommended that you back up \nyour entire FP2 folder\n" +
+                                    "and only install mods on a separate \ncopy to prevent this training\n" +
+                                    "from unexpectedly breaking due to \ngame version updates.\n" +
+                                    "You may backup your save files too, if you like.\n" +
+                                    "Your save files can typically be found at:\n" +
+                                    "C:\\Users\\<YOUR username here>\\AppData\n\\LocalLow\\GalaxyTrail\\Freedom Planet 2\n" +
+                                    "(That's **LocalLOW**, not Local. A common mistake.\n)";
+                    //"Your save files are currently stored at:\n{0}", Application.persistentDataPath;
+                    break;
+                case InstructionPage.SPEEDRUN:
+                    debugDisplay += "**Speedrun Tools**\n" +
+                                    "Data data DATA! Your speed, position, damage,\n" +
+                                    "collision layer, dps, boss info, and more!\n" +
+                                    String.Format("View DataViewer Next Page: {0}\n" +
+                                                  "View DataViewer Previous Page: {1}\n" +
+                                                  "Set Warp Point: {2}\n" +
+                                                  "Teleport to Warp Point: {3}\n\n" +
+                                                  "Load ANY Stage Menu: {4}\n" +
+                                                  "Confirm Stage Menu Choice: (Jump Button)",
+                                        PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKSetWarpPoint.Value, PHKGotoWarpPoint.Value, PHKGoToLevelSelectMenu.Value);
+                    break;
+                case InstructionPage.NO_CLIP:
+                    debugDisplay += "**NoClip**\n" +
+                                    "This allows you to fly freely through the \nmap ignoring gravity and walls!\n" +
+                                    "Most things can't touch you, but \nthe camera can still be locked in place.\n" +
+                                    "And some crush-triggers may still KO you.\n" +
+                                    String.Format("Toggle NoClip Mode: {0}\n" +
+                                                  "Cancel NoClip and Return to Start:\n  (Attack Button)\n" +
+                                                  "Exit NoClip at Current Position:\n  (Jump Button) or {0}\n", PHKToggleNoClip.Value);
+                    break;
+                case InstructionPage.MULTICHARACTER:
+                    debugDisplay += "**Multi-Character**\n" +
+                                    "With this, you can play the game \nas multiple characters at the same time!\n" +
+                                    "Be warned, this is very buggy. \nThe game is not designed to support more than one character at a time.\n" +
+                                    "If you have multiple characters, KOed characters \nare removed from play immediately until there is only one left." +
+                                    String.Format("Spawn Additional Character: {0}\n" +
+                                                  "Switch to Next Remaining Character: {1}\n" +
+                                                  "Toggle Multi-Char auto-spawn at level-start: {2}\n" +
+                                                  "Insta-KO Current Character: {3}\n",
+                                        PHKSpawnExtraChar.Value, PHKSwapBetweenSpawnedChars.Value, PHKToggleMultiCharStart.Value, PHKKOCharacter.Value);
+                    break;
+                /*case InstructionPage.NETPLAY:
+                    debugDisplay += "**Basics**\n";
+                    break;*/
+                case InstructionPage.BUGS:
+                    debugDisplay += "**Bugs**\n" +
+                                    "tbh I need sleep, I'll probably fill this up \nwith something useful later.";
+                    break;
+                case InstructionPage.HOTKEYS_1:
+                    debugDisplay += "**How to Rebind Hotkeys**\n" +
+                                    "If you want to change your \nHotkey Bindings, you can edit them\n" +
+                                    "at <FP2 Install Dir>/UserData/MelonPreferences.cfg\n\n" +
+                                    "If you don't see a config file there, \nlaunch the game for a few seconds,\n" +
+                                        "then close it and check again for \na regenerated config file.\n" +
+                                    "Hotkey Keybinds are Case-Sensitive \nand only take effect on _next launch of the game_.\n" +
+                                    "If you need help setting it up, please ask.\n" +
+                                    "If you make a mistake, don't worry!\n" +
+                                    "Delete the file and relaunch the game \nto regenerate a new default config file.";
+                    break;
+                case InstructionPage.HOTKEYS_2:
+                    debugDisplay += "**Current Hotkeys**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1, 1+numHotkeyLinesPerPage);
+                    break;
+                case InstructionPage.HOTKEYS_3:
+                    debugDisplay += "**More Current Hotkeys**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1+(numHotkeyLinesPerPage*1), 1+(numHotkeyLinesPerPage*2));
+                    break;
+                case InstructionPage.QUICKBOOT:
+                    debugDisplay += "**QuickBoot**\n";
+                    debugDisplay += "Do you find yourself opening and closing\nthe game often and wish you had a faster way to\n" +
+                                    "immediately start a stage?\n" +
+                                    "By setting the \"bootupLevel\" in your config file\n" +
+                                    "to the name of a valid level in-game (CaseSensitive!)\n" +
+                                    "The game will immediately \n" +
+                                    "drop Lilac into that Level after the first set of Logos.\n\n" +
+                                    "(Tip: Change the value to Empty Quotes\n\"\"\n if you want to continue booting to the Main Menu.\n)";
+                    break;
+                case InstructionPage.NONE:
+                    debugDisplay += "That's all, folks!\n" +
+                                    String.Format("When you're ready, press {0} to close the instructions.", PHKToggleInstructions.Value) +
+                                    "If you need more info, reach out \nto me either on Github,\n" +
+                                    "GalaxyTrail Discord, or \nthe Freedom Planet Speedrunning Discord.\n\n" +
+                                    "Just, please be sure that you've \nACTUALLY read the readme and these instructions first\n" +
+                                    "And are prepared to explain what you already tried if asked\n," +
+                                    "I put hours of time into writing these instructions,\n" +
+                                    "so I'm unlikely to want to \nspend time re-explaining it 1 to 1.\n";
+                    break;
+                default:
+                    debugDisplay += "this is bugged. i have no idea how you got here.";
+                    break;
+            }
+            
         }
 
         public void UpdateDPS()
@@ -946,26 +1076,26 @@ namespace Fp2Trainer
         public void HandleHotkeys()
         {
             //if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.attack))
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyLoadDebugRoom))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKLoadDebugRoom))
             {
                 Log("F9 -> Load Debug Room");
                 SceneManager.LoadScene("StageDebugMenu", LoadSceneMode.Additive);
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGoToMainMenu))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGoToMainMenu))
             {
                 Log("F8 -> Main Menu");
                 //UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
                 GoToMainMenuNoLogos();
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyLoadAssetBundles))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKLoadAssetBundles))
             {
                 Log("F7 -> Load Asset Bundles");
                 LoadAssetBundlesFromModsFolder();
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGoToLevelSelectMenu))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGoToLevelSelectMenu))
             {
                 Log("F6 -> Level Select");
                 var availableScenes = new List<SceneNamePair>();
@@ -993,29 +1123,48 @@ namespace Fp2Trainer
                 //GameObject.Destroy(this.pauseMenu);
             }
 
-            if (false /*FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyasdfasfd)*/)
+            if (false /*FP2TrainerCustomHotkeys.GetButtonDown(PHKasdfasfd)*/)
             {
                 Log("F5 -> Toggle Level Select Menu Visibility");
                 ToggleLevelSelectVisibility();
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyShowNextDataPage))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKShowNextDataPage))
             {
-                ToggleVariableDisplay();
-                Log("F4 -> Toggle DataPage (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
+                if (showInstructions)
+                {
+                    IncrementInstructionPage();
+                    Log("Next Instruction Page (" + Enum.GetName(typeof(InstructionPage), currentInstructionPage) + ")");
+                }
+                else
+                {
+                    ToggleVariableDisplay();
+                    Log("Next Data Page (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
+                }
+
+                
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyShowPreviousDataPage))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKShowPreviousDataPage))
             {
-                ToggleVariableDisplayPrevious();
+                if (showInstructions)
+                {
+                    DecrementInstructionPage();
+                    Log("Previous Instruction Page (" + Enum.GetName(typeof(InstructionPage), currentInstructionPage) + ")");
+                }
+                else
+                {
+                    ToggleVariableDisplayPrevious();
+                    Log("Previous Data Page (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
+                }
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeySwapBetweenSpawnedChars))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwapBetweenSpawnedChars))
             {
                 FPPlayer2p.SwapBetweenActiveCharacters();
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGoToLevelAtLastIndex))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGoToLevelAtLastIndex))
             {
                 Log("F3 -> Load last located scene: ");
                 if (fptls != null)
@@ -1030,7 +1179,7 @@ namespace Fp2Trainer
                 }
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyKOCharacter))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKKOCharacter))
             {
                 //TestDamageNumberPopups();
 
@@ -1045,33 +1194,29 @@ namespace Fp2Trainer
                 }
             }
             
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyToggleInstructions))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleInstructions))
             {
                 //TestDamageNumberPopups();
 
-                if (fpplayer != null)
-                {
-                    Log(String.Format("F1 -> Toggle Instructions: ({0}) -> ({1})", showInstructions, !showInstructions));
-                    showInstructions = !showInstructions;
-                }
+                ToggleShowInstructions();
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyToggleNoClip))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleNoClip))
             {
-                Log("F2 -> NoClip Toggle");
+                Log("NoClip Toggle");
                 ToggleNoClip();
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGetOutGetOutGetOut))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGetOutGetOutGetOut))
             {
-                Log("GET OUT DEL GET OUT ETE GET OUT");
+                Log("GET OUT GET OUT GET OUT");
                 SpawnSpoilerBoss();
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyToggleMultiCharStart))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleMultiCharStart))
             {
                 multiplayerStart = !multiplayerStart;
-                Log(String.Format("F12 -> Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
+                Log(String.Format("Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
             }
 
             HandleMultiplayerSpawnHotkeys();
@@ -1079,18 +1224,18 @@ namespace Fp2Trainer
             HandleCameraHotkeys();
 
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyGotoWarpPoint))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGotoWarpPoint))
             {
                 fpplayer.position = new Vector2(warpPoint.x, warpPoint.y);
-                Log("Hold Guard + Tap Special -> Goto Warp: " + warpPoint);
+                Log("Goto Warp: " + warpPoint);
                 warpMessage = "Warping to " + warpPoint;
                 timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeySetWarpPoint))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSetWarpPoint))
             {
                 warpPoint = new Vector2(fpplayer.position.x, fpplayer.position.y);
-                Log("Hold Guard + Tap Jump -> Set Warp: " + warpPoint);
+                Log("Set Warp: " + warpPoint);
                 warpMessage = "Set warp at " + warpPoint;
                 timeoutShowWarpInfo = howLongToShowWarpInfo;
             }
@@ -1112,9 +1257,23 @@ namespace Fp2Trainer
             HandleNoClip();
         }
 
+        private void ToggleShowInstructions()
+        {
+            if (fpplayer != null)
+            {
+                Log(String.Format("Toggle Instructions: ({0}) -> ({1})", showInstructions, !showInstructions));
+                showInstructions = !showInstructions;
+
+                if (showInstructions)
+                {
+                    currentInstructionPage = InstructionPage.BASICS;
+                }
+            }
+        }
+
         private void HandleMultiplayerSpawnHotkeys()
         {
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeySpawnExtraChar))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSpawnExtraChar))
             {
                 //TestDamageNumberPopups();
 
@@ -1140,13 +1299,13 @@ namespace Fp2Trainer
 
         private void HandleResizeFontHotkeys()
         {
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyIncreaseFontSize))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKIncreaseFontSize))
             {
                 Log("Shift + Plus -> Increase Font Size: ");
                 if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize++;
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyDecreaseFontSize))
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKDecreaseFontSize))
             {
                 Log("Shift + Minus -> Decrease Font Size: ");
                 if (textmeshFancyTextPosition != null) textmeshFancyTextPosition.characterSize--;
@@ -1155,27 +1314,30 @@ namespace Fp2Trainer
 
         private void HandleCameraHotkeys()
         {
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyCameraZoomOut))
+            if (FP2TrainerCustomHotkeys.GetButton(PHKCameraZoomOut))
             {
-                Log("Minus -> Camera Zoom Out: ");
                 if (FPCamera.stageCamera != null)
                 {
-                    trainerRequestZoomValue -= 0.1f;
-                    FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
+                    Log(String.Format("{0} -> Camera Zoom Out: {1} / {2}", PHKCameraZoomOut.Value,
+                        FPCamera.stageCamera.GetZoom(), FPCamera.stageCamera.zoomMax));
+                    trainerRequestZoomValue += 0.1f;
+                    FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue, FPCamera.ZoomPriority_VeryHigh);
                 }
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyCameraZoomIn))
+            if (FP2TrainerCustomHotkeys.GetButton(PHKCameraZoomIn))
             {
                 Log("Minus -> Camera Zoom In: ");
                 if (FPCamera.stageCamera != null)
                 {
-                    trainerRequestZoomValue += 0.1f;
-                    FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
+                    Log(String.Format("{0} -> Camera Zoom In: {1} / {2}", PHKCameraZoomIn.Value,
+                        FPCamera.stageCamera.GetZoom(), FPCamera.stageCamera.zoomMin));
+                    trainerRequestZoomValue -= 0.1f;
+                    FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue, FPCamera.ZoomPriority_VeryHigh);
                 }
             }
 
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PrefHotkeyCameraZoomReset))
+            if (FP2TrainerCustomHotkeys.GetButton(PHKCameraZoomReset))
             {
                 Log("Numpad Period . -> Camera Reset: ");
                 if (FPCamera.stageCamera != null)
@@ -1365,11 +1527,32 @@ namespace Fp2Trainer
 
             UpdateAfterDataPageChange();
         }
+        
+        private void IncrementInstructionPage()
+        {
+            if (currentInstructionPage < InstructionPage.NONE)
+            {
+                currentInstructionPage++;
+            }
+        }
+        
+        private void DecrementInstructionPage()
+        {
+            if (currentInstructionPage > InstructionPage.BASICS)
+            {
+                currentInstructionPage--;
+            }
+        }
+        
+        private void ResetInstructionPage()
+        {
+            currentInstructionPage = InstructionPage.BASICS;
+        }
 
         private void UpdateAfterDataPageChange()
         {
             // After incrementing.
-            if (currentDataPage == DataPage.NONE)
+            if (currentDataPage == DataPage.NONE && !showInstructions)
                 showVarString = false;
             else
                 showVarString = true;
