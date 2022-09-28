@@ -220,6 +220,8 @@ namespace Fp2Trainer
         public bool planeSwitchVisualizersVisible = false;
         public List<GameObject> planeSwitchVisualizers;
 
+        public static GameObject cacheGameObjectHunter = null;
+
 
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
@@ -2102,17 +2104,32 @@ namespace Fp2Trainer
 
         public void SpawnSpoilerGimmick()
         {
-            var bk5 = SceneManager.GetSceneByName("Bakunawa5");
-            if (!bk5.isLoaded)
+            if (cacheGameObjectHunter == null)
             {
-                SceneManager.LoadScene("Bakunawa5", LoadSceneMode.Additive);
-                Scene scene = SceneManager.GetSceneByName("Bakunawa5");
+                GetReferencesToSpoilerGimmick();
+                cacheGameObjectHunter.SetActive(false);
+                GameObject.DontDestroyOnLoad(cacheGameObjectHunter);
             }
 
+            var goNewHunter = GameObject.Instantiate(cacheGameObjectHunter);
+            goNewHunter.SetActive(true);
+            foreach (Transform child in goNewHunter.transform)
+            {
+                Log(child.name + " " + child.transform.position + " " + child.gameObject.activeInHierarchy);
+            }
+
+        }
+
+        private static void GetReferencesToSpoilerGimmick()
+        {
+            Scene currentScene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene("Bakunawa5", LoadSceneMode.Additive);
             GameObject goHunter = GameObject.Find("Syntax Hunter");
             GameObject goHunterKO = GameObject.Find("HunterKOScreen");
             GameObject goArc = GameObject.Find("arc");
             GameObject goMeter = GameObject.Find("Hud Stealth Meter");
+
+            cacheGameObjectHunter = new GameObject("cacheHunter");
 
             if (goHunter != null)
             {
@@ -2121,22 +2138,16 @@ namespace Fp2Trainer
                 SceneManager.MoveGameObjectToScene(goHunterKO, SceneManager.GetActiveScene());
                 SceneManager.MoveGameObjectToScene(goArc, SceneManager.GetActiveScene());
                 SceneManager.MoveGameObjectToScene(goMeter, SceneManager.GetActiveScene());
+
+                goHunter.transform.parent = cacheGameObjectHunter.transform;
+                goHunterKO.transform.parent = cacheGameObjectHunter.transform;
+                goArc.transform.parent = cacheGameObjectHunter.transform;
+                goMeter.transform.parent = cacheGameObjectHunter.transform;
             }
 
-            if (bk5.isLoaded)
-            {
-                SceneManager.UnloadSceneAsync(bk5);
-                Log("P for Perish");
-            }
-
-            /*
-            var goSyntaxHunter = new GameObject();
-            if (fpplayer != null)
-            {
-                goSyntaxHunter.transform.position = new Vector3(fpplayer.position.x, fpplayer.position.y, goSyntaxHunter.transform.position.z);
-                goSyntaxHunter.AddComponent<BFSyntaxHunt>();
-                
-            }*/
+            SceneManager.SetActiveScene(currentScene);
+            SceneManager.UnloadSceneAsync("Bakunawa5");
+            Log("P for Perish");
         }
 
 
