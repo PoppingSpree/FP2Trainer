@@ -1017,7 +1017,7 @@ namespace Fp2Trainer
                     debugDisplay += "**Bugs**\n" +
                                     "tbh I need sleep, I'll probably fill this up \nwith something useful later.\n+" +
                                     "If you have this version of the trainer,\nyou probably already know how to contact me.\n\n\n" +
-                                    String.Format("GET OUT GET OUT GET OUT {0}",
+                                    String.Format("GET OUT GET OUT GET OUT\n{0}\n",
                                         PHKGetOutGetOutGetOut.Value);
                     break;
                 case InstructionPage.HOTKEYS_1:
