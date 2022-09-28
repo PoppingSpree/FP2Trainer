@@ -976,7 +976,7 @@ namespace Fp2Trainer
                         "to the name of a valid level in-game (CaseSensitive!)\n" +
                         "The game will immediately drop Lilac \n" +
                         "into that Level after the first set of Logos.\n\n" +
-                        "(Tip: Change the value to Empty Quotes (\"\")\nif you want to continue booting to the Main Menu.\n)";
+                        "(Tip: Change the value to Empty Quotes (\"\")\nif you want to continue booting to the Main Menu.)\n";
                     break;
                 case InstructionPage.NONE:
                     debugDisplay += "That's all, folks!\n" +
