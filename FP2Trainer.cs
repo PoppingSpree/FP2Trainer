@@ -108,6 +108,8 @@ namespace Fp2Trainer
 
         public static MelonPreferences_Entry<string> PHKReturnToCheckpoint;
         public static MelonPreferences_Entry<string> PHKRestartStage;
+        
+        public static MelonPreferences_Entry<string> PHKTogglePlaneSwitcherVisualizers;
 
         public static MelonPreferences_Entry<string> PHKToggleRecordGhostData;
         public static MelonPreferences_Entry<string> PHKToggleEnableNetworkPlayers;
@@ -305,6 +307,8 @@ namespace Fp2Trainer
             
             PHKReturnToCheckpoint = CreateEntryAndBindHotkey("PHKReturnToCheckpoint", "R");
             PHKRestartStage = CreateEntryAndBindHotkey("PHKRestartStage", "Shift+R");
+            
+            PHKTogglePlaneSwitcherVisualizers = CreateEntryAndBindHotkey("PHKTogglePlaneSwitcherVisualizers", "F3");
 
             //PHKNextWarppointSaveSlot = CreateEntryAndBindHotkey("PHKNextWarppointSaveSlot", "F10");
             //PHKPrevWarppointSaveSlot = CreateEntryAndBindHotkey("PHKPrevWarppointSaveSlot", "F9");
@@ -956,11 +960,12 @@ namespace Fp2Trainer
                                     String.Format("View DataViewer Next Page: {0}\n" +
                                                   "View DataViewer Previous Page: {1}\n" +
                                                   "Set Warp Point: {2}\n" +
-                                                  "Teleport to Warp Point: {3}\n\n" +
-                                                  "Load ANY Stage Menu: {4}\n" +
+                                                  "Teleport to Warp Point: {3}\n" +
+                                                  "Toggle PlaneSwitcherVisualizers: {4}\n\n" +
+                                                  "Load ANY Stage Menu: {5}\n" +
                                                   "Confirm Stage Menu Choice: (Jump Button)\n",
                                         PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKSetWarpPoint.Value,
-                                        PHKGotoWarpPoint.Value, PHKGoToLevelSelectMenu.Value);
+                                        PHKGotoWarpPoint.Value, PHKTogglePlaneSwitcherVisualizers.Value, PHKGoToLevelSelectMenu.Value);
                     break;
                 case InstructionPage.QUICK_RESTART:
                     debugDisplay += "**Quick Restart**\n" +
@@ -999,7 +1004,9 @@ namespace Fp2Trainer
                 case InstructionPage.BUGS:
                     debugDisplay += "**Bugs**\n" +
                                     "tbh I need sleep, I'll probably fill this up \nwith something useful later.\n+" +
-                                    "If you have this version of the trainer,\nyou probably already know how to contact me.\n";
+                                    "If you have this version of the trainer,\nyou probably already know how to contact me.\n\n\n" +
+                                    String.Format("GET OUT GET OUT GET OUT {0}",
+                                        PHKGetOutGetOutGetOut.Value);
                     break;
                 case InstructionPage.HOTKEYS_1:
                     debugDisplay += "**How to Rebind Hotkeys (1/2)**\n" +
@@ -1268,7 +1275,7 @@ namespace Fp2Trainer
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGoToLevelAtLastIndex))
             {
-                Log("F3 -> Load last located scene: ");
+                Log("Load last located scene: ");
                 if (fptls != null)
                 {
                     var iWantToGoToBed = fptls.availableScenes[fptls.availableScenes.Count - 1];
@@ -1287,12 +1294,12 @@ namespace Fp2Trainer
 
                 if (fpplayer != null)
                 {
-                    Log("Shift + F1 -> KO the Player");
+                    Log("KO the Player");
                     InstaKOPlayer();
                 }
                 else
                 {
-                    Log("Shift + F1 -> Attempted to KO the player, but no FPPlayer instance was found");
+                    Log("Attempted to KO the player, but no FPPlayer instance was found");
                 }
             }
 
@@ -1307,6 +1314,12 @@ namespace Fp2Trainer
             {
                 Log("NoClip Toggle");
                 ToggleNoClip();
+            }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKTogglePlaneSwitcherVisualizers))
+            {
+                Log("Toggle PlaneSwitcher Visualizers.");
+                TogglePlaneSwitchVisualizers();
             }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGetOutGetOutGetOut))
