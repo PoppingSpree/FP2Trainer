@@ -844,11 +844,17 @@ namespace Fp2Trainer
 
         public void HandleInstructionPageDisplay()
         {
+            if (showInstructions && currentDataPage == DataPage.NONE)
+            {
+                currentDataPage = DataPage.MOVEMENT;
+            }
+
             int numHotkeyLinesPerPage = 7;
-            debugDisplay += String.Format("Instructions: ({0} / {1})\n", (int)currentInstructionPage, (int)InstructionPage.NONE);
+            debugDisplay += String.Format("--[Instructions: ({0} / {1})]--\n", 
+                (int)currentInstructionPage+1, (int)InstructionPage.NONE)+1;
             
-            debugDisplay += String.Format("Press {0} or {1} to view the Next / Previous page.\nPress {2} to toggle the Instructions on or off.\n", 
-                PHKToggleInstructions.Value, PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value);
+            debugDisplay += String.Format("{0} / {1} -> View Next / Prev Page.\nPress {2} to toggle Instructions on or off.\n", 
+                PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKToggleInstructions.Value);
             switch (currentInstructionPage)
             {
                 /*
@@ -922,7 +928,7 @@ namespace Fp2Trainer
                                     "at <FP2 Install Dir>/UserData/MelonPreferences.cfg\n\n" +
                                     "If you don't see a config file there, \nlaunch the game for a few seconds,\n" +
                                         "then close it and check again for \na regenerated config file.\n" +
-                                    "Hotkey Keybinds are Case-Sensitive \nand only take effect on _next launch of the game_.\n" +
+                                    "Hotkey Keybinds are Case-Sensitive \nand can only be changed while the game is NOT RUNNING.\n" +
                                     "If you need help setting it up, please ask.\n" +
                                     "If you make a mistake, don't worry!\n" +
                                     "Delete the file and relaunch the game \nto regenerate a new default config file.";
@@ -1091,13 +1097,18 @@ namespace Fp2Trainer
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKLoadAssetBundles))
             {
-                Log("F7 -> Load Asset Bundles");
+                Log("Load Asset Bundles");
                 LoadAssetBundlesFromModsFolder();
             }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGoToLevelSelectMenu))
             {
-                Log("F6 -> Level Select");
+                Log("Level Select");
+                if (showInstructions)
+                {
+                    ToggleShowInstructions();
+                }
+
                 var availableScenes = new List<SceneNamePair>();
                 var i = 0;
                 for (i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
@@ -1552,7 +1563,7 @@ namespace Fp2Trainer
         private void UpdateAfterDataPageChange()
         {
             // After incrementing.
-            if (currentDataPage == DataPage.NONE && !showInstructions)
+            if (currentDataPage == DataPage.NONE && !showInstructions && !(stageSelectMenu == null))
                 showVarString = false;
             else
                 showVarString = true;
