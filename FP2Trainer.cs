@@ -211,6 +211,10 @@ namespace Fp2Trainer
 
         public static Dictionary<string, KeyMapping> customHotkeys;
 
+        public bool planeSwitchVisualizersCreated = false;
+        public bool planeSwitchVisualizersVisible = false;
+        public List<GameObject> planeSwitchVisualizers;
+
 
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
@@ -403,6 +407,9 @@ namespace Fp2Trainer
             {
                 CreateFP2TrainerGameObject();
             }
+            
+            planeSwitchVisualizersCreated = false;
+            planeSwitchVisualizersVisible = false;
         }
 
         private static void CreateFP2TrainerGameObject()
@@ -561,12 +568,64 @@ namespace Fp2Trainer
 
         private void VisualizePlaneSwitchers()
         {
-            List<PlaneSwitcher> planeSwitchers;
-            planeSwitchers = new List<PlaneSwitcher>((GameObject.FindObjectsOfType<PlaneSwitcher>()));
-            Log(String.Format("Found {0} PlaneSwitchers. Attempting to visualize.\n", planeSwitchers.Count));
-            foreach (PlaneSwitcher ps in planeSwitchers)
+            if (!planeSwitchVisualizersCreated)
             {
-                //Log(String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
+                planeSwitchVisualizers = new List<GameObject>();
+                
+                List<PlaneSwitcher> planeSwitchers;
+                planeSwitchers = new List<PlaneSwitcher>((GameObject.FindObjectsOfType<PlaneSwitcher>()));
+                Debug.Log(System.String.Format("Found {0} PlaneSwitchers. Attempting to visualize.\n", planeSwitchers.Count));
+                GameObject goCube;
+                Renderer renCube;
+                foreach (PlaneSwitcher ps in planeSwitchers)
+                {
+                    Debug.Log(System.String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
+                    goCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    goCube.name = ("Visualizer " + ps.name);
+                    goCube.transform.position = new Vector3(ps.transform.position.x, ps.transform.position.y, ps.transform.position.z);
+                    goCube.transform.localScale = new Vector3(ps.xsize, ps.ysize, 1f);
+                    renCube = goCube.GetComponent<Renderer>();
+			
+                    renCube.material.color = new Color(1, 0, 0, 0.7f);
+                    goCube.SetActive(false);
+                    planeSwitchVisualizers.Add(goCube);
+                    //renCube.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                    //renCube.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                }
+
+                planeSwitchVisualizersCreated = true;
+                planeSwitchVisualizersVisible = true;
+            }
+        }
+
+        public void ShowPlaneSwitchVisualizers()
+        {
+            foreach (var psv in planeSwitchVisualizers)
+            {
+                psv.SetActive(true);
+            }
+            planeSwitchVisualizersVisible = true;
+        }
+        
+        public void HidePlaneSwitchVisualizers()
+        {
+            foreach (var psv in planeSwitchVisualizers)
+            {
+                psv.SetActive(false);
+            }
+            planeSwitchVisualizersVisible = false;
+        }
+
+        public void TogglePlaneSwitchVisualizers()
+        {
+            planeSwitchVisualizersVisible = !planeSwitchVisualizersVisible;
+            if (planeSwitchVisualizersVisible)
+            {
+                ShowPlaneSwitchVisualizers();
+            }
+            else
+            {
+                HidePlaneSwitchVisualizers();
             }
         }
 
