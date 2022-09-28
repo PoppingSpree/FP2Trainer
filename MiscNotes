@@ -41,3 +41,17 @@ public override float getInputDown(bool exactKeyModifiers = false, string axis =
 */
 
 checkModifiersForKeys // probablyh wanna pass in true
+
+---
+
+
+fppausemenu 
+this is the bit where it reacts to the chosen option:
+
+else if (FPStage.menuInput.confirm)
+				{
+					timer = 0f;
+					switch (menuSelection)
+---
+					
+menuCursor

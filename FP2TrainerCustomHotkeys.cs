@@ -153,7 +153,7 @@ namespace Fp2Trainer
             {
                 if (lineCount >= start && lineCount <= end)
                 {
-                    strControlListing += String.Format("{0} -> {1}\n", configBinding.Value, configBinding.Identifier);
+                    strControlListing += String.Format("{1} -> {0}\n", configBinding.Value, configBinding.Identifier);
                 }
 
                 lineCount++;

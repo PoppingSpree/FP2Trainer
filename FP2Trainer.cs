@@ -31,7 +31,7 @@ namespace Fp2Trainer
     {
         public static GameObject goFP2Trainer;
         public static GameObject goFP2TrainerYourPlayerIndicator;
-        
+
         public enum DataPage
         {
             MOVEMENT,
@@ -43,19 +43,22 @@ namespace Fp2Trainer
             NO_CLIP,
             NONE
         }
-        
+
         public enum InstructionPage
         {
             BASICS,
             BACKUPS,
             SPEEDRUN,
+            QUICK_RESTART,
             NO_CLIP,
             MULTICHARACTER,
+
             //NETPLAY,
             BUGS,
             HOTKEYS_1,
             HOTKEYS_2,
             HOTKEYS_3,
+            HOTKEYS_4,
             QUICKBOOT,
             NONE
         }
@@ -67,53 +70,57 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> enableNoClip;
 
         public static MelonPreferences_Entry<string> BootupLevel;
-        
+
         public static MelonPreferences_Entry<string> PHKToggleInstructions;
-        
+
         public static MelonPreferences_Entry<string> PHKSetWarpPoint;
         public static MelonPreferences_Entry<string> PHKGotoWarpPoint;
-        
+
         public static MelonPreferences_Entry<string> PHKKOCharacter;
-        
+
         public static MelonPreferences_Entry<string> PHKToggleNoClip;
-        
+
         public static MelonPreferences_Entry<string> PHKSpawnExtraChar;
         public static MelonPreferences_Entry<string> PHKSwapBetweenSpawnedChars;
         public static MelonPreferences_Entry<string> PHKToggleMultiCharStart;
-        
+
         public static MelonPreferences_Entry<string> PHKGetOutGetOutGetOut;
 
         public static MelonPreferences_Entry<string> PHKCameraZoomIn;
         public static MelonPreferences_Entry<string> PHKCameraZoomOut;
         public static MelonPreferences_Entry<string> PHKCameraZoomReset;
-        
+
         public static MelonPreferences_Entry<string> PHKShowNextDataPage;
         public static MelonPreferences_Entry<string> PHKShowPreviousDataPage;
-        
+
         public static MelonPreferences_Entry<string> PHKGoToMainMenu;
         public static MelonPreferences_Entry<string> PHKLoadDebugRoom;
-        
+
         public static MelonPreferences_Entry<string> PHKGoToLevelSelectMenu;
-        
+
         public static MelonPreferences_Entry<string> PHKLoadAssetBundles;
+
         //public static MelonPreferences_Entry<string> PHKTogglePauseMenuOrTrainerMenu;
         public static MelonPreferences_Entry<string> PHKGoToLevelAtLastIndex;
-        
+
         public static MelonPreferences_Entry<string> PHKIncreaseFontSize;
         public static MelonPreferences_Entry<string> PHKDecreaseFontSize;
-        
+
+        public static MelonPreferences_Entry<string> PHKReturnToCheckpoint;
+        public static MelonPreferences_Entry<string> PHKRestartStage;
+
         public static MelonPreferences_Entry<string> PHKToggleRecordGhostData;
         public static MelonPreferences_Entry<string> PHKToggleEnableNetworkPlayers;
-        
+
         public static MelonPreferences_Entry<string> PHKRebindAllHotkeys;
 
         public static bool hotkeysLoaded = false;
-        
+
         //public static MelonPreferences_Entry<string> PHK;
-        
+
         // public static MelonPreferences_Entry<string> PHKSaveTrainerData;
         // public static MelonPreferences_Entry<string> PHKLoadTrainerData;
-        
+
 
         public static Fp2Trainer fp2TrainerInstance;
 
@@ -178,7 +185,7 @@ namespace Fp2Trainer
 
         public static bool multiplayerStart = false;
         public static bool doneMultiplayerStart = false;
-        
+
         public bool showVarString = true;
         private GameObject stageHUD;
         private GameObject stageSelectMenu;
@@ -252,7 +259,7 @@ namespace Fp2Trainer
             BootupLevel = fp2Trainer.CreateEntry("bootupLevel", "");
             showDebug = fp2Trainer.CreateEntry("showDebug", true);
             enableNoClip = fp2Trainer.CreateEntry("enableNoClip", false);
-            
+
             InitPrefsCustomHotkeys();
         }
 
@@ -288,19 +295,23 @@ namespace Fp2Trainer
             PHKLoadAssetBundles = CreateEntryAndBindHotkey("PHKLoadAssetBundles", "Shift+F9");
             //PHKTogglePauseMenuOrTrainerMenu = CreateEntryAndBindHotkey("PHKTogglePauseMenuOrTrainerMenu", "F1");
             PHKGoToLevelAtLastIndex = CreateEntryAndBindHotkey("PHKGoToLevelAtLastIndex", "BackQuote");
-            
+
             PHKIncreaseFontSize = CreateEntryAndBindHotkey("PHKIncreaseFontSize", "Shift+KeypadPlus");
             PHKDecreaseFontSize = CreateEntryAndBindHotkey("PHKDecreaseFontSize", "Shift+KeypadMinus");
+            
+            PHKReturnToCheckpoint = CreateEntryAndBindHotkey("PHKReturnToCheckpoint", "R");
+            PHKRestartStage = CreateEntryAndBindHotkey("PHKRestartStage", "Shift+R");
 
             //PHKNextWarppointSaveSlot = CreateEntryAndBindHotkey("PHKNextWarppointSaveSlot", "F10");
             //PHKPrevWarppointSaveSlot = CreateEntryAndBindHotkey("PHKPrevWarppointSaveSlot", "F9");
-            
+
             PHKRebindAllHotkeys = CreateEntryAndBindHotkey("PHKRebindAllHotkeys", "Pause");
 
             hotkeysLoaded = true;
         }
 
-        private static MelonLoader.MelonPreferences_Entry<string> CreateEntryAndBindHotkey(string identifier, string default_value)
+        private static MelonLoader.MelonPreferences_Entry<string> CreateEntryAndBindHotkey(string identifier,
+            string default_value)
         {
             var melonPrefEntry = fp2Trainer.CreateEntry(identifier, default_value);
             FP2TrainerCustomHotkeys.Add(melonPrefEntry);
@@ -544,10 +555,8 @@ namespace Fp2Trainer
             if (goFP2TrainerYourPlayerIndicator == null)
             {
                 goFP2TrainerYourPlayerIndicator = FP2TrainerYourPlayerIndicator.CreateFPYourPlayerIndicator(
-            "YourPlayer", Vector3.zero, Quaternion.identity, goFP2Trainer.transform);
+                    "YourPlayer", Vector3.zero, Quaternion.identity, goFP2Trainer.transform);
             }
-
-            
         }
 
         private void VisualizePlaneSwitchers()
@@ -559,7 +568,6 @@ namespace Fp2Trainer
             {
                 //Log(String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
             }
-
         }
 
         public override void OnApplicationQuit() // Runs when the Game is told to Close.
@@ -617,7 +625,7 @@ namespace Fp2Trainer
                 {
                     if (hotkeysLoaded)
                     {
-                        HandleHotkeys();   
+                        HandleHotkeys();
                     }
 
                     if (showInstructions)
@@ -652,6 +660,7 @@ namespace Fp2Trainer
                         HandleDataPageDisplay();
                         //FPPlayer2p.ShowPressedButtons();
                     }
+
                     FPPlayer2p.CatchupIfPlayerTooFarAway();
                 }
 
@@ -850,11 +859,9 @@ namespace Fp2Trainer
             }
 
             int numHotkeyLinesPerPage = 7;
-            debugDisplay += String.Format("--[Instructions: ({0} / {1})]--\n", 
-                (int)currentInstructionPage+1, (int)InstructionPage.NONE)+1;
+            debugDisplay += String.Format("--[Instructions: ({0} / {1})]--\n",
+                (int)(currentInstructionPage + 1), ((int)(InstructionPage.NONE) + 1));
             
-            debugDisplay += String.Format("{0} / {1} -> View Next / Prev Page.\nPress {2} to toggle Instructions on or off.\n", 
-                PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKToggleInstructions.Value);
             switch (currentInstructionPage)
             {
                 /*
@@ -870,7 +877,7 @@ namespace Fp2Trainer
                                     "and experimenting with the physics and \nmechanics of the game to find new\n" +
                                     "techniques in the pursuit of going FAST.\n" +
                                     "But of course, there's other toys too. But first...\n" +
-                                    String.Format("(Press {0} to continue)", PHKShowNextDataPage.Value);
+                                    String.Format("(Press {0} to continue)\n", PHKShowNextDataPage.Value);
                     break;
                 case InstructionPage.BACKUPS:
                     debugDisplay += "**Backups**\n" +
@@ -880,7 +887,7 @@ namespace Fp2Trainer
                                     "You may backup your save files too, if you like.\n" +
                                     "Your save files can typically be found at:\n" +
                                     "C:\\Users\\<YOUR username here>\\AppData\n\\LocalLow\\GalaxyTrail\\Freedom Planet 2\n" +
-                                    "(That's **LocalLOW**, not Local. A common mistake.\n)";
+                                    "(That's **LocalLOW**, not Local. A common mistake.)\n";
                     //"Your save files are currently stored at:\n{0}", Application.persistentDataPath;
                     break;
                 case InstructionPage.SPEEDRUN:
@@ -892,8 +899,16 @@ namespace Fp2Trainer
                                                   "Set Warp Point: {2}\n" +
                                                   "Teleport to Warp Point: {3}\n\n" +
                                                   "Load ANY Stage Menu: {4}\n" +
-                                                  "Confirm Stage Menu Choice: (Jump Button)",
-                                        PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKSetWarpPoint.Value, PHKGotoWarpPoint.Value, PHKGoToLevelSelectMenu.Value);
+                                                  "Confirm Stage Menu Choice: (Jump Button)\n",
+                                        PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKSetWarpPoint.Value,
+                                        PHKGotoWarpPoint.Value, PHKGoToLevelSelectMenu.Value);
+                    break;
+                case InstructionPage.QUICK_RESTART:
+                    debugDisplay += "**Quick Restart**\n" +
+                                    "For when going to the pause menu is too slow.\n" +
+                                    String.Format("Reset to Checkpoint: {0}\n" +
+                                                  "Restart Stage: {1}\n",
+                                        PHKReturnToCheckpoint.Value, PHKRestartStage.Value);
                     break;
                 case InstructionPage.NO_CLIP:
                     debugDisplay += "**NoClip**\n" +
@@ -902,70 +917,87 @@ namespace Fp2Trainer
                                     "And some crush-triggers may still KO you.\n" +
                                     String.Format("Toggle NoClip Mode: {0}\n" +
                                                   "Cancel NoClip and Return to Start:\n  (Attack Button)\n" +
-                                                  "Exit NoClip at Current Position:\n  (Jump Button) or {0}\n", PHKToggleNoClip.Value);
+                                                  "Exit NoClip at Current Position:\n  (Jump Button) or {0}\n",
+                                        PHKToggleNoClip.Value);
                     break;
                 case InstructionPage.MULTICHARACTER:
                     debugDisplay += "**Multi-Character**\n" +
-                                    "With this, you can play the game \nas multiple characters at the same time!\n" +
-                                    "Be warned, this is very buggy. \nThe game is not designed to support more than one character at a time.\n" +
-                                    "If you have multiple characters, KOed characters \nare removed from play immediately until there is only one left." +
+                                    "Play as multiple characters at the same time!\n" +
+                                    "Be warned, this is very buggy. \nThe game is not designed to support \nmore than one character at a time.\n" +
+                                    "If you have multiple characters, KOed characters \n" +
+                                    "are removed from play immediately until \n" +
+                                    "there is only one left.\n" +
                                     String.Format("Spawn Additional Character: {0}\n" +
                                                   "Switch to Next Remaining Character: {1}\n" +
-                                                  "Toggle Multi-Char auto-spawn at level-start: {2}\n" +
+                                                  "Toggle Ally-spawn on level-start: {2}\n" +
                                                   "Insta-KO Current Character: {3}\n",
-                                        PHKSpawnExtraChar.Value, PHKSwapBetweenSpawnedChars.Value, PHKToggleMultiCharStart.Value, PHKKOCharacter.Value);
+                                        PHKSpawnExtraChar.Value, PHKSwapBetweenSpawnedChars.Value,
+                                        PHKToggleMultiCharStart.Value, PHKKOCharacter.Value);
                     break;
                 /*case InstructionPage.NETPLAY:
                     debugDisplay += "**Basics**\n";
                     break;*/
                 case InstructionPage.BUGS:
                     debugDisplay += "**Bugs**\n" +
-                                    "tbh I need sleep, I'll probably fill this up \nwith something useful later.";
+                                    "tbh I need sleep, I'll probably fill this up \nwith something useful later.\n+" +
+                                    "If you have this version of the trainer,\nyou probably already know how to contact me.\n";
                     break;
                 case InstructionPage.HOTKEYS_1:
-                    debugDisplay += "**How to Rebind Hotkeys**\n" +
+                    debugDisplay += "**How to Rebind Hotkeys (1/2)**\n" +
                                     "If you want to change your \nHotkey Bindings, you can edit them\n" +
-                                    "at <FP2 Install Dir>/UserData/MelonPreferences.cfg\n\n" +
+                                    "at <FP2 Install Dir>/UserData/MelonPreferences.cfg\n" +
                                     "If you don't see a config file there, \nlaunch the game for a few seconds,\n" +
-                                        "then close it and check again for \na regenerated config file.\n" +
-                                    "Hotkey Keybinds are Case-Sensitive \nand can only be changed while the game is NOT RUNNING.\n" +
-                                    "If you need help setting it up, please ask.\n" +
-                                    "If you make a mistake, don't worry!\n" +
-                                    "Delete the file and relaunch the game \nto regenerate a new default config file.";
+                                    "then close it and check again for \na regenerated config file.\n";
                     break;
                 case InstructionPage.HOTKEYS_2:
-                    debugDisplay += "**Current Hotkeys**\n";
-                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1, 1+numHotkeyLinesPerPage);
+                    debugDisplay += "**How to Rebind Hotkeys (2/2)**\n" +
+                                    "Hotkey Keybinds are Case-Sensitive and can \nonly be changed while the game is NOT RUNNING.\n" +
+                                    "Edits made to the config file \nwhile the game is running\n" +
+                                    "will be OVERWRITTEN!\n" +
+                                    "If you need help setting it up, please ask.\n" +
+                                    "If you make a mistake, don't worry!\n" +
+                                    "Delete the file and relaunch the game \nto regenerate a new default config file.\n";
                     break;
                 case InstructionPage.HOTKEYS_3:
+                    debugDisplay += "**Current Hotkeys**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1, 1 + numHotkeyLinesPerPage);
+                    break;
+                case InstructionPage.HOTKEYS_4:
                     debugDisplay += "**More Current Hotkeys**\n";
-                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1+(numHotkeyLinesPerPage*1), 1+(numHotkeyLinesPerPage*2));
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 1),
+                        1 + (numHotkeyLinesPerPage * 2));
                     break;
                 case InstructionPage.QUICKBOOT:
                     debugDisplay += "**QuickBoot**\n";
-                    debugDisplay += "Do you find yourself opening and closing\nthe game often and wish you had a faster way to\n" +
-                                    "immediately start a stage?\n" +
-                                    "By setting the \"bootupLevel\" in your config file\n" +
-                                    "to the name of a valid level in-game (CaseSensitive!)\n" +
-                                    "The game will immediately \n" +
-                                    "drop Lilac into that Level after the first set of Logos.\n\n" +
-                                    "(Tip: Change the value to Empty Quotes\n\"\"\n if you want to continue booting to the Main Menu.\n)";
+                    debugDisplay +=
+                        "Do you find yourself opening and closing\nthe game often and wish you had a faster way to\n" +
+                        "immediately start a stage?\n" +
+                        "By setting the \"bootupLevel\" in your config file\n" +
+                        "to the name of a valid level in-game (CaseSensitive!)\n" +
+                        "The game will immediately drop Lilac \n" +
+                        "into that Level after the first set of Logos.\n\n" +
+                        "(Tip: Change the value to Empty Quotes (\"\")\nif you want to continue booting to the Main Menu.\n)";
                     break;
                 case InstructionPage.NONE:
                     debugDisplay += "That's all, folks!\n" +
-                                    String.Format("When you're ready, press {0} to close the instructions.", PHKToggleInstructions.Value) +
-                                    "If you need more info, reach out \nto me either on Github,\n" +
-                                    "GalaxyTrail Discord, or \nthe Freedom Planet Speedrunning Discord.\n\n" +
-                                    "Just, please be sure that you've \nACTUALLY read the readme and these instructions first\n" +
-                                    "And are prepared to explain what you already tried if asked\n," +
-                                    "I put hours of time into writing these instructions,\n" +
-                                    "so I'm unlikely to want to \nspend time re-explaining it 1 to 1.\n";
+                                    String.Format("When you're ready, press {0} to close this guide.\n",
+                                        PHKToggleInstructions.Value) +
+                                    "If you need more info, reach out \nto me either on GitHub,\n" +
+                                    "GalaxyTrail Discord, or \nthe Freedom Planet Speedrunning Discord.\n" +
+                                    "Please be sure that you've ACTUALLY \nread the readme and these instructions first\n" +
+                                    "And are prepared to explain what you tried.\n" +
+                                    "I spent hours writing these instructions,\n" +
+                                    "so I'll be a little bit _unkind_ \n" +
+                                    "if you didn't read before contacting me.\n";
                     break;
                 default:
-                    debugDisplay += "this is bugged. i have no idea how you got here.";
+                    debugDisplay += "this is bugged. i have no idea how you got here.\n";
                     break;
             }
             
+            debugDisplay += String.Format(
+                "{0} / {1} -> View Next / Prev Page.\nPress {2} to toggle Instructions on or off.\n",
+                PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKToggleInstructions.Value);
         }
 
         public void UpdateDPS()
@@ -1145,15 +1177,14 @@ namespace Fp2Trainer
                 if (showInstructions)
                 {
                     IncrementInstructionPage();
-                    Log("Next Instruction Page (" + Enum.GetName(typeof(InstructionPage), currentInstructionPage) + ")");
+                    Log("Next Instruction Page (" + Enum.GetName(typeof(InstructionPage), currentInstructionPage) +
+                        ")");
                 }
                 else
                 {
                     ToggleVariableDisplay();
                     Log("Next Data Page (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
                 }
-
-                
             }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKShowPreviousDataPage))
@@ -1161,7 +1192,8 @@ namespace Fp2Trainer
                 if (showInstructions)
                 {
                     DecrementInstructionPage();
-                    Log("Previous Instruction Page (" + Enum.GetName(typeof(InstructionPage), currentInstructionPage) + ")");
+                    Log("Previous Instruction Page (" + Enum.GetName(typeof(InstructionPage), currentInstructionPage) +
+                        ")");
                 }
                 else
                 {
@@ -1204,7 +1236,7 @@ namespace Fp2Trainer
                     Log("Shift + F1 -> Attempted to KO the player, but no FPPlayer instance was found");
                 }
             }
-            
+
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleInstructions))
             {
                 //TestDamageNumberPopups();
@@ -1252,7 +1284,7 @@ namespace Fp2Trainer
             }
 
             // I'd like to preserve the gamepad version of this somehow...
-            
+
             /*
             if (InputControl.GetButton(Controls.buttons.pause) && InputControl.GetButtonDown(Controls.buttons.special))
             {
@@ -1528,7 +1560,7 @@ namespace Fp2Trainer
 
             UpdateAfterDataPageChange();
         }
-        
+
         private void ToggleVariableDisplayPrevious()
         {
             if (currentDataPage == DataPage.MOVEMENT)
@@ -1538,26 +1570,30 @@ namespace Fp2Trainer
 
             UpdateAfterDataPageChange();
         }
-        
+
         private void IncrementInstructionPage()
         {
             if (currentInstructionPage < InstructionPage.NONE)
             {
                 currentInstructionPage++;
             }
+
+            UpdateAfterDataPageChange();
         }
-        
+
         private void DecrementInstructionPage()
         {
             if (currentInstructionPage > InstructionPage.BASICS)
             {
                 currentInstructionPage--;
             }
+            UpdateAfterDataPageChange();
         }
-        
+
         private void ResetInstructionPage()
         {
             currentInstructionPage = InstructionPage.BASICS;
+            UpdateAfterDataPageChange();
         }
 
         private void UpdateAfterDataPageChange()
@@ -2039,6 +2075,41 @@ namespace Fp2Trainer
                 num2 += 18f - (float)maxPetals * 1f;
             }
             */
+        }
+
+        public void ReturnToCheckpoint()
+        {
+            if (FPStage.checkpointEnabled /*&& FPStage.currentStage.GetPlayerInstance_FPPlayer().state !=
+                new FPObjectState(FPStage.currentStage.GetPlayerInstance_FPPlayer().State_KO)*/)
+            {
+                sceneToLoad = SceneManager.GetActiveScene().name;
+                FPAudio.PlayMenuSfx(2);
+
+                FPSaveManager.currentSave.Local_Restart();
+                FPStage.checkpointEnabled = false;
+                FPStage.checkpointPos = new Vector2(0f, 0f);
+                FPSaveManager.stageDoorFlags = new bool[10];
+                FPSaveManager.activatedDialogZones = new bool[10];
+                FPSaveManager.bossRushId = 0;
+            }
+            else
+            {
+                RestartLevel();
+            }
+        }
+
+        public void RestartLevel()
+        {
+            sceneToLoad = SceneManager.GetActiveScene().name;
+            FPAudio.PlayMenuSfx(2);
+
+            FPScreenTransition component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
+            component.transitionType = FPTransitionTypes.WIPE;
+            component.transitionSpeed = 48f;
+            component.sceneToLoad = sceneToLoad;
+            component.SetTransitionColor(0f, 0f, 0f);
+            component.BeginTransition();
+            FPAudio.PlayMenuSfx(3);
         }
 
         public static void Log(string txt)
