@@ -60,6 +60,8 @@ namespace Fp2Trainer
             HOTKEYS_2,
             HOTKEYS_3,
             HOTKEYS_4,
+            HOTKEYS_5,
+            HOTKEYS_6,
             QUICKBOOT,
             NONE
         }
@@ -1044,6 +1046,16 @@ namespace Fp2Trainer
                     debugDisplay += "**More Current Hotkeys**\n";
                     debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 1),
                         1 + (numHotkeyLinesPerPage * 2));
+                    break;
+                case InstructionPage.HOTKEYS_5:
+                    debugDisplay += "**Even More Current Hotkeys**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 2),
+                        1 + (numHotkeyLinesPerPage * 3));
+                    break;
+                case InstructionPage.HOTKEYS_6:
+                    debugDisplay += "**Even MORE More Current Hotkeys**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 3),
+                        1 + (numHotkeyLinesPerPage * 4));
                     break;
                 case InstructionPage.QUICKBOOT:
                     debugDisplay += "**QuickBoot**\n";
