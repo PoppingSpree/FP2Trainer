@@ -35,6 +35,7 @@ namespace Fp2Trainer
         public enum DataPage
         {
             MOVEMENT,
+            MOVEMENT_2,
             COMBAT,
             DPS,
             DPS_ALL,
@@ -591,33 +592,33 @@ namespace Fp2Trainer
                     renCube = goCube.GetComponent<Renderer>();
 			
                     renCube.material.color = new Color(1, 0, 0, 0.7f);
-                    goCube.SetActive(false);
+                    goCube.SetActive(planeSwitchVisualizersVisible);
                     planeSwitchVisualizers.Add(goCube);
                     //renCube.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
                     //renCube.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
                 }
 
                 planeSwitchVisualizersCreated = true;
-                planeSwitchVisualizersVisible = true;
             }
         }
 
         public void ShowPlaneSwitchVisualizers()
         {
+            planeSwitchVisualizersVisible = true;
             foreach (var psv in planeSwitchVisualizers)
             {
-                psv.SetActive(true);
+                psv.SetActive(planeSwitchVisualizersVisible);
             }
-            planeSwitchVisualizersVisible = true;
+            
         }
         
         public void HidePlaneSwitchVisualizers()
         {
+            planeSwitchVisualizersVisible = false;
             foreach (var psv in planeSwitchVisualizers)
             {
-                psv.SetActive(false);
+                psv.SetActive(planeSwitchVisualizersVisible);
             }
-            planeSwitchVisualizersVisible = false;
         }
 
         public void TogglePlaneSwitchVisualizers()
@@ -750,6 +751,7 @@ namespace Fp2Trainer
                 debugDisplay += "Terrain Collision: " + fpplayer.terrainCollision.ToString() + "\n";
                 debugDisplay += "Physics Enabled: " + fpplayer.enablePhysics.ToString() + "\n";
                 debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
+                debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
             }
 
 
@@ -760,7 +762,7 @@ namespace Fp2Trainer
 
             if (currentDataPage == DataPage.MOVEMENT)
             {
-                debugDisplay += "Movement: \n";
+                debugDisplay += "Movement (1/2): \n";
                 if (playerValuesToShow.Contains("Pos")) debugDisplay += "Pos: " + fpplayer.position + "\n";
                 if (playerValuesToShow.Contains("Vel")) debugDisplay += "Vel: " + fpplayer.velocity + "\n";
                 if (playerValuesToShow.Contains("Magnitude"))
@@ -771,6 +773,16 @@ namespace Fp2Trainer
                     debugDisplay += "Air Accel: " + fpplayer.airAceleration + "\n";
                     debugDisplay += "Air Drag: " + fpplayer.airDrag + "\n";
                 }
+                
+                debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
+                debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
+            }
+            else if (currentDataPage == DataPage.MOVEMENT_2)
+            {
+                debugDisplay += "Movement (2/2): \n";
+                
+                debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
+                debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
 
                 if (playerValuesToShow.Contains("Ground Angle"))
                     debugDisplay += "Ground Angle: " + fpplayer.groundAngle + "\n";
@@ -1318,8 +1330,8 @@ namespace Fp2Trainer
             
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKTogglePlaneSwitcherVisualizers))
             {
-                Log("Toggle PlaneSwitcher Visualizers.");
                 TogglePlaneSwitchVisualizers();
+                Log(String.Format("Toggle PlaneSwitcher Visualizers: {0} -> {1}", !planeSwitchVisualizersVisible, planeSwitchVisualizersVisible));
             }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGetOutGetOutGetOut))
