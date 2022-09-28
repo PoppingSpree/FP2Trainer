@@ -55,3 +55,8 @@ else if (FPStage.menuInput.confirm)
 ---
 					
 menuCursor
+----
+
+public FPObjectState inputMethod;
+// In FPEventSequence
+targetPlayer.inputMethod = targetPlayer.GetInputFromPlayer1;

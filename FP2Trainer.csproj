@@ -43,6 +43,7 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="FP2TrainerAllyControls.cs" />
         <Compile Include="FP2TrainerCustomHotkeys.cs" />
         <Compile Include="FP2TrainerDamageNumber.cs" />
         <Compile Include="FP2TrainerDPSTracker.cs" />

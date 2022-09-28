@@ -86,6 +86,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKSpawnExtraChar;
         public static MelonPreferences_Entry<string> PHKSwapBetweenSpawnedChars;
         public static MelonPreferences_Entry<string> PHKToggleMultiCharStart;
+        public static MelonPreferences_Entry<string> PHKCyclePreferredAllyControlType;
 
         public static MelonPreferences_Entry<string> PHKGetOutGetOutGetOut;
 
@@ -289,6 +290,7 @@ namespace Fp2Trainer
             PHKSpawnExtraChar = CreateEntryAndBindHotkey("PHKSpawnExtraChar", "F12");
             PHKSwapBetweenSpawnedChars = CreateEntryAndBindHotkey("PHKSwapBetweenSpawnedChars", "F11");
             PHKToggleMultiCharStart = CreateEntryAndBindHotkey("PHKToggleMultiCharStart", "Shift+F12");
+            PHKCyclePreferredAllyControlType = CreateEntryAndBindHotkey("PHKCyclePreferredAllyControlType", "Shift+F11");
 
             PHKGetOutGetOutGetOut = CreateEntryAndBindHotkey("PHKGetOutGetOutGetOut", "Delete");
 
@@ -1016,9 +1018,11 @@ namespace Fp2Trainer
                                     String.Format("Spawn Additional Character: {0}\n" +
                                                   "Switch to Next Remaining Character: {1}\n" +
                                                   "Toggle Ally-spawn on level-start: {2}\n" +
-                                                  "Insta-KO Current Character: {3}\n",
+                                                  "Cycle Ally Playstyle: {3}\n" +
+                                                  "Insta-KO Current Character: {4}\n",
                                         PHKSpawnExtraChar.Value, PHKSwapBetweenSpawnedChars.Value,
-                                        PHKToggleMultiCharStart.Value, PHKKOCharacter.Value);
+                                        PHKToggleMultiCharStart.Value, PHKCyclePreferredAllyControlType.Value, 
+                                        PHKKOCharacter.Value);
                     break;
                 /*case InstructionPage.NETPLAY:
                     debugDisplay += "**Basics**\n";
@@ -1299,12 +1303,7 @@ namespace Fp2Trainer
                     Log("Previous Data Page (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
                 }
             }
-
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwapBetweenSpawnedChars))
-            {
-                FPPlayer2p.SwapBetweenActiveCharacters();
-            }
-
+            
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGoToLevelAtLastIndex))
             {
                 Log("Load last located scene: ");
@@ -1358,12 +1357,6 @@ namespace Fp2Trainer
             {
                 Log("GET OUT GET OUT GET OUT");
                 SpawnSpoilerGimmick();
-            }
-
-            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleMultiCharStart))
-            {
-                multiplayerStart = !multiplayerStart;
-                Log(String.Format("Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
             }
 
             HandleMultiplayerSpawnHotkeys();
@@ -1441,6 +1434,22 @@ namespace Fp2Trainer
                 {
                     Log("Shift + F2 -> Attempted to start 2P but could not find 1P");
                 }
+            }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleMultiCharStart))
+            {
+                multiplayerStart = !multiplayerStart;
+                Log(String.Format("Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
+            }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwapBetweenSpawnedChars))
+            {
+                FPPlayer2p.SwapBetweenActiveCharacters();
+            }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKCyclePreferredAllyControlType))
+            {
+                FP2TrainerAllyControls.CyclePreferredAllyControlType();
             }
         }
 

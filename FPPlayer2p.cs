@@ -26,8 +26,6 @@ namespace Fp2Trainer
 
         public static Dictionary<string, KeyMapping> customControls;
 
-        public static AllyControlType preferredAllyControlType = AllyControlType.SINGLE_PLAYER;
-
 
         protected new void Start()
         {
@@ -305,9 +303,14 @@ namespace Fp2Trainer
 
                 Fp2Trainer.Log("NumPlayers: " + Fp2Trainer.fpplayers.Count.ToString());
                 Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
+                
+                var fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+                fppi.inputMethod = FP2TrainerAllyControls.GetInputMethodFromPreferredAllyControlType(fppi);
+                
                 SetFPPlayerForFPStageAndTrainer(Fp2Trainer.fpplayers[currentActivePlayerInstance]);
 
-                var fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+                fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+                fppi.inputMethod = fppi.GetInputFromPlayer1;
 
                 FPCamera.SetCameraTarget(fppi.gameObject);
                 fppi.Action_PlayVoiceArray("Clear");
