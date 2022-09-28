@@ -4,6 +4,16 @@ using UnityEngine;
 
 namespace Fp2Trainer
 {
+    
+    public enum AllyControlType
+    {
+        SINGLE_PLAYER,
+        NPC_FOLLOW,
+        NPC_HUNTER,
+        LOCAL_MULTIPLAYER,
+        NETWORK_MULTIPLAYER
+    }
+
     public class FPPlayer2p : FPPlayer
     {
         public int maxCharacterID = 4;
@@ -15,6 +25,8 @@ namespace Fp2Trainer
         public static float catchupDistance = 512f;
 
         public static Dictionary<string, KeyMapping> customControls;
+
+        public static AllyControlType preferredAllyControlType = AllyControlType.SINGLE_PLAYER;
 
 
         protected new void Start()
@@ -289,7 +301,7 @@ namespace Fp2Trainer
 
                 Fp2Trainer.Log("NumPlayers: " + Fp2Trainer.fpplayers.Count.ToString());
                 Fp2Trainer.Log("CurrentPlayer: " + currentActivePlayerInstance.ToString());
-                FPStage.currentStage.SetPlayerInstance(Fp2Trainer.fpplayers[currentActivePlayerInstance]);
+                SetFPPlayerForFPStageAndTrainer(Fp2Trainer.fpplayers[currentActivePlayerInstance]);
 
                 var fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
 
@@ -310,6 +322,12 @@ namespace Fp2Trainer
                         FPStage.currentStage.GetPlayerInstance_FPPlayer();
                 }
             }
+        }
+
+        private static void SetFPPlayerForFPStageAndTrainer(FPPlayer targetPlayer)
+        {
+            FPStage.currentStage.SetPlayerInstance(targetPlayer);
+            Fp2Trainer.fpplayer = targetPlayer;
         }
 
         public static void CatchupIfPlayerTooFarAway()
@@ -377,7 +395,44 @@ namespace Fp2Trainer
             FPPlayer newPlayer = null;
             FPPlayer fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
             bool playerObjectValidated = false;
+            
+            extraPlayerCount++;
+            if (extraPlayerCount % 5 == 2) //Skip Bike Carol.
+            {
+                extraPlayerCount++;
+            }
+            
             int playerNumModulus = extraPlayerCount % 5;
+
+            // Spawn all possible characters before allowing duplicates.
+            int baseMaxCharacterCount = 4;
+            Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
+            if (Fp2Trainer.fpplayers.Count <= baseMaxCharacterCount)
+            {
+                List<int> availableCharIDs = new List<int>();
+                availableCharIDs.Add(0);
+                availableCharIDs.Add(1);
+                // Bike Carol is 2. Skip.
+                availableCharIDs.Add(3);
+                availableCharIDs.Add(4);
+                
+                int charID = -1;
+                for (int i = 0; i < Fp2Trainer.fpplayers.Count; i++)
+                {
+                    charID = (int)(Fp2Trainer.fpplayers[i].characterID);
+                    if (availableCharIDs.Contains(charID))
+                    {
+                        availableCharIDs.Remove(charID);
+                        Fp2Trainer.Log(String.Format("Removed {0} from available spawns.", charID));
+                    }
+                }
+
+                if (availableCharIDs.Count > 0)
+                {
+                    playerNumModulus = availableCharIDs[0];
+                }
+            }
+
             newPlayer = FPStage.InstantiateFPBaseObject(FPStage.player[(int)(playerNumModulus)],
                 out playerObjectValidated);
 
@@ -392,12 +447,6 @@ namespace Fp2Trainer
             newPlayer.collisionLayer = fppi.collisionLayer;
 
             newPlayer.name = String.Format("Player {0}", extraPlayerCount);
-
-            extraPlayerCount++;
-            if (extraPlayerCount % 5 == 2)
-            {
-                extraPlayerCount++;
-            }
 
             Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
             Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance_FPPlayer().name + " joins the party!");

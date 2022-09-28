@@ -163,7 +163,7 @@ namespace Fp2Trainer
         public Dictionary<int, string> fpElementTypeNames;
         private List<FPBaseEnemy> fpEnemies;
 
-        private FPPlayer fpplayer;
+        public static FPPlayer fpplayer;
         public static List<FPPlayer> fpplayers;
 
         private FPTrainerLevelSelect fptls;
@@ -1349,7 +1349,7 @@ namespace Fp2Trainer
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGetOutGetOutGetOut))
             {
                 Log("GET OUT GET OUT GET OUT");
-                SpawnSpoilerBoss();
+                SpawnSpoilerGimmick();
             }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleMultiCharStart))
@@ -2100,16 +2100,13 @@ namespace Fp2Trainer
             TrainerPauseMenu.GrabAndTweakPauseMenu();
         }
 
-        public IEnumerator SpawnSpoilerBoss()
+        public void SpawnSpoilerGimmick()
         {
             var bk5 = SceneManager.GetSceneByName("Bakunawa5");
             if (!bk5.isLoaded)
             {
-                AsyncOperation scene = SceneManager.LoadSceneAsync("Bakunawa5", LoadSceneMode.Additive);
-                while (!scene.isDone)
-                {
-                    yield return null;
-                }
+                SceneManager.LoadScene("Bakunawa5", LoadSceneMode.Additive);
+                Scene scene = SceneManager.GetSceneByName("Bakunawa5");
             }
 
             GameObject goHunter = GameObject.Find("Syntax Hunter");
