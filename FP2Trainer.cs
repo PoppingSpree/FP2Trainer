@@ -174,7 +174,7 @@ namespace Fp2Trainer
         public GameObject goStageHUD;
         private readonly float howLongToShowWarpInfo = 2f;
 
-        public List<AssetBundle> loadedAssetBundles;
+        public static List<AssetBundle> loadedAssetBundles;
 
         private FPBaseEnemy nearestEnemy;
         private FPBaseEnemy nearestEnemyPrevious;
@@ -198,7 +198,7 @@ namespace Fp2Trainer
 
         private float timeoutShowWarpInfo;
 
-        private bool warped;
+        private static bool warped;
         private string warpMessage = "";
 
         private Vector2 warpPoint = new Vector2(211f, 50f);
@@ -222,6 +222,7 @@ namespace Fp2Trainer
 
         public static GameObject cacheGameObjectHunter = null;
 
+        public static bool waitingForNextFrameForSpoilerGimmick = false;
 
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
@@ -649,6 +650,11 @@ namespace Fp2Trainer
             if (introSkipped < 1)
             {
                 SkipBootIntros();
+            }
+
+            if (waitingForNextFrameForSpoilerGimmick)
+            {
+                GetReferencesToSpoilerGimmickPart2();
             }
 
             if (dpsTracker != null) dpsTracker.Update();
@@ -1718,7 +1724,7 @@ namespace Fp2Trainer
                     fpEnemies.Add(fpbh.targetBoss);
         }
 
-        public void LoadAssetBundlesFromModsFolder()
+        public static void LoadAssetBundlesFromModsFolder()
         {
             try
             {
@@ -1846,16 +1852,23 @@ namespace Fp2Trainer
             FPAudio.PlayMenuSfx(3);
         }
 
-        private void WriteSceneObjectsToFile()
+        private static void WriteSceneObjectsToFile()
         {
             if (!warped)
             {
                 warped = true;
 
                 var allObjects = "";
-                Object[] objs = Object.FindObjectsOfType<GameObject>();
+                GameObject[] objs = GameObject.FindObjectsOfType<GameObject>();
 
-                foreach (var obj in objs) allObjects += obj.name + "\r\n";
+                foreach (var obj in objs)
+                {
+                    allObjects += obj.name + " | " + obj.activeInHierarchy + "\r\n";
+                    foreach (UnityEngine.MonoBehaviour mb in obj.GetComponents<MonoBehaviour>())
+                    {
+                        allObjects += "+MonoBehaviors: " + mb.GetType().Name + " | " + mb.isActiveAndEnabled + "\r\n";
+                    }
+                }
                 // UMFGUI.AddConsoleText(allObjects);
 
                 var fileName = "SceneObjects.txt";
@@ -2106,39 +2119,31 @@ namespace Fp2Trainer
         {
             if (cacheGameObjectHunter == null)
             {
+                Log("~~~~1");
                 GetReferencesToSpoilerGimmick();
-                cacheGameObjectHunter.SetActive(false);
-                GameObject.DontDestroyOnLoad(cacheGameObjectHunter);
+                Log("~~~~2");
             }
-
-            var goNewHunter = GameObject.Instantiate(cacheGameObjectHunter);
-            goNewHunter.SetActive(true);
-            foreach (Transform child in goNewHunter.transform)
+            else
             {
-                Log(child.name + " " + child.transform.position + " " + child.gameObject.activeInHierarchy);
+                GetReferencesToSpoilerGimmickPart3();
+                
             }
-
         }
 
         private static void GetReferencesToSpoilerGimmick()
         {
             Scene currentScene = SceneManager.GetActiveScene();
-            SceneManager.LoadScene("Bakunawa5", LoadSceneMode.Additive);
-            //SceneManager.SetActiveScene(currentScene);
-
-            Log("@@@@@1");
+            //SceneManager.LoadScene("Bakunawa5", LoadSceneMode.Additive);
+            Log("@@@@@+");
+            LoadAssetBundlesFromModsFolder();
+            Log("@@@@@0");
             ListScenesToLog();
-            Log("@@@@@2");
-
-            GameObject goHunter = GameObject.Find("Syntax Hunter");
-            GameObject goHunterKO = GameObject.Find("HunterKOScreen");
-            GameObject goArc = GameObject.Find("arc");
-            GameObject goMeter = GameObject.Find("Hud Stealth Meter");
-
-            Log(String.Format("Gimmick Objects: ({0},{1},{2},{3})\n", goHunter, goHunterKO, goArc, goMeter));
-
-            cacheGameObjectHunter = new GameObject("cacheHunter");
+            SceneManager.LoadScene("SpoilerGimmick", LoadSceneMode.Additive);
+            // The scenes will appear as available immediately, but will not actually load until the next update frame.
+            waitingForNextFrameForSpoilerGimmick = true;
             
+            
+            /*
             Log("@@@@@3");
             if (goHunter != null)
             {
@@ -2148,7 +2153,7 @@ namespace Fp2Trainer
                 SceneManager.MoveGameObjectToScene(goHunterKO, SceneManager.GetActiveScene());
                 SceneManager.MoveGameObjectToScene(goArc, SceneManager.GetActiveScene());
                 SceneManager.MoveGameObjectToScene(goMeter, SceneManager.GetActiveScene());
-                */
+                *//*
                 
                 GameObject.DontDestroyOnLoad(goHunter);
                 GameObject.DontDestroyOnLoad(goHunterKO);
@@ -2197,28 +2202,82 @@ namespace Fp2Trainer
                 Log(String.Format("Gimmick Objects: ({0},{1},{2},{3})\n", goHunter, goHunterKO, goArc, goMeter));
                 Log("@@@@@6");
             }
-
-            Log("@@@@7");
-            var zxcv = Suffering().GetEnumerator();
-            zxcv.MoveNext();
-
-            
-            Log("@@@@@8");
-            zxcv.MoveNext();
-            Log("@@@@@9");
-            
-            /*
-            //Log("@@@@@" + unloading.progress);
-            //Log("@@@@@" + unloading.isDone);
-            Log("@@@@@8b");
-            while ((SceneManager.sceneCount > 1) && !SceneManager.GetSceneAt(1).name.Equals("Bakunawa5"))
-            {
-                Log("P for Perish ");
-            }
-            Log("@@@@@9");
             */
+            //ListScenesToLog();
+        }
 
+        public static void GetReferencesToSpoilerGimmickPart2()
+        {
+            waitingForNextFrameForSpoilerGimmick = false;
             ListScenesToLog();
+            Log("Are scenes loaded? " + SceneManager.GetSceneAt(0).isLoaded.ToString() + SceneManager.GetSceneAt(1).isLoaded.ToString() );
+            SceneManager.MergeScenes(SceneManager.GetSceneAt(0), SceneManager.GetSceneAt(1));
+            
+            //SceneManager.SetActiveScene(currentScene);
+
+            Log("@@@@@1");
+            ListScenesToLog();
+            Log("@@@@@2");
+
+            WriteSceneObjectsToFile();
+
+            GameObject goHunter = GameObject.Find("Syntax Hunter");
+            GameObject goHunterKO = GameObject.Find("HunterKO");
+            GameObject goHunterKOScreen = GameObject.Find("HunterKOScreen");
+            GameObject goArc = GameObject.Find("arc");
+            GameObject goMeter = GameObject.Find("Hud Stealth Meter");
+
+            Log("@@@@@3");
+            Log(String.Format("Gimmick Objects: ({0},{1},{2},{3},{4})\n", goHunter, goHunterKO, goArc, goMeter, goHunterKOScreen));
+            Log("@@@@@4");
+
+            cacheGameObjectHunter = new GameObject("cacheHunter");
+            
+            goHunter.transform.parent = cacheGameObjectHunter.transform;
+            goHunterKO.transform.parent = cacheGameObjectHunter.transform;
+            goHunterKOScreen.transform.parent = cacheGameObjectHunter.transform;
+            goArc.transform.parent = cacheGameObjectHunter.transform;
+            goMeter.transform.parent = cacheGameObjectHunter.transform;
+            
+            //move this to part 2
+            cacheGameObjectHunter.SetActive(false);
+            Log("~~~~3");
+            GameObject.DontDestroyOnLoad(cacheGameObjectHunter);
+            Log("~~~~4");
+            
+            var temp = goHunter.transform.GetComponent<BFSyntaxHunt>();
+            GameObject.Destroy(temp);
+            
+            var temp2 = goHunter.AddComponent<BFSyntaxHunt>();
+            temp2.hudStealthMeter = goMeter.GetComponent<SpriteRenderer>();
+            temp2.hudStealthMeterBar = goMeter.transform.Find("bar").GetComponent<SpriteRenderer>();
+            temp2.koParent = goHunterKOScreen;
+            temp2.body = goHunterKO;
+            temp2.playerBody = goHunterKO.transform.Find("players").gameObject;
+            temp2.dbWarn = goHunterKOScreen.transform.Find("DBWarn1").GetComponent<SpriteRenderer>();
+            temp2.dbWarn2 = goHunterKOScreen.transform.Find("DBWarn2").GetComponent<SpriteRenderer>();
+            
+            
+            
+            GetReferencesToSpoilerGimmickPart3();
+        }
+
+        public static void GetReferencesToSpoilerGimmickPart3()
+        {
+            Log("~~~~5");
+            var goNewHunter = GameObject.Instantiate(cacheGameObjectHunter);
+            Log("~~~~6");
+            goNewHunter.SetActive(true);
+            //var goHunter = goNewHunter.transform.Find("Syntax Hunter").gameObject;
+            //goHunter.gameObject.SetActive(true);
+            Log("~~~~7");
+            for (int i = 0; i < goNewHunter.transform.childCount; i++)
+            {
+                Transform child = goNewHunter.transform.GetChild(i);
+                Log("~~~~8");
+                Log(child.name + " " + child.transform.position + " " + child.gameObject.activeInHierarchy);
+            }
+            Log("~~~~9");
         }
 
         private static IEnumerable Suffering()

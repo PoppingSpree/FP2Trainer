@@ -229,14 +229,18 @@ namespace Fp2Trainer
         {
             //Button 5: Saturn Z
             // Button 7: Saturn R
+            
+            //Some custom gamepad bindings here. Should not be on by default...
 
             customControls = new Dictionary<string, KeyMapping>();
+            /*
             customControls.Add("CharTeamSwap",
                 InputControl.setKey("CharTeamSwap", new JoystickInput(JoystickButton.Button8),
                     KeyCode.None, KeyCode.None));
             customControls.Add("CharTeamSpawn",
                 InputControl.setKey("CharTeamSpawn", new JoystickInput(JoystickButton.Button6),
                     KeyCode.None, KeyCode.None));
+                    */
         }
 
         public static void ShowPressedButtons()
@@ -322,6 +326,7 @@ namespace Fp2Trainer
                         FPStage.currentStage.GetPlayerInstance_FPPlayer();
                 }
             }
+            Fp2Trainer.Log("Switching control to " + FPStage.currentStage.GetPlayerInstance_FPPlayer().name);
         }
 
         private static void SetFPPlayerForFPStageAndTrainer(FPPlayer targetPlayer)
@@ -378,6 +383,8 @@ namespace Fp2Trainer
 
 
             //This last bit is more suited for a separate update method:
+            
+            /*
             if (InputControl.GetButtonDown(customControls["CharTeamSpawn"]))
             {
                 SpawnExtraCharacter();
@@ -388,6 +395,7 @@ namespace Fp2Trainer
                 SwapBetweenActiveCharacters();
                 Fp2Trainer.Log("Switching control to " + FPStage.currentStage.GetPlayerInstance_FPPlayer().name);
             }
+            */
         }
 
         public static FPPlayer SpawnExtraCharacter()
