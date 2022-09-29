@@ -188,11 +188,7 @@ namespace Fp2Trainer
 
         private static void FollowLeadPlayerHorizontal(FPPlayer fpp, FPPlayer leadPlayer)
         {
-	        if (Vector2.Distance(leadPlayer.transform.position,
-		            fpp.transform.position) > playerFollowMinimumDistanceHorizontal)
-	        {
-		        FollowTargetObjectHorizontal(fpp, leadPlayer);
-	        }
+	        FollowTargetObjectHorizontal(fpp, leadPlayer);
         }
         
         private static void FollowTargetObjectVertical(FPPlayer fpp, FPBaseObject targetObj)
@@ -208,8 +204,9 @@ namespace Fp2Trainer
 
         private static void FollowTargetObjectHorizontal(FPPlayer fpp, FPBaseObject targetObj)
         {
-	        if (Vector2.Distance(targetObj.transform.position,
-		            fpp.transform.position) > playerFollowMinimumDistanceHorizontal)
+	        float dist = Vector2.Distance(targetObj.transform.position,
+		        fpp.transform.position);
+	        if (dist > playerFollowMinimumDistanceHorizontal)
 	        {
 		        if (targetObj.position.x > fpp.position.x)
 		        {
@@ -313,6 +310,10 @@ namespace Fp2Trainer
 		        LogDebugOnly("jump3");
 		        fpp.input.jumpPress = false;
 		        fpp.input.jumpHold = false;
+	        }
+	        else if ((!fpp.onGround && !fpp.onGrindRail)&& fpp.velocity.y > -1f)
+	        {
+		        LogDebugOnly("jump4");
 	        }
 	        else
 	        {
