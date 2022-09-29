@@ -452,6 +452,15 @@ namespace Fp2Trainer
             
             planeSwitchVisualizersCreated = false;
             planeSwitchVisualizersVisible = ShowPlaneSwitcherVisualizersLastSetting.Value;
+
+            if (FP2TrainerAllyControls.inputQueueForPlayers != null)
+            {
+                FP2TrainerAllyControls.inputQueueForPlayers.Clear();
+            }
+            else
+            {
+                FP2TrainerAllyControls.inputQueueForPlayers = new Dictionary<FPPlayer, FP2TrainerInputQueue>();
+            }
         }
 
         private static void CreateFP2TrainerGameObject()
