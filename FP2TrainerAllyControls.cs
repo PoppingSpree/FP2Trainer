@@ -530,7 +530,7 @@ namespace Fp2Trainer
 			        break;
 	        }
 	        Fp2Trainer.Log("Set control type to " + AllyControlTypeName(preferredAllyControlType));
-	        Fp2Trainer.Log("(But actually, it's set to" + nameof(result) + ")");
+	        Fp2Trainer.Log("(But actually, it's set to" + actually + ")");
 	        return result;
         }
 

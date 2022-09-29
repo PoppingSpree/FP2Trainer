@@ -107,7 +107,7 @@ namespace Fp2Trainer
             return ti;
         }
 
-        public string ToString()
+        override public string ToString()
         {
             string str = "---{InputQueue}---";
             foreach (var tsi in timestampedInputsList)
@@ -166,7 +166,7 @@ namespace Fp2Trainer
             this.bitwiseInputs |= p ? BitwiseInputState.PAUSE : BitwiseInputState.NONE;
         }
 
-        public string ToString()
+        override public string ToString()
         {
             return String.Format("{0} | {1} | {2,3} | {3:G}\n", numStep, timestamp, bitwiseInputs, (BitwiseInputState)bitwiseInputs);
         }
