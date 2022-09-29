@@ -127,6 +127,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> ShowInstructionsOnStart;
         public static MelonPreferences_Entry<bool> ShowInputNamesInTerminal;
         public static MelonPreferences_Entry<bool> EnableNetworking;
+        public static MelonPreferences_Entry<bool> SaveGhostFiles;
 
         public static bool hotkeysLoaded = false;
 
@@ -298,6 +299,7 @@ namespace Fp2Trainer
             ShowInstructionsOnStart = fp2Trainer.CreateEntry("ShowInstructionsOnStart", true);
             ShowInputNamesInTerminal = fp2Trainer.CreateEntry("ShowInputNamesInTerminal", false);
             EnableNetworking = fp2Trainer.CreateEntry("EnableNetworking", false);
+            SaveGhostFiles = fp2Trainer.CreateEntry("SaveGhostFiles", false);
 
             InitPrefsCustomHotkeys();
         }
@@ -1251,7 +1253,7 @@ namespace Fp2Trainer
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKLoadDebugRoom))
             {
                 Log("Load Debug Room");
-                //FP2TrainerAllyControls.DumpAllPlayerVars(); //todo: delete this.
+                FP2TrainerAllyControls.DumpAllPlayerVars(); //todo: delete this.
                 SceneManager.LoadScene("StageDebugMenu", LoadSceneMode.Additive);
             }
 

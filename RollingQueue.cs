@@ -21,6 +21,17 @@ namespace Fp2Trainer
             queueItemList.Capacity = this.maxLength;
         }
 
+        public int Count()
+        {
+            return queueItemList.Count;
+        }
+
+        public T this[int i]
+        {
+            get { return queueItemList[i]; }
+            set { queueItemList[i] = value; }
+        }
+
         public T Add(T item)
         {
             T purgedItem = default(T); 

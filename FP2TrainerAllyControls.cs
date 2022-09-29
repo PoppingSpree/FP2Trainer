@@ -49,9 +49,6 @@ namespace Fp2Trainer
 		        fpp.input.jumpHold, fpp.input.attackHold, fpp.input.specialHold, fpp.input.guardHold,
 		        false));
 	        
-	        
-	        //LogDebugOnly(ipq.ToString());
-	        
 	        return ipq;
         }
 
@@ -315,11 +312,12 @@ namespace Fp2Trainer
 	        if (fpp != leadPlayer)
 	        {
 		        // ConnectionID
-		        TimestampedInputs tsi = GetLatestInputQueueFromNetworkPlayer(0);
-		        RollingQueue<Vector2[]> transformQueue = GetLatestTransformQueueFromNetworkPlayer(0);
+		        TimestampedInputs tsi = null;
+		        FP2TrainerInputQueue tiq = GetLatestInputQueueFromNetworkPlayer(0);
+		        RollingQueue<TimestampedTransform> transformQueue = GetLatestTransformQueueFromNetworkPlayer(0);
 		        
 		        // thisplayer, timestampedInputs, currentTime, expectedOffsetTime
-		        MapPlayerClosestTimedInputFromInputQueue(fpp, tsi, 0f, 0f);
+		        MapPlayerClosestTimedInputFromInputQueue(fpp, tiq, 0f, 0f);
 		        MapPosRotClosestFromTransformQueue(fpp, transformQueue, 0f, 0f);
 		        
 				/*
@@ -349,36 +347,104 @@ namespace Fp2Trainer
 	        }
         }
         
-        private static TimestampedInputs GetLatestInputQueueFromNetworkPlayer(int connectionId)
+        public static void GetAndRecordInputFromPlayer1(this FPPlayer fpp)
         {
-	        TimestampedInputs tsi = null;
+	        int fiveMinutesAsFrames = 60 * 60 * 5;
+	        fpp.GetInputFromPlayer1();
+	        
+	        try
+	        {
+		        AddTime(GetInputQueue(fpp), Time.deltaTime);
+		        GetInputQueue(fpp).SetMaxLength(fiveMinutesAsFrames);
+		        RecordInput(fpp);
+		        MapPlayerPressesFromPreviousInputs(fpp);
+
+		        if (fpp.state == new FPObjectState(fpp.State_KO) || fpp.state == new FPObjectState(fpp.State_Victory))
+		        {
+			        string additionalHeader = $"fpp.characterID | {fpp.characterID}\r\n" +
+			                                  $"FPStage.currentStage.stageName | {FPStage.currentStage.stageName}\r\n";
+			        GetInputQueue(fpp).SaveQueueToFile();
+		        }
+	        }
+	        catch (Exception e)
+	        {
+		        LogDebugOnly(e.Message);
+		        LogDebugOnly(e.ToString());
+		        LogDebugOnly(e.StackTrace);
+	        }
+        }
+        
+        private static FP2TrainerInputQueue GetLatestInputQueueFromNetworkPlayer(int connectionId)
+        {
+	        FP2TrainerInputQueue tiq = null;
 	        
 	        
 	        
-	        return tsi;
+	        return tiq;
         }
 
-        private static RollingQueue<Vector2[]> GetLatestTransformQueueFromNetworkPlayer(int i)
+        private static RollingQueue<TimestampedTransform> GetLatestTransformQueueFromNetworkPlayer(int i)
         {
-	        return new RollingQueue<Vector2[]>();
+	        return new RollingQueue<TimestampedTransform>();
 	        //throw new NotImplementedException();
         }
 
-        private static void MapPosRotClosestFromTransformQueue(FPPlayer fpp, RollingQueue<Vector2[]> transformQueue, float currentTime, float playerToNetworkTimeOffset)
+        private static void MapPosRotClosestFromTransformQueue(FPPlayer fpp, RollingQueue<TimestampedTransform> transformQueue, float currentTime, float playerToNetworkTimeOffset)
         {
-	        
-	        //throw new NotImplementedException();
-        }
-        
-        private static void MapPlayerClosestTimedInputFromInputQueue(FPPlayer fpp, TimestampedInputs tsi, float currentTime, float playerToNetworkTimeOffset)
-        {
-	        
-	        //throw new NotImplementedException();
-        }
-        
-        public static <T> GetClosestItemFromQueueByTimestamp
+	        var tt = GetClosestItemFromQueueByTimestamp(transformQueue, currentTime, playerToNetworkTimeOffset);
+	        fpp.position.x = tt.position.x;
+	        fpp.position.y = tt.position.y;
 
+	        fpp.transform.position = new Vector3(tt.position.x, tt.position.y, fpp.transform.position.z);
+
+	        fpp.angle = tt.angle;
+        }
         
+        private static void MapPlayerClosestTimedInputFromInputQueue(FPPlayer fpp, FP2TrainerInputQueue tiq, 
+	        float currentTime, float playerToNetworkTimeOffset)
+        {
+	        var tsi = tiq.GetClosestToTimestamp(currentTime, playerToNetworkTimeOffset);
+	        
+        }
+
+        public static TimestampedTransform GetClosestItemFromQueueByTimestamp(RollingQueue<TimestampedTransform> tiq, 
+	        float targetTimestamp, float playerToNetworkTimeOffset)
+        {
+	        TimestampedTransform tt = null;
+	        float timestamp = targetTimestamp - playerToNetworkTimeOffset;
+	        if (timestamp < 0)
+	        {
+		        timestamp = 0;
+	        }
+
+	        for (int i = 0; i < tiq.Count(); i++)
+	        {
+		        if (timestamp >= tiq[i].timestamp)
+		        {
+			        tt = tiq[i];
+		        }
+		        else
+		        {
+			        float distToPrev = float.PositiveInfinity;
+			        float distToNext = float.PositiveInfinity;
+			        if (tt != null)
+			        {
+				        distToPrev = Mathf.Abs(tt.timestamp - timestamp);
+			        }
+			        distToNext = Mathf.Abs(tiq[i].timestamp - timestamp);
+
+			        if (distToNext < distToPrev)
+			        {
+				        tt = tiq[i];
+			        }
+			        break;
+		        }
+	        }
+
+	        return tt;
+        }
+
+
 
         public static bool EnemyIsAbove(FPPlayer fpp, FPBaseObject targetObj)
         {
@@ -637,14 +703,12 @@ namespace Fp2Trainer
 			        }
 			        else
 			        {
-				        result = fpp.GetInputFromPlayer1;
+				        result = fpp.GetAndRecordInputFromPlayer1;
 				        actually = "Player1";
 			        }
-			        result = fpp.HandleAllyControlsHunter;
-			        actually = "Hunter";
 			        break;
 		        default:
-			        result = fpp.GetInputFromPlayer1;
+			        result = fpp.GetAndRecordInputFromPlayer1;
 			        actually = "Player1";
 			        break;
 	        }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace Fp2Trainer
@@ -21,13 +22,17 @@ namespace Fp2Trainer
         PAUSE = 256
     };
     
+    [Serializable]
     public class FP2TrainerInputQueue
     {
         // 9 bools, an index, and a timestamp.
         protected List<TimestampedInputs> timestampedInputsList;
-        protected int maxLength = 30;
+        //protected int maxLength = 30;
+        protected int maxLength = 60 * 60 * 5;
         protected int countSteps = 0;
         protected float elapsedTime;
+        
+        protected bool savedInputQueue = false;
 
         public FP2TrainerInputQueue()
         {
@@ -48,10 +53,21 @@ namespace Fp2Trainer
         {
             elapsedTime += amountOfTime;
         }
+        
+        public void SetMaxLength(int newMaxLength)
+        {
+            maxLength += newMaxLength;
+            timestampedInputsList.Capacity = maxLength;
+        }
 
         public TimestampedInputs Add(TimestampedInputs timestampedInputs)
         {
-            TimestampedInputs purgedInputs = null; 
+            TimestampedInputs purgedInputs = null;
+            if (timestampedInputsList.Count >= maxLength && maxLength > 0)
+            {
+                SaveQueueToFile(); // only wrote this once using the flag to check.
+            }
+
             while (timestampedInputsList.Count >= maxLength && maxLength > 0)
             {
                 purgedInputs = timestampedInputsList[0];
@@ -106,6 +122,42 @@ namespace Fp2Trainer
 
             return ti;
         }
+        
+        public TimestampedInputs GetClosestToTimestamp(float targetTimestamp, float playerToNetworkTimeOffset)
+        {
+            float timestamp = targetTimestamp - playerToNetworkTimeOffset;
+            if (timestamp < 0)
+            {
+                timestamp = 0;
+            }
+            
+            TimestampedInputs ti = null;
+            for (int i = 0; i < timestampedInputsList.Count; i++)
+            {
+                if (timestamp >= timestampedInputsList[i].timestamp)
+                {
+                    ti = timestampedInputsList[i];
+                }
+                else
+                {
+                    float distToPrev = float.PositiveInfinity;
+                    float distToNext = float.PositiveInfinity;
+                    if (ti != null)
+                    {
+                        distToPrev = Mathf.Abs(ti.timestamp - timestamp);
+                    }
+                    distToNext = Mathf.Abs(timestampedInputsList[i].timestamp - timestamp);
+
+                    if (distToNext < distToPrev)
+                    {
+                        ti = timestampedInputsList[i];
+                    }
+                    break;
+                }
+            }
+
+            return ti;
+        }
 
         override public string ToString()
         {
@@ -118,12 +170,48 @@ namespace Fp2Trainer
 
             return str;
         }
+
+        public void SaveQueueToFile(string additionalHeaderText = "")
+        {
+            if (Fp2Trainer.SaveGhostFiles.Value && !savedInputQueue)
+            {
+                savedInputQueue = true;
+
+                var allTimestampedInputs = "";
+
+                allTimestampedInputs += $"maxLength | {maxLength}\r\n";
+                allTimestampedInputs += $"countSteps | {countSteps}\r\n";
+                allTimestampedInputs += $"elapsedTime | {elapsedTime}\r\n";
+                
+                allTimestampedInputs += additionalHeaderText;
+                
+                foreach (var tsi in timestampedInputsList)
+                {
+                    allTimestampedInputs += tsi.ToString() + "\r\n";
+                }
+
+                var fileName = "LastInputRecords" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".ghost";
+                if (File.Exists(fileName))
+                {
+                    Debug.Log(fileName + " already exists... Overwriting.");
+                    //return;
+                }
+
+                var sr = File.CreateText(fileName);
+                sr.WriteLine(allTimestampedInputs);
+                sr.Close();
+            }
+            else
+            {
+                //MelonLogger.Msg("Warped already...");
+            }
+        }
     }
 
     public class TimestampedInputs
     {
         public int numStep = 0;
-        public double timestamp = 0f;
+        public float timestamp = 0f;
         public BitwiseInputState bitwiseInputs = BitwiseInputState.NONE;
 
         public TimestampedInputs()
@@ -164,6 +252,24 @@ namespace Fp2Trainer
             this.bitwiseInputs |= g ? BitwiseInputState.GUARD : BitwiseInputState.NONE;
             
             this.bitwiseInputs |= p ? BitwiseInputState.PAUSE : BitwiseInputState.NONE;
+        }
+        
+        public static bool HasFlag(BitwiseInputState theFlags, BitwiseInputState flagCondition)
+        {
+            return (theFlags & flagCondition) == flagCondition;
+        }
+        
+        public void MapInputsToFPPlayer(FPPlayer fpp, BitwiseInputState bitwiseInputState)
+        {
+            fpp.input.up = HasFlag(bitwiseInputs, BitwiseInputState.UP);
+            fpp.input.down = HasFlag(bitwiseInputs, BitwiseInputState.DOWN);
+            fpp.input.left = HasFlag(bitwiseInputs, BitwiseInputState.LEFT);
+            fpp.input.right = HasFlag(bitwiseInputs, BitwiseInputState.RIGHT);
+            
+            fpp.input.jumpHold = HasFlag(bitwiseInputs, BitwiseInputState.JUMP);
+            fpp.input.attackHold = HasFlag(bitwiseInputs, BitwiseInputState.ATTACK);
+            fpp.input.specialHold = HasFlag(bitwiseInputs, BitwiseInputState.SPECIAL);
+            fpp.input.guardHold = HasFlag(bitwiseInputs, BitwiseInputState.GUARD);
         }
 
         override public string ToString()
