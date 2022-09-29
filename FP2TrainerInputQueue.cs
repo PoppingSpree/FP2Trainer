@@ -55,7 +55,7 @@ namespace Fp2Trainer
             while (timestampedInputsList.Count >= maxLength && maxLength > 0)
             {
                 purgedInputs = timestampedInputsList[0];
-                Fp2Trainer.Log("Purging: \n" + purgedInputs.ToString());
+                //Fp2Trainer.Log("Purging: \n" + purgedInputs.ToString());
                 timestampedInputsList.RemoveAt(0);
             }
 

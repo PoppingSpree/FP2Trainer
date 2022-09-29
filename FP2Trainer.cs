@@ -124,6 +124,9 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> MultiCharStartLastSetting;
         public static MelonPreferences_Entry<bool> ShowPlaneSwitcherVisualizersLastSetting;
         public static MelonPreferences_Entry<string> PreferredAllyControlTypeLastSetting;
+        public static MelonPreferences_Entry<bool> ShowInstructionsOnStart;
+        public static MelonPreferences_Entry<bool> ShowInputNamesInTerminal;
+        public static MelonPreferences_Entry<bool> EnableNetworking;
 
         public static bool hotkeysLoaded = false;
 
@@ -272,6 +275,7 @@ namespace Fp2Trainer
             multiplayerStart = MultiCharStartLastSetting.Value;
             planeSwitchVisualizersVisible = ShowPlaneSwitcherVisualizersLastSetting.Value;
             FP2TrainerAllyControls.preferredAllyControlType = (AllyControlType)(Enum.Parse(typeof(AllyControlType), PreferredAllyControlTypeLastSetting.Value));
+            showInstructions = ShowInstructionsOnStart.Value;
 
             Log("blep" + multiplayerStart);
             Log("blep" + planeSwitchVisualizersVisible);
@@ -291,6 +295,9 @@ namespace Fp2Trainer
             ShowPlaneSwitcherVisualizersLastSetting = fp2Trainer.CreateEntry("ShowPlaneSwitcherVisualizersLastSetting", false);
             PreferredAllyControlTypeLastSetting = fp2Trainer.CreateEntry("PreferredAllyControlTypeLastSetting", 
                 FP2TrainerAllyControls.AllyControlTypeName(AllyControlType.SINGLE_PLAYER));
+            ShowInstructionsOnStart = fp2Trainer.CreateEntry("ShowInstructionsOnStart", true);
+            ShowInputNamesInTerminal = fp2Trainer.CreateEntry("ShowInputNamesInTerminal", false);
+            EnableNetworking = fp2Trainer.CreateEntry("EnableNetworking", false);
 
             InitPrefsCustomHotkeys();
         }
@@ -440,7 +447,7 @@ namespace Fp2Trainer
             }
             
             planeSwitchVisualizersCreated = false;
-            planeSwitchVisualizersVisible = false;
+            planeSwitchVisualizersVisible = ShowPlaneSwitcherVisualizersLastSetting.Value;
         }
 
         private static void CreateFP2TrainerGameObject()
@@ -610,14 +617,15 @@ namespace Fp2Trainer
                 Renderer renCube;
                 foreach (PlaneSwitcher ps in planeSwitchers)
                 {
-                    Debug.Log(System.String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
+                    Fp2Trainer.Log(System.String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
                     goCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     goCube.name = ("Visualizer " + ps.name);
                     goCube.transform.position = new Vector3(ps.transform.position.x, ps.transform.position.y, ps.transform.position.z);
                     goCube.transform.localScale = new Vector3(ps.xsize, ps.ysize, 1f);
                     renCube = goCube.GetComponent<Renderer>();
 			
-                    renCube.material.color = new Color(1, 0, 0, 0.7f);
+                    //renCube.material.color = new Color(1, 0, 0, 0.7f);
+                    renCube.material.color = new Color(1, 0, 0, 1f);
                     goCube.SetActive(planeSwitchVisualizersVisible);
                     planeSwitchVisualizers.Add(goCube);
                     //renCube.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -764,6 +772,11 @@ namespace Fp2Trainer
                     UpdateFancyText();
                 else
                     CreateFancyTextObjects();
+
+                if (ShowInputNamesInTerminal.Value)
+                {
+                    FPPlayer2p.ShowPressedButtons();
+                }
             }
 
             catch (Exception e)
@@ -1237,13 +1250,14 @@ namespace Fp2Trainer
             //if (InputControl.GetButton(Controls.buttons.guard) && InputControl.GetButtonDown(Controls.buttons.attack))
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKLoadDebugRoom))
             {
-                Log("F9 -> Load Debug Room");
+                Log("Load Debug Room");
+                //FP2TrainerAllyControls.DumpAllPlayerVars(); //todo: delete this.
                 SceneManager.LoadScene("StageDebugMenu", LoadSceneMode.Additive);
             }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGoToMainMenu))
             {
-                Log("F8 -> Main Menu");
+                Log("Main Menu");
                 //UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
                 GoToMainMenuNoLogos();
             }
@@ -1423,6 +1437,8 @@ namespace Fp2Trainer
             {
                 Log(String.Format("Toggle Instructions: ({0}) -> ({1})", showInstructions, !showInstructions));
                 showInstructions = !showInstructions;
+
+                ShowInstructionsOnStart.Value = showInstructions;
 
                 if (showInstructions)
                 {
