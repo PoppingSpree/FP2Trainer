@@ -51,6 +51,7 @@
         <Compile Include="FP2TrainerInputQueue.cs" />
         <Compile Include="FPPlayer2p.cs" />
         <Compile Include="FPTrainerLevelSelect.cs" />
+        <Compile Include="PlaneSwitcherVisualizer.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="FP2Trainer.cs" />
         <Compile Include="RollingQueue.cs" />

@@ -30,6 +30,7 @@ namespace Fp2Trainer
     public class Fp2Trainer : MelonMod
     {
         public static GameObject goFP2Trainer;
+        public static PlaneSwitcherVisualizer planeSwitcherVisualizer;
         public static GameObject goFP2TrainerYourPlayerIndicator;
 
         public enum DataPage
@@ -449,7 +450,12 @@ namespace Fp2Trainer
             {
                 CreateFP2TrainerGameObject();
             }
-            
+
+            if (planeSwitcherVisualizer)
+            {
+                planeSwitcherVisualizer.Reset();
+                planeSwitcherVisualizer.SpawnVisualizers();
+            }
             planeSwitchVisualizersCreated = false;
             planeSwitchVisualizersVisible = ShowPlaneSwitcherVisualizersLastSetting.Value;
 
@@ -459,7 +465,7 @@ namespace Fp2Trainer
             }
             else
             {
-                FP2TrainerAllyControls.inputQueueForPlayers = new Dictionary<FPPlayer, FP2TrainerInputQueue>();
+                FP2TrainerAllyControls.inputQueueForPlayers = new Dictionary<string, FP2TrainerInputQueue>();
             }
         }
 
@@ -468,6 +474,7 @@ namespace Fp2Trainer
             goFP2Trainer = new GameObject("FP2Trainer");
             GameObject.DontDestroyOnLoad(goFP2Trainer);
             goFP2Trainer.AddComponent<FP2TrainerCustomHotkeys>();
+            planeSwitcherVisualizer = goFP2Trainer.AddComponent<PlaneSwitcherVisualizer>();
         }
 
         public static Font GetFPMenuFont()
@@ -619,39 +626,62 @@ namespace Fp2Trainer
 
         private void VisualizePlaneSwitchers()
         {
-            if (!planeSwitchVisualizersCreated)
+            if (planeSwitcherVisualizer != null)
             {
-                planeSwitchVisualizers = new List<GameObject>();
-                
-                List<PlaneSwitcher> planeSwitchers;
-                planeSwitchers = new List<PlaneSwitcher>((GameObject.FindObjectsOfType<PlaneSwitcher>()));
-                Debug.Log(System.String.Format("Found {0} PlaneSwitchers. Attempting to visualize.\n", planeSwitchers.Count));
-                GameObject goCube;
-                Renderer renCube;
-                foreach (PlaneSwitcher ps in planeSwitchers)
+                Fp2Trainer.Log("PSV Not Null");
+                planeSwitcherVisualizer.SpawnVisualizers();
+                planeSwitcherVisualizer.SetActiveOfSpawnedVisualizers(planeSwitchVisualizersVisible);
+            }
+            else
+            {
+                if (!planeSwitchVisualizersCreated)
                 {
-                    Fp2Trainer.Log(System.String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
-                    goCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    goCube.name = ("Visualizer " + ps.name);
-                    goCube.transform.position = new Vector3(ps.transform.position.x, ps.transform.position.y, ps.transform.position.z);
-                    goCube.transform.localScale = new Vector3(ps.xsize, ps.ysize, 1f);
-                    renCube = goCube.GetComponent<Renderer>();
+                    Fp2Trainer.Log("PSV Is Null");
+                    planeSwitchVisualizers = new List<GameObject>();
+                
+                    List<PlaneSwitcher> planeSwitchers;
+                    planeSwitchers = new List<PlaneSwitcher>((GameObject.FindObjectsOfType<PlaneSwitcher>()));
+                    Debug.Log(System.String.Format("Found {0} PlaneSwitchers. Attempting to visualize.\n", planeSwitchers.Count));
+                    GameObject goCube;
+                    Renderer renCube;
+                    foreach (PlaneSwitcher ps in planeSwitchers)
+                    {
+                        Fp2Trainer.Log(System.String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
+                        goCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        goCube.name = ("Visualizer " + ps.name);
+                        goCube.transform.position = new Vector3(ps.transform.position.x, ps.transform.position.y, ps.transform.position.z);
+                        goCube.transform.localScale = new Vector3(ps.xsize, ps.ysize, 1f);
+                        renCube = goCube.GetComponent<Renderer>();
 			
-                    //renCube.material.color = new Color(1, 0, 0, 0.7f);
-                    renCube.material.color = new Color(1, 0, 0, 1f);
-                    goCube.SetActive(planeSwitchVisualizersVisible);
-                    planeSwitchVisualizers.Add(goCube);
-                    //renCube.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                    //renCube.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                        //renCube.material.color = new Color(1, 0, 0, 0.7f);
+                        renCube.material.color = new Color(1, 0, 0, 1f);
+                        goCube.SetActive(planeSwitchVisualizersVisible);
+                        planeSwitchVisualizers.Add(goCube);
+                        //renCube.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                        //renCube.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                    }
+                    
+                    planeSwitchVisualizersCreated = true; 
                 }
 
-                planeSwitchVisualizersCreated = true;
+            
             }
         }
 
         public void ShowPlaneSwitchVisualizers()
         {
             planeSwitchVisualizersVisible = true;
+            
+            if (planeSwitcherVisualizer != null)
+            {
+                planeSwitcherVisualizer.SetActiveOfSpawnedVisualizers(planeSwitchVisualizersVisible);
+                return;
+            }
+
+            if (planeSwitchVisualizers == null)
+            {
+                return;
+            }
             foreach (var psv in planeSwitchVisualizers)
             {
                 psv.SetActive(planeSwitchVisualizersVisible);
@@ -662,6 +692,18 @@ namespace Fp2Trainer
         public void HidePlaneSwitchVisualizers()
         {
             planeSwitchVisualizersVisible = false;
+            
+            if (planeSwitcherVisualizer != null)
+            {
+                planeSwitcherVisualizer.SetActiveOfSpawnedVisualizers(planeSwitchVisualizersVisible);
+                return;
+            }
+
+            if (planeSwitchVisualizers == null)
+            {
+                return;
+            }
+            
             foreach (var psv in planeSwitchVisualizers)
             {
                 psv.SetActive(planeSwitchVisualizersVisible);

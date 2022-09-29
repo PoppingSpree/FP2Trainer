@@ -11,7 +11,7 @@ namespace Fp2Trainer
     {
         public static FPPlayer leadPlayer;
         public static List<FPPlayer> allPlayers;
-        public static Dictionary<FPPlayer, FP2TrainerInputQueue> inputQueueForPlayers = new Dictionary<FPPlayer, FP2TrainerInputQueue>();
+        public static Dictionary<string, FP2TrainerInputQueue> inputQueueForPlayers = new Dictionary<string, FP2TrainerInputQueue>();
         public static AllyControlType preferredAllyControlType = AllyControlType.SINGLE_PLAYER;
 
         public static float playerFollowMinimumDistanceHorizontal = 32f;
@@ -35,14 +35,14 @@ namespace Fp2Trainer
         {
 	        
 	        FP2TrainerInputQueue ipq;
-	        if (!inputQueueForPlayers.ContainsKey(fpp))
+	        if (!inputQueueForPlayers.ContainsKey(fpp.name))
 	        {
 		        
-		        inputQueueForPlayers.Add(fpp, new FP2TrainerInputQueue());
+		        inputQueueForPlayers.Add(fpp.name, new FP2TrainerInputQueue());
 	        }
 
 	        
-	        ipq = inputQueueForPlayers[fpp];
+	        ipq = inputQueueForPlayers[fpp.name];
 	        
 	        
 	        ipq.Add(new TimestampedInputs(fpp.input.up, fpp.input.down, fpp.input.left, fpp.input.right,
@@ -60,15 +60,15 @@ namespace Fp2Trainer
         public static FP2TrainerInputQueue GetInputQueue(FPPlayer fpp)
         {
 	        FP2TrainerInputQueue ipq;
-	        if (inputQueueForPlayers.ContainsKey(fpp))
+	        if (inputQueueForPlayers.ContainsKey(fpp.name))
 	        {
 		        
-		        ipq = inputQueueForPlayers[fpp];
+		        ipq = inputQueueForPlayers[fpp.name];
 	        }
 	        else
 	        {
 		        ipq = RecordInput(fpp);
-		        inputQueueForPlayers.Add(fpp, ipq);
+		        inputQueueForPlayers.Add(fpp.name, ipq);
 	        }
 
 	        return ipq;
@@ -89,10 +89,10 @@ namespace Fp2Trainer
 
         public static void MapPlayerPressesFromPreviousInputs(FPPlayer fpp)
         {
-	        if (inputQueueForPlayers.ContainsKey(fpp))
+	        if (inputQueueForPlayers.ContainsKey(fpp.name))
 	        {
-		        var prevInputs = inputQueueForPlayers[fpp].GetPrevious();
-		        var latestInputs = inputQueueForPlayers[fpp].GetLatest();
+		        var prevInputs = inputQueueForPlayers[fpp.name].GetPrevious();
+		        var latestInputs = inputQueueForPlayers[fpp.name].GetLatest();
 
 		        SetBoolIfFlagJustSet(out fpp.input.upPress,
 			        prevInputs.bitwiseInputs, 
