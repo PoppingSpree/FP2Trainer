@@ -10,7 +10,7 @@ namespace Fp2Trainer
     {
         public static FPPlayer leadPlayer;
         public static List<FPPlayer> allPlayers;
-        public static Dictionary<FPPlayer, FP2TrainerInputQueue> inputQueueForPlayers;
+        public static Dictionary<FPPlayer, FP2TrainerInputQueue> inputQueueForPlayers = new Dictionary<FPPlayer, FP2TrainerInputQueue>();
         public static AllyControlType preferredAllyControlType = AllyControlType.SINGLE_PLAYER;
 
         public static float playerFollowMinimumDistanceHorizontal = 32f;
@@ -32,18 +32,23 @@ namespace Fp2Trainer
 
         public static FP2TrainerInputQueue RecordInput(FPPlayer fpp)
         {
+	        LogDebugOnly("RecInp");
 	        FP2TrainerInputQueue ipq;
 	        if (!inputQueueForPlayers.ContainsKey(fpp))
 	        {
+		        LogDebugOnly("RecInp No Key");
 		        inputQueueForPlayers.Add(fpp, new FP2TrainerInputQueue());
 	        }
 
+	        LogDebugOnly("set ipq");
 	        ipq = inputQueueForPlayers[fpp];
 	        
+	        LogDebugOnly("ipq add");
 	        ipq.Add(new TimestampedInputs(fpp.input.up, fpp.input.down, fpp.input.left, fpp.input.right,
 		        fpp.input.jumpHold, fpp.input.attackHold, fpp.input.specialHold, fpp.input.guardHold,
 		        false));
 	        
+	        LogDebugOnly("ipq to string: ");
 	        LogDebugOnly(ipq.ToString());
 	        
 	        return ipq;
@@ -56,15 +61,16 @@ namespace Fp2Trainer
 
         public static FP2TrainerInputQueue GetInputQueue(FPPlayer fpp)
         {
-	        FP2TrainerInputQueue ipq;
+	        FP2TrainerInputQueue ipq; LogDebugOnly("AAA 1");
 	        if (inputQueueForPlayers.ContainsKey(fpp))
 	        {
-		        ipq = inputQueueForPlayers[fpp];
+		        LogDebugOnly("AAA 2");
+		        ipq = inputQueueForPlayers[fpp];LogDebugOnly("AAA 3");
 	        }
 	        else
 	        {
-		        ipq = RecordInput(fpp);
-		        inputQueueForPlayers.Add(fpp, ipq);
+		        ipq = RecordInput(fpp);LogDebugOnly("AAA 4");
+		        inputQueueForPlayers.Add(fpp, ipq);LogDebugOnly("AAA 5");
 	        }
 
 	        return ipq;
@@ -147,28 +153,44 @@ namespace Fp2Trainer
 
         public static void HandleAllyControlsFollow(this FPPlayer fpp)
         {
+	        LogDebugOnly("2");
             GetUpdatedPlayerList();
 
+            LogDebugOnly("3");
             if (fpp != leadPlayer)
             {
+	            LogDebugOnly("4");
                 FollowLeadPlayerHorizontal(fpp, leadPlayer);
+                LogDebugOnly("5");
                 FollowLeadPlayerVertical(fpp, leadPlayer);
+                
+                LogDebugOnly("6");
 
-                fpp.input.attackHold = leadPlayer.input.attackHold;
-                fpp.input.attackPress = leadPlayer.input.attackPress;
+                fpp.input.attackHold = leadPlayer.input.attackHold; LogDebugOnly("7");
+                fpp.input.attackPress = leadPlayer.input.attackPress;LogDebugOnly("8");
                 
-                fpp.input.specialHold = leadPlayer.input.specialHold;
-                fpp.input.specialPress = leadPlayer.input.specialPress;
+                fpp.input.specialHold = leadPlayer.input.specialHold;LogDebugOnly("9");
+                fpp.input.specialPress = leadPlayer.input.specialPress;LogDebugOnly("10");
                 
-                fpp.input.up = leadPlayer.input.up;
-                fpp.input.upPress = leadPlayer.input.upPress;
+                fpp.input.up = leadPlayer.input.up;LogDebugOnly("11");
+                fpp.input.upPress = leadPlayer.input.upPress;LogDebugOnly("12");
                 
-                fpp.input.down = leadPlayer.input.down;
-                fpp.input.downPress = leadPlayer.input.downPress;
+                fpp.input.down = leadPlayer.input.down;LogDebugOnly("13");
+                fpp.input.downPress = leadPlayer.input.downPress;LogDebugOnly("14");
                 
-                AddTime(GetInputQueue(fpp), Time.deltaTime);
-                RecordInput(fpp);
-                MapPlayerPressesFromPreviousInputs(fpp);
+                try
+                {
+	                AddTime(GetInputQueue(fpp), Time.deltaTime);LogDebugOnly("15");
+	                RecordInput(fpp);LogDebugOnly("16");
+	                MapPlayerPressesFromPreviousInputs(fpp);LogDebugOnly("17");
+                }
+                catch (Exception e)
+                {
+	                LogDebugOnly(e.Message);
+	                LogDebugOnly(e.ToString());
+	                LogDebugOnly(e.StackTrace);
+                }
+                
             }
             else
             {
@@ -312,6 +334,7 @@ namespace Fp2Trainer
 
         private static void FollowLeadPlayerHorizontal(FPPlayer fpp, FPPlayer leadPlayer)
         {
+	        LogDebugOnly("PlayerHoriz");
 	        FollowTargetObjectHorizontal(fpp, leadPlayer);
         }
         
@@ -328,25 +351,32 @@ namespace Fp2Trainer
 
         private static void FollowTargetObjectHorizontal(FPPlayer fpp, FPBaseObject targetObj)
         {
+	        LogDebugOnly("TargetHoriz");
 	        float dist = Vector2.Distance(targetObj.transform.position,
 		        fpp.transform.position);
+	        LogDebugOnly("TargHorzDist: " + dist);
 	        if (dist > playerFollowMinimumDistanceHorizontal)
 	        {
+		        LogDebugOnly("TargHorzGrtThanMinH");
 		        if (targetObj.position.x > fpp.position.x)
 		        {
+			        LogDebugOnly("TargHorzRelMR");
 			        MoveRight(fpp);
 		        }
 		        else if (targetObj.position.x < fpp.position.x)
 		        {
+			        LogDebugOnly("TargHorzML");
 			        MoveLeft(fpp);
 		        }
 		        else
 		        {
+			        LogDebugOnly("TargHorzRel");
 			        MoveLRRelease(fpp);
 		        }
 	        }
 	        else
 	        {
+		        LogDebugOnly("TargHorzRelElse");
 		        MoveLRRelease(fpp);
 	        }
         }
@@ -381,8 +411,11 @@ namespace Fp2Trainer
 
         private static void MoveRight(FPPlayer fpp)
         {
+	        LogDebugOnly("StartMoveRight");
 	        fpp.input.left = false;
+	        LogDebugOnly("FinnaPressThenHold");
 	        PressThenHold(ref fpp.input.rightPress, ref fpp.input.right);
+	        LogDebugOnly("EndMoveRight");
         }
         
         private static void MoveLeft(FPPlayer fpp)
