@@ -48,6 +48,7 @@
         <Compile Include="FP2TrainerDamageNumber.cs" />
         <Compile Include="FP2TrainerDPSTracker.cs" />
         <Compile Include="FP2TrainerDTTracker.cs" />
+        <Compile Include="FP2TrainerInputQueue.cs" />
         <Compile Include="FPPlayer2p.cs" />
         <Compile Include="FPTrainerLevelSelect.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />

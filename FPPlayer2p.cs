@@ -10,6 +10,7 @@ namespace Fp2Trainer
         SINGLE_PLAYER,
         NPC_FOLLOW,
         NPC_HUNTER,
+        NPC_GHOST,
         LOCAL_MULTIPLAYER,
         NETWORK_MULTIPLAYER
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -9,6 +10,7 @@ namespace Fp2Trainer
     {
         public static FPPlayer leadPlayer;
         public static List<FPPlayer> allPlayers;
+        public static Dictionary<FPPlayer, FP2TrainerInputQueue> inputQueueForPlayers;
         public static AllyControlType preferredAllyControlType = AllyControlType.SINGLE_PLAYER;
 
         public static float playerFollowMinimumDistanceHorizontal = 32f;
@@ -24,7 +26,114 @@ namespace Fp2Trainer
 
 	        if (showAllyControlDebugs)
 	        {
-		        Fp2Trainer.Log(str);
+		        Fp2Trainer.Log(str + "\n");
+	        }
+        }
+
+        public static FP2TrainerInputQueue RecordInput(FPPlayer fpp, int maxLength)
+        {
+	        FP2TrainerInputQueue ipq;
+	        if (!inputQueueForPlayers.ContainsKey(fpp))
+	        {
+		        inputQueueForPlayers.Add(fpp, new FP2TrainerInputQueue(maxLength));
+	        }
+
+	        ipq = inputQueueForPlayers[fpp];
+	        
+	        ipq.Add(new TimestampedInputs(fpp.input.up, fpp.input.down, fpp.input.left, fpp.input.right,
+		        fpp.input.jumpHold, fpp.input.attackHold, fpp.input.specialHold, fpp.input.guardHold,
+		        false));
+	        
+	        return ipq;
+        }
+
+        public static void AddTime(FP2TrainerInputQueue ipq, float deltaTime)
+        {
+	        ipq.AddTime(deltaTime);
+        }
+
+        public static FP2TrainerInputQueue GetInputQueue(FPPlayer fpp)
+        {
+	        FP2TrainerInputQueue ipq;
+	        if (inputQueueForPlayers.ContainsKey(fpp))
+	        {
+		        ipq = inputQueueForPlayers[fpp];
+	        }
+	        else
+	        {
+		        ipq = RecordInput(fpp, 5);
+		        inputQueueForPlayers.Add(fpp, ipq);
+	        }
+
+	        return ipq;
+        }
+
+        public static bool HasFlag(BitwiseInputState theFlags, BitwiseInputState flagCondition)
+        {
+	        return (theFlags & flagCondition) == flagCondition;
+        }
+        
+        public static void SetBoolIfFlagJustSet(out bool toBeSet, 
+	        BitwiseInputState flagPrev, BitwiseInputState flagLatest,
+			BitwiseInputState conditionFlags)
+        {
+	        toBeSet = !HasFlag(flagPrev, conditionFlags) 
+	                  && HasFlag(flagLatest, conditionFlags);
+        }
+
+        public static void MapPlayerPressesFromPreviousInputs(FPPlayer fpp)
+        {
+	        if (inputQueueForPlayers.ContainsKey(fpp))
+	        {
+		        var prevInputs = inputQueueForPlayers[fpp].GetPrevious();
+		        var latestInputs = inputQueueForPlayers[fpp].GetLatest();
+
+		        SetBoolIfFlagJustSet(out fpp.input.upPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.UP);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.downPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.DOWN);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.leftPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.LEFT);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.rightPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.RIGHT);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.jumpPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.JUMP);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.attackPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.ATTACK);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.specialPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.SPECIAL);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.guardPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.GUARD);
+		        
+		        /*
+		        SetBoolIfFlagJustSet(out fpp.input.pause,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.PAUSE);
+			    */
 	        }
         }
 
@@ -54,6 +163,8 @@ namespace Fp2Trainer
                 
                 fpp.input.down = leadPlayer.input.down;
                 fpp.input.downPress = leadPlayer.input.downPress;
+                AddTime(GetInputQueue(fpp), Time.deltaTime);
+                
             }
             else
             {
@@ -151,10 +262,13 @@ namespace Fp2Trainer
 				        ReleaseAttack(fpp);
 			        }
 		        }
+		        
+		        AddTime(GetInputQueue(fpp), Time.deltaTime);
+		        MapPlayerPressesFromPreviousInputs(fpp);
 	        }
 	        else
 	        {
-		        Fp2Trainer.Log("A character is attempting to follow itself as lead. Control types may be misassigned.");
+		        LogDebugOnly("A character is attempting to follow itself as lead. Control types may be misassigned.");
 	        }
 
         }
@@ -229,32 +343,41 @@ namespace Fp2Trainer
         
         private static void PressThenHold(ref bool inPress, ref bool inHold)
         {
+	        inPress = true;
+	        inHold = true;
+        }
+        
+        public static void ClearPresses(FPPlayer fpp)
+        {
 	        // If you were already pressing this, turn it into a hold.
 	        // If you were holding this on a DPad, it would be impossible to press again while holding without releasing.
-	        if (inPress)
-	        {
-		        inPress = false;
-		        inHold = true;
-	        }
-	        else
-	        {
-		        // Otherwise, just start pressing.
-		        inPress = true;
-		        inHold = true;
-	        }
+	        
+	        fpp.input.upPress = false;
+	        fpp.input.downPress = false;
+	        fpp.input.leftPress = false;
+	        fpp.input.rightPress = false;
+	        
+	        fpp.input.jumpPress = false;
+	        fpp.input.attackPress = false;
+	        fpp.input.specialPress = false;
+	        fpp.input.guardPress = false;
+
+        }
+        
+        public static void DetectPresses(FPPlayer fpp)
+        {
+	        MapPlayerPressesFromPreviousInputs(fpp);
         }
 
         private static void MoveRight(FPPlayer fpp)
         {
 	        fpp.input.left = false;
-	        fpp.input.leftPress = false;
 	        PressThenHold(ref fpp.input.rightPress, ref fpp.input.right);
         }
         
         private static void MoveLeft(FPPlayer fpp)
         {
 	        fpp.input.right = false;
-	        fpp.input.rightPress = false;
 	        PressThenHold(ref fpp.input.leftPress, ref fpp.input.left);
         }
 
@@ -262,67 +385,55 @@ namespace Fp2Trainer
         {
 	        fpp.input.right = false;
 	        fpp.input.left = false;
-	        fpp.input.rightPress = false;
-	        fpp.input.leftPress = false;
 
         }
 
         private static void HoldDown(FPPlayer fpp)
         {
 	        fpp.input.up = false;
-	        fpp.input.upPress = false;
 	        PressThenHold(ref fpp.input.downPress, ref fpp.input.down);
         }
         private static void ReleaseDown(FPPlayer fpp)
         {
 	        fpp.input.down = false;
-	        fpp.input.downPress = false;
         }
         
         private static void HoldUp(FPPlayer fpp)
         {
 	        fpp.input.down = false;
-	        fpp.input.downPress = false;
 	        PressThenHold(ref fpp.input.upPress, ref fpp.input.up);
         }
         private static void ReleaseUp(FPPlayer fpp)
         {
 	        fpp.input.up = false;
-	        fpp.input.upPress = false;
         }
 
         private static void Jump(FPPlayer fpp)
         {
-	        LogDebugOnly("jump0");
+	        LogDebugOnly("wanna jump");
 	        if ((fpp.onGround || fpp.onGrindRail) && fpp.input.jumpHold)
 	        {
-		        LogDebugOnly("jump1");
+		        LogDebugOnly("jump - grounded and holding jump");
 		        ReleaseJump(fpp);
 	        }
 	        else if ((fpp.onGround || fpp.onGrindRail) && !fpp.input.jumpHold)
 	        {
-		        LogDebugOnly("jump2");
-		        fpp.input.jumpPress = true;
-		        fpp.input.jumpHold = true;
+		        LogDebugOnly("jump - grounded and not holding jump");
+		        PressThenHold(ref fpp.input.jumpPress, ref fpp.input.jumpHold);
 	        }
 	        else if ((!fpp.onGround && !fpp.onGrindRail) && !fpp.jumpAbilityFlag && fpp.velocity.y < -1f)
 	        {
-		        LogDebugOnly("jump3");
-		        fpp.input.jumpPress = false;
-		        fpp.input.jumpHold = false;
+		        LogDebugOnly("jump - In air, falling, and can use Air Action");
+		        JumpRelease(fpp);
 	        }
 	        else if ((!fpp.onGround && !fpp.onGrindRail)&& fpp.velocity.y > -1f)
 	        {
-		        LogDebugOnly("jump4");
+		        LogDebugOnly("jump - In air, Rising");
 	        }
 	        else
 	        {
 		        ReleaseJump(fpp);
 	        }
-
-	        PressThenHold(ref fpp.input.leftPress, ref fpp.input.left);
-	        
-	        // uhhh reminder to add some kind of timed input queue where you process things a bit later.
         }
 
         public static void ReleaseJump(FPPlayer fpp)
@@ -339,8 +450,7 @@ namespace Fp2Trainer
 
         public static void MashAttack(FPPlayer fpp)
         {
-	        fpp.input.attackPress = !fpp.input.attackPress;
-	        fpp.input.attackHold = fpp.input.attackPress;
+	        fpp.input.attackHold = !fpp.input.attackHold;
         }
         
         public static void ReleaseAttack(FPPlayer fpp)
@@ -351,8 +461,7 @@ namespace Fp2Trainer
         
         public static void MashSpecial(FPPlayer fpp)
         {
-	        fpp.input.specialPress = !fpp.input.specialPress;
-	        fpp.input.specialHold = fpp.input.specialPress;
+	        fpp.input.specialHold = !fpp.input.specialHold;
         }
 
         public static void ReleaseSpecial(FPPlayer fpp)
@@ -363,8 +472,7 @@ namespace Fp2Trainer
         
         public static void MashGuard(FPPlayer fpp)
         {
-	        fpp.input.guardPress = !fpp.input.guardPress;
-	        fpp.input.guardHold = fpp.input.guardPress;
+	        fpp.input.guardHold = !fpp.input.guardHold;
         }
         public static void ReleaseGuard(FPPlayer fpp)
         {
@@ -431,103 +539,5 @@ namespace Fp2Trainer
                 }
             }
         }
-        
-	    private static void ProcessInputControl(FPPlayer fpp)
-		{
-			float axis = InputControl.GetAxis(Controls.axes.horizontal);
-			float axis2 = InputControl.GetAxis(Controls.axes.vertical);
-			fpp.input.upPress = false;
-			fpp.input.downPress = false;
-			fpp.input.leftPress = false;
-			fpp.input.rightPress = false;
-			if (fpp.IsPowerupActive(FPPowerup.MIRROR_LENS))
-			{
-				if (axis > InputControl.joystickThreshold)
-				{
-					if (!fpp.input.left)
-					{
-						fpp.input.leftPress = true;
-					}
-					fpp.input.left = true;
-				}
-				else
-				{
-					fpp.input.left = false;
-				}
-				if (axis < 0f - InputControl.joystickThreshold)
-				{
-					if (!fpp.input.right)
-					{
-						fpp.input.rightPress = true;
-					}
-					fpp.input.right = true;
-				}
-				else
-				{
-					fpp.input.right = false;
-				}
-			}
-			else
-			{
-				if (axis > InputControl.joystickThreshold)
-				{
-					if (!fpp.input.right)
-					{
-						fpp.input.rightPress = true;
-					}
-					fpp.input.right = true;
-				}
-				else
-				{
-					fpp.input.right = false;
-				}
-				if (axis < 0f - InputControl.joystickThreshold)
-				{
-					if (!fpp.input.left)
-					{
-						fpp.input.leftPress = true;
-					}
-					fpp.input.left = true;
-				}
-				else
-				{
-					fpp.input.left = false;
-				}
-			}
-			if (axis2 > InputControl.joystickThreshold)
-			{
-				if (!fpp.input.up)
-				{
-					fpp.input.upPress = true;
-				}
-				fpp.input.up = true;
-			}
-			else
-			{
-				fpp.input.up = false;
-			}
-			if (axis2 < 0f - InputControl.joystickThreshold)
-			{
-				if (!fpp.input.down)
-				{
-					fpp.input.downPress = true;
-				}
-				fpp.input.down = true;
-			}
-			else
-			{
-				fpp.input.down = false;
-			}
-			fpp.input.jumpPress = InputControl.GetButtonDown(Controls.buttons.jump);
-			fpp.input.jumpHold = InputControl.GetButton(Controls.buttons.jump);
-			fpp.input.attackPress = InputControl.GetButtonDown(Controls.buttons.attack);
-			fpp.input.attackHold = InputControl.GetButton(Controls.buttons.attack);
-			fpp.input.specialPress = InputControl.GetButtonDown(Controls.buttons.special);
-			fpp.input.specialHold = InputControl.GetButton(Controls.buttons.special);
-			fpp.input.guardPress = InputControl.GetButtonDown(Controls.buttons.guard);
-			fpp.input.guardHold = InputControl.GetButton(Controls.buttons.guard);
-			fpp.input.confirm = (fpp.input.jumpPress | InputControl.GetButtonDown(Controls.buttons.pause));
-			fpp.input.cancel = (fpp.input.attackPress | Input.GetKey(KeyCode.Escape));
-		}
     }
 }
