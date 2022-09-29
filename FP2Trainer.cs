@@ -1253,7 +1253,7 @@ namespace Fp2Trainer
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKLoadDebugRoom))
             {
                 Log("Load Debug Room");
-                FP2TrainerAllyControls.DumpAllPlayerVars(); //todo: delete this.
+                //FP2TrainerAllyControls.DumpAllPlayerVars();
                 SceneManager.LoadScene("StageDebugMenu", LoadSceneMode.Additive);
             }
 
