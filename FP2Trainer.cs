@@ -119,6 +119,11 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKToggleEnableNetworkPlayers;
 
         public static MelonPreferences_Entry<string> PHKRebindAllHotkeys;
+        
+        
+        public static MelonPreferences_Entry<bool> MultiCharStartLastSetting;
+        public static MelonPreferences_Entry<bool> ShowPlaneSwitcherVisualizersLastSetting;
+        public static MelonPreferences_Entry<string> PreferredAllyControlTypeLastSetting;
 
         public static bool hotkeysLoaded = false;
 
@@ -263,6 +268,15 @@ namespace Fp2Trainer
             introSkipped = 0;
 
             FPPlayer2p.InitCustomControls();
+
+            multiplayerStart = MultiCharStartLastSetting.Value;
+            planeSwitchVisualizersVisible = ShowPlaneSwitcherVisualizersLastSetting.Value;
+            FP2TrainerAllyControls.preferredAllyControlType = (AllyControlType)(Enum.Parse(typeof(AllyControlType), PreferredAllyControlTypeLastSetting.Value));
+
+            Log("blep" + multiplayerStart);
+            Log("blep" + planeSwitchVisualizersVisible);
+            Log("blep" + FP2TrainerAllyControls.preferredAllyControlType);
+
         }
 
         private void InitPrefs()
@@ -272,6 +286,11 @@ namespace Fp2Trainer
             BootupLevel = fp2Trainer.CreateEntry("bootupLevel", "");
             showDebug = fp2Trainer.CreateEntry("showDebug", true);
             enableNoClip = fp2Trainer.CreateEntry("enableNoClip", false);
+            
+            MultiCharStartLastSetting = fp2Trainer.CreateEntry("MultiCharStartLastSetting", false);
+            ShowPlaneSwitcherVisualizersLastSetting = fp2Trainer.CreateEntry("ShowPlaneSwitcherVisualizersLastSetting", false);
+            PreferredAllyControlTypeLastSetting = fp2Trainer.CreateEntry("PreferredAllyControlTypeLastSetting", 
+                FP2TrainerAllyControls.AllyControlTypeName(AllyControlType.SINGLE_PLAYER));
 
             InitPrefsCustomHotkeys();
         }
@@ -703,6 +722,13 @@ namespace Fp2Trainer
                     {
                         HandleHotkeys();
                     }
+                    
+                    if (multiplayerStart && !doneMultiplayerStart)
+                    {
+                        currentDataPage = DataPage.MULTIPLAYER_DEBUG;
+                        FPPlayer2p.SpawnExtraCharacter();
+                        doneMultiplayerStart = true;
+                    }
 
                     if (showInstructions)
                     {
@@ -711,13 +737,6 @@ namespace Fp2Trainer
 
                     else
                     {
-                        if (multiplayerStart && !doneMultiplayerStart)
-                        {
-                            currentDataPage = DataPage.MULTIPLAYER_DEBUG;
-                            FPPlayer2p.SpawnExtraCharacter();
-                            doneMultiplayerStart = true;
-                        }
-
                         UpdateDPS();
                         if (timeoutShowWarpInfo > 0) debugDisplay += warpMessage + "\n";
 
@@ -1350,6 +1369,7 @@ namespace Fp2Trainer
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKTogglePlaneSwitcherVisualizers))
             {
                 TogglePlaneSwitchVisualizers();
+                ShowPlaneSwitcherVisualizersLastSetting.Value = planeSwitchVisualizersVisible;
                 Log(String.Format("Toggle PlaneSwitcher Visualizers: {0} -> {1}", !planeSwitchVisualizersVisible, planeSwitchVisualizersVisible));
             }
 
@@ -1439,6 +1459,7 @@ namespace Fp2Trainer
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleMultiCharStart))
             {
                 multiplayerStart = !multiplayerStart;
+                MultiCharStartLastSetting.Value = multiplayerStart;
                 Log(String.Format("Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
             }
             

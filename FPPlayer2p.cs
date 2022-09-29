@@ -22,7 +22,7 @@ namespace Fp2Trainer
         public static Vector2 spawnOffset = new Vector2(-64, 0);
         public static Vector2 catchupOffset = new Vector2(32, 128);
 
-        public static float catchupDistance = 512f;
+        public static float catchupDistance = 1024f;
 
         public static Dictionary<string, KeyMapping> customControls;
 
@@ -458,6 +458,8 @@ namespace Fp2Trainer
             newPlayer.collisionLayer = fppi.collisionLayer;
 
             newPlayer.name = String.Format("Player {0}", extraPlayerCount);
+
+            newPlayer.inputMethod = FP2TrainerAllyControls.GetInputMethodFromPreferredAllyControlType(newPlayer);
 
             Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
             Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance_FPPlayer().name + " joins the party!");

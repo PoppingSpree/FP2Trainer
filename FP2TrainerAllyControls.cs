@@ -15,7 +15,18 @@ namespace Fp2Trainer
         public static float playerFollowMinimumDistanceVertical = 16f;
         
         public static float targetObjHunterMinAttackDistanceHorizontal = 64f;
-        
+
+        public static bool showAllyControlDebugs = false;
+
+        public static void LogDebugOnly(string str)
+        {
+	        showAllyControlDebugs = Fp2Trainer.multiplayerStart;
+
+	        if (showAllyControlDebugs)
+	        {
+		        Fp2Trainer.Log(str);
+	        }
+        }
 
         public static void GetUpdatedPlayerList()
         {
@@ -30,11 +41,23 @@ namespace Fp2Trainer
             if (fpp != leadPlayer)
             {
                 FollowLeadPlayerHorizontal(fpp, leadPlayer);
-                FollowLeadPlayerVertical(fpp, leadPlayer);   
+                FollowLeadPlayerVertical(fpp, leadPlayer);
+
+                fpp.input.attackHold = leadPlayer.input.attackHold;
+                fpp.input.attackPress = leadPlayer.input.attackPress;
+                
+                fpp.input.specialHold = leadPlayer.input.specialHold;
+                fpp.input.specialPress = leadPlayer.input.specialPress;
+                
+                fpp.input.up = leadPlayer.input.up;
+                fpp.input.upPress = leadPlayer.input.upPress;
+                
+                fpp.input.down = leadPlayer.input.down;
+                fpp.input.downPress = leadPlayer.input.downPress;
             }
             else
             {
-                Fp2Trainer.Log("A character is attempting to follow itself as lead. Control types may be misassigned.");
+                LogDebugOnly("A character is attempting to follow itself as lead. Control types may be misassigned.");
             }
 
         }
@@ -50,14 +73,22 @@ namespace Fp2Trainer
 		        {
 			        FPStage.FindNearestPlayer(fpp, 360f);
 		        }
+		        if (targetObj == null)
+		        {
+			        targetObj = fpp;
+		        }
+
+		        LogDebugOnly(String.Format("Hunter {2} Target set to {0} - ({1})", 
+			        targetObj.name, targetObj.position, fpp.name));
 
 		        if (targetObj != null)
 		        {
 			        FollowTargetObjectHorizontal(fpp, targetObj);
 			        FollowTargetObjectVertical(fpp, targetObj);
-
-			        if (Vector2.Distance(fpp.position, targetObj.position) <= targetObjHunterMinAttackDistanceHorizontal)
+			        float distToEnemy = Vector2.Distance(fpp.position, targetObj.position); 
+			        if ( distToEnemy <= targetObjHunterMinAttackDistanceHorizontal)
 			        {
+				        LogDebugOnly(String.Format("Attempting to attack. Dist to Target: {0}.", distToEnemy));
 				        if (fpp.characterID == FPCharacterID.MILLA)
 				        {
 					        if (!fpp.cubeSpawned)
@@ -72,7 +103,7 @@ namespace Fp2Trainer
 
 				        if (fpp.energy >= 80 || fpp.canWarp || fpp.millaCubeEnergy > 0)
 				        {
-					        Fp2Trainer.Log(String.Format("Character position ({0})\nTarget Position ({1})", fpp.position.y, targetObj.position.y));
+					        LogDebugOnly(String.Format("Character position ({0})\nTarget Position ({1})", fpp.position.y, targetObj.position.y));
 					        if (EnemyIsAbove(fpp, targetObj))
 					        {
 						        HoldUp(fpp);
@@ -141,13 +172,17 @@ namespace Fp2Trainer
 
         private static void FollowLeadPlayerVertical(FPPlayer fpp, FPPlayer leadPlayer)
         {
-            //throw new System.NotImplementedException();
+	        float dist = Vector2.Distance(fpp.position, leadPlayer.position);
             if (!leadPlayer.onGround && !leadPlayer.onGrindRail
-                && Vector2.Distance(fpp.position, leadPlayer.position) > playerFollowMinimumDistanceVertical)
+                && dist > playerFollowMinimumDistanceVertical)
             {
                 // Assume the player is jumping.
                 Jump(fpp);
 				
+            }
+            else
+            {
+	            ReleaseJump(fpp);
             }
         }
 
@@ -261,20 +296,38 @@ namespace Fp2Trainer
 
         private static void Jump(FPPlayer fpp)
         {
+	        LogDebugOnly("jump0");
 	        if ((fpp.onGround || fpp.onGrindRail) && fpp.input.jumpHold)
 	        {
+		        LogDebugOnly("jump1");
+		        ReleaseJump(fpp);
+	        }
+	        else if ((fpp.onGround || fpp.onGrindRail) && !fpp.input.jumpHold)
+	        {
+		        LogDebugOnly("jump2");
+		        fpp.input.jumpPress = true;
+		        fpp.input.jumpHold = true;
+	        }
+	        else if ((!fpp.onGround && !fpp.onGrindRail) && !fpp.jumpAbilityFlag && fpp.velocity.y < -1f)
+	        {
+		        LogDebugOnly("jump3");
 		        fpp.input.jumpPress = false;
 		        fpp.input.jumpHold = false;
 	        }
-	        else if ((!fpp.onGround && !fpp.onGrindRail) && !fpp.jumpAbilityFlag && fpp.velocity.y > 1f)
+	        else
 	        {
-		        fpp.input.jumpPress = false;
-		        fpp.input.jumpHold = false;
+		        ReleaseJump(fpp);
 	        }
 
 	        PressThenHold(ref fpp.input.leftPress, ref fpp.input.left);
 	        
 	        // uhhh reminder to add some kind of timed input queue where you process things a bit later.
+        }
+
+        public static void ReleaseJump(FPPlayer fpp)
+        {
+	        fpp.input.jumpPress = false;
+	        fpp.input.jumpHold = false;
         }
 
         private static void JumpRelease(FPPlayer fpp)
@@ -325,10 +378,11 @@ namespace Fp2Trainer
             {
                 preferredAllyControlType = AllyControlType.SINGLE_PLAYER;
             }
-
-            string allyControlTypeName = AllyControlTypeName(preferredAllyControlType);
-            Fp2Trainer.Log("Preferred Ally Control Type Set To: " + allyControlTypeName);
             
+            string allyControlTypeName = AllyControlTypeName(preferredAllyControlType);
+            Fp2Trainer.PreferredAllyControlTypeLastSetting.Value = allyControlTypeName;
+            Fp2Trainer.Log("Preferred Ally Control Type Set To: " + allyControlTypeName);
+
             UpdateFPPlayersControlTypes();
         }
 
