@@ -349,13 +349,13 @@ namespace Fp2Trainer
         
         public static void GetAndRecordInputFromPlayer1(this FPPlayer fpp)
         {
-	        int fiveMinutesAsFrames = 60 * 60 * 5;
+	        //int fiveMinutesAsFrames = 60 * 60 * 5;
 	        fpp.GetInputFromPlayer1();
 	        
 	        try
 	        {
 		        AddTime(GetInputQueue(fpp), Time.deltaTime);
-		        GetInputQueue(fpp).SetMaxLength(fiveMinutesAsFrames);
+		        //GetInputQueue(fpp).SetMaxLength(fiveMinutesAsFrames);
 		        RecordInput(fpp);
 		        MapPlayerPressesFromPreviousInputs(fpp);
 

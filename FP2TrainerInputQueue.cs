@@ -28,7 +28,7 @@ namespace Fp2Trainer
         // 9 bools, an index, and a timestamp.
         protected List<TimestampedInputs> timestampedInputsList;
         //protected int maxLength = 30;
-        protected int maxLength = 60 * 3;
+        protected int maxLength = 30;
         protected int countSteps = 0;
         protected float elapsedTime;
         
