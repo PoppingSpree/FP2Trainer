@@ -306,7 +306,7 @@ namespace Fp2Trainer
 	        }
         }
         
-        public static void HandleAllyControlsFollow(this FPPlayer fpp)
+        public static void HandleAllyControlsNetplay(this FPPlayer fpp)
         {
 	        
 	        GetUpdatedPlayerList();
@@ -316,11 +316,13 @@ namespace Fp2Trainer
 	        {
 		        // ConnectionID
 		        TimestampedInputs tsi = GetLatestInputQueueFromNetworkPlayer(0);
+		        RollingQueue<Vector2[]> transformQueue = GetLatestTransformQueueFromNetworkPlayer(0);
 		        
 		        // thisplayer, timestampedInputs, currentTime, expectedOffsetTime
 		        MapPlayerClosestTimedInputFromInputQueue(fpp, tsi, 0f, 0f);
+		        MapPosRotClosestFromTransformQueue(fpp, transformQueue, 0f, 0f);
 		        
-
+				/*
 		        fpp.input.attackHold = leadPlayer.input.attackHold; 
 		        fpp.input.attackPress = leadPlayer.input.attackPress;
                 
@@ -332,11 +334,10 @@ namespace Fp2Trainer
                 
 		        fpp.input.down = leadPlayer.input.down;
 		        fpp.input.downPress = leadPlayer.input.downPress;
+		        */
                 
 		        try
 		        {
-			        AddTime(GetInputQueue(fpp), Time.deltaTime);
-			        RecordInput(fpp);
 			        MapPlayerPressesFromPreviousInputs(fpp);
 		        }
 		        catch (Exception e)
@@ -345,14 +346,39 @@ namespace Fp2Trainer
 			        LogDebugOnly(e.ToString());
 			        LogDebugOnly(e.StackTrace);
 		        }
-                
 	        }
-	        else
-	        {
-		        LogDebugOnly("A character is attempting to follow itself as lead. Control types may be misassigned.");
-	        }
-
         }
+        
+        private static TimestampedInputs GetLatestInputQueueFromNetworkPlayer(int connectionId)
+        {
+	        TimestampedInputs tsi = null;
+	        
+	        
+	        
+	        return tsi;
+        }
+
+        private static RollingQueue<Vector2[]> GetLatestTransformQueueFromNetworkPlayer(int i)
+        {
+	        return new RollingQueue<Vector2[]>();
+	        //throw new NotImplementedException();
+        }
+
+        private static void MapPosRotClosestFromTransformQueue(FPPlayer fpp, RollingQueue<Vector2[]> transformQueue, float currentTime, float playerToNetworkTimeOffset)
+        {
+	        
+	        //throw new NotImplementedException();
+        }
+        
+        private static void MapPlayerClosestTimedInputFromInputQueue(FPPlayer fpp, TimestampedInputs tsi, float currentTime, float playerToNetworkTimeOffset)
+        {
+	        
+	        //throw new NotImplementedException();
+        }
+        
+        public static <T> GetClosestItemFromQueueByTimestamp
+
+        
 
         public static bool EnemyIsAbove(FPPlayer fpp, FPBaseObject targetObj)
         {
