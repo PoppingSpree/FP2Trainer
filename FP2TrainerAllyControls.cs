@@ -30,12 +30,12 @@ namespace Fp2Trainer
 	        }
         }
 
-        public static FP2TrainerInputQueue RecordInput(FPPlayer fpp, int maxLength)
+        public static FP2TrainerInputQueue RecordInput(FPPlayer fpp)
         {
 	        FP2TrainerInputQueue ipq;
 	        if (!inputQueueForPlayers.ContainsKey(fpp))
 	        {
-		        inputQueueForPlayers.Add(fpp, new FP2TrainerInputQueue(maxLength));
+		        inputQueueForPlayers.Add(fpp, new FP2TrainerInputQueue());
 	        }
 
 	        ipq = inputQueueForPlayers[fpp];
@@ -43,6 +43,8 @@ namespace Fp2Trainer
 	        ipq.Add(new TimestampedInputs(fpp.input.up, fpp.input.down, fpp.input.left, fpp.input.right,
 		        fpp.input.jumpHold, fpp.input.attackHold, fpp.input.specialHold, fpp.input.guardHold,
 		        false));
+	        
+	        LogDebugOnly(ipq.ToString());
 	        
 	        return ipq;
         }
@@ -61,7 +63,7 @@ namespace Fp2Trainer
 	        }
 	        else
 	        {
-		        ipq = RecordInput(fpp, 5);
+		        ipq = RecordInput(fpp);
 		        inputQueueForPlayers.Add(fpp, ipq);
 	        }
 
@@ -163,8 +165,10 @@ namespace Fp2Trainer
                 
                 fpp.input.down = leadPlayer.input.down;
                 fpp.input.downPress = leadPlayer.input.downPress;
-                AddTime(GetInputQueue(fpp), Time.deltaTime);
                 
+                AddTime(GetInputQueue(fpp), Time.deltaTime);
+                RecordInput(fpp);
+                MapPlayerPressesFromPreviousInputs(fpp);
             }
             else
             {
@@ -182,11 +186,17 @@ namespace Fp2Trainer
 		        FPBaseObject targetObj = FPStage.FindNearestEnemy(fpp, 360f, string.Empty);
 		        if (targetObj == null)
 		        {
-			        FPStage.FindNearestPlayer(fpp, 360f);
+			        //FPStage.FindNearestPlayer(fpp, 360f); //Doesn't work, it will always return itself.
+			        targetObj = leadPlayer;
 		        }
 		        if (targetObj == null)
 		        {
 			        targetObj = fpp;
+		        }
+
+		        if (targetObj == fpp)
+		        {
+			        LogDebugOnly("A character is attempting to follow itself. Probably could not find a valid target.");
 		        }
 
 		        LogDebugOnly(String.Format("Hunter {2} Target set to {0} - ({1})", 
@@ -264,13 +274,13 @@ namespace Fp2Trainer
 		        }
 		        
 		        AddTime(GetInputQueue(fpp), Time.deltaTime);
+		        RecordInput(fpp);
 		        MapPlayerPressesFromPreviousInputs(fpp);
 	        }
-	        else
+	        else if (fpp == leadPlayer)
 	        {
 		        LogDebugOnly("A character is attempting to follow itself as lead. Control types may be misassigned.");
 	        }
-
         }
 
         public static bool EnemyIsAbove(FPPlayer fpp, FPBaseObject targetObj)

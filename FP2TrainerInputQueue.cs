@@ -109,11 +109,12 @@ namespace Fp2Trainer
 
         public string ToString()
         {
-            string str = "";
+            string str = "---{InputQueue}---";
             foreach (var tsi in timestampedInputsList)
             {
-                str += String.Format("{0} | {1} | {2,3} | {3:G}\n", tsi.numStep, tsi.timestamp, tsi.bitwiseInputs, (BitwiseInputState)tsi.bitwiseInputs);
+                str += tsi.ToString() + "\n";
             }
+            str += "---{EndInputQueue}---";
 
             return str;
         }
@@ -165,5 +166,9 @@ namespace Fp2Trainer
             this.bitwiseInputs |= p ? BitwiseInputState.PAUSE : BitwiseInputState.NONE;
         }
 
+        public string ToString()
+        {
+            return String.Format("{0} | {1} | {2,3} | {3:G}\n", numStep, timestamp, bitwiseInputs, (BitwiseInputState)bitwiseInputs);
+        }
     }
 }
