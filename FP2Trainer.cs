@@ -128,6 +128,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> ShowInputNamesInTerminal;
         public static MelonPreferences_Entry<bool> EnableNetworking;
         public static MelonPreferences_Entry<bool> SaveGhostFiles;
+        public static MelonPreferences_Entry<int> MultiCharStartNumChars;
 
         public static bool hotkeysLoaded = false;
 
@@ -300,6 +301,7 @@ namespace Fp2Trainer
             ShowInputNamesInTerminal = fp2Trainer.CreateEntry("ShowInputNamesInTerminal", false);
             EnableNetworking = fp2Trainer.CreateEntry("EnableNetworking", false);
             SaveGhostFiles = fp2Trainer.CreateEntry("SaveGhostFiles", false);
+            MultiCharStartNumChars = fp2Trainer.CreateEntry("MultiCharStartNumChars", 2);
 
             InitPrefsCustomHotkeys();
         }
@@ -736,7 +738,10 @@ namespace Fp2Trainer
                     if (multiplayerStart && !doneMultiplayerStart)
                     {
                         currentDataPage = DataPage.MULTIPLAYER_DEBUG;
-                        FPPlayer2p.SpawnExtraCharacter();
+                        while (fpplayers.Count < MultiCharStartNumChars.Value)
+                        {
+                            FPPlayer2p.SpawnExtraCharacter();
+                        }
                         doneMultiplayerStart = true;
                     }
 
