@@ -712,6 +712,12 @@ namespace Fp2Trainer
 
         public void TogglePlaneSwitchVisualizers()
         {
+            if (planeSwitcherVisualizer)
+            {
+                /*planeSwitcherVisualizer.AnnihilateGameObjects("AM_BG0 (0)", "AM_BG0 (1)", "AM_BG0 (2)", "AM_BG0 (3)", "AM_BG0 (4)", "AM_BG0 (5)",
+                    "AM_BG1");*/
+            }
+
             planeSwitchVisualizersVisible = !planeSwitchVisualizersVisible;
             if (planeSwitchVisualizersVisible)
             {
@@ -2474,6 +2480,47 @@ namespace Fp2Trainer
         public static void Log(string txt)
         {
             MelonLogger.Msg(txt);
+        }
+        
+        public static void DumpSpriteRendererVars(GameObject go)
+        {
+            var fppVars = "";
+            var sren = go.GetComponent<SpriteRenderer>();
+
+
+		        /*
+		        fppVars += String.Format(
+			        "{0}:\r\n" +
+			        "{1} = {2}\r\n"));
+			        */
+
+                /*
+                fppVars += $"{go.name}: \r\n" +
+                           $"{nameof(sren.blah)} : {sren.barTimer}" +
+                           $"{nameof(go.inputLock)} : {go.inputLock}" +
+                           $"{nameof(go.idleTimer)} : {go.idleTimer}" +
+                           $"{nameof(go.targetGimmick)} : {go.targetGimmick}" +
+                           $"{nameof(sren.targetWaterSurface)} : {sren.targetWaterSurface}" +
+                           $"{nameof(sren.chaseMode)} : {sren.chaseMode}" +
+                           $"{nameof(sren.swapCharacter)} : {sren.swapCharacter}" +
+                           $"{nameof(sren.hideChildObject)} : {sren.hideChildObject}" +
+                           $"{nameof(sren.lastGround)} : {sren.lastGround}" +
+                           $"{nameof(sren.lastSafePosition)} : {sren.lastSafePosition}";
+                           
+                           */
+
+	        // UMFGUI.AddConsoleText(allObjects);
+
+	        var fileName = "fppVars.txt";
+	        if (File.Exists(fileName))
+	        {
+		        Debug.Log(fileName + " already exists.");
+		        return;
+	        }
+
+	        var sr = File.CreateText(fileName);
+	        sr.WriteLine(fppVars);
+	        sr.Close();
         }
     }
 }

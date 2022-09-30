@@ -39,27 +39,49 @@ namespace Fp2Trainer
             pixelSprite = Sprite.Create(redPixel, new Rect(0.0f, 0.0f, redPixel.width, redPixel.height),
                 new Vector2(0.5f, 0.5f), 1.0f);
             
-            Fp2Trainer.Log("Spawning PlaneSwitchVisualizer Objects.");
+            Fp2Trainer.Log("Spawning PlaneSwitchVisualizer Objects. Now with sortOrder 2k");
+
+            var blah = GameObject.Find("Crystal");
 
             foreach (PlaneSwitcher ps in planeSwitchers)
             {
                 //Debug.Log(System.String.Format("Adding Sprite Indicators to {0} PlaneSwitchers.\n", ps.name));
                 Fp2Trainer.Log(System.String.Format("Adding Sprite Indicators to {0} PlaneSwitchers.\n", ps.name));
 
-                goCube = new GameObject();
+                //goCube = new GameObject();
+
+                
+                goCube = ps.gameObject;
                 var spriteRenderer = goCube.AddComponent<SpriteRenderer>();
                 spriteRenderer.sprite = pixelSprite;
-
-                goCube.name = ("Visualizer " + ps.name);
-                goCube.transform.position = new Vector3(ps.transform.position.x, ps.transform.position.y,
-                    ps.transform.position.z);
+                
                 goCube.transform.localScale = new Vector3(ps.xsize, ps.ysize, 1f);
 
-                renCube = goCube.GetComponent<SpriteRenderer>();
+                /*
+                if (blah != null)
+                {
+                    blah = GameObject.Instantiate(blah);
+                    GameObject.Destroy(blah.GetComponent<Animator>());
+                    blah.transform.position = new Vector3(ps.transform.position.x, ps.transform.position.y,
+                        blah.transform.position.z);
+                    blah.transform.localScale = new Vector3(ps.xsize, ps.ysize, 1f);
 
-                renCube.material.color = new Color(1, 0, 0, 0.7f);
+                    goCube.layer = blah.layer;
+                    //spriteRenderer.material = blah.GetComponent<SpriteRenderer>().material;
+                    //blah.transform.localScale = new Vector3(50, 50, 1f);
+                    
+                    blah.SetActive(false);
+                }
+                */
+
+                goCube.layer = 8; //FG Plane A - D are 98 9 10 11. 13 - 27 are BG0 - BG15. 28 and 29 are LightingSetup and Lighting.
+                renCube = goCube.GetComponent<SpriteRenderer>();
+                renCube.sortingOrder = 2000;
+
+                //renCube.material.color = new Color(1, 0, 0, 0.7f);
                 
                 planeSwitchersVisualizers.Add(goCube);
+                
             }
             hasSpawnedVisualizers = true;
         }
@@ -81,8 +103,29 @@ namespace Fp2Trainer
         {
             foreach (GameObject go in planeSwitchersVisualizers)
             {
+                Fp2Trainer.Log($"Hello {go.name}\n" +
+                               $"Has Renderer: {go.GetComponent<SpriteRenderer>().ToString()}\n" +
+                               $"Sort Order: {go.GetComponent<SpriteRenderer>().sortingOrder}\n");
                 go.SetActive(planeSwitchVisualizersVisible);
             }
+        }
+
+        public void AnnihilateGameObjects(params string[] gameObjectNames)
+        {
+            foreach (string nameOfGameObject in gameObjectNames)
+            {
+                GameObject go = GameObject.Find(nameOfGameObject);
+                if (go != null)
+                {
+                    GameObject.Destroy(go);
+                    Fp2Trainer.Log($"Deleted {go.name}\n");
+                }
+                else
+                {
+                    Fp2Trainer.Log($"Could not find {nameOfGameObject} to delete.\n");
+                }
+            }
+
         }
     }
 }
