@@ -881,6 +881,7 @@ namespace Fp2Trainer
                 debugDisplay += "Physics Enabled: " + fpplayer.enablePhysics.ToString() + "\n";
                 debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
                 debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
+                debugDisplay += "Show Debug Colliders: " + ShowCollidersLastSetting.Value.ToString() + "\n";
             }
 
 
@@ -905,6 +906,7 @@ namespace Fp2Trainer
                 
                 debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
                 debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
+                debugDisplay += "Show Debug Colliders: " + ShowCollidersLastSetting.Value.ToString() + "\n";
             }
             else if (currentDataPage == DataPage.MOVEMENT_2)
             {
@@ -912,6 +914,7 @@ namespace Fp2Trainer
                 
                 debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
                 debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
+                debugDisplay += "Show Debug Colliders: " + ShowCollidersLastSetting.Value.ToString() + "\n";
 
                 if (playerValuesToShow.Contains("Ground Angle"))
                     debugDisplay += "Ground Angle: " + fpplayer.groundAngle + "\n";
