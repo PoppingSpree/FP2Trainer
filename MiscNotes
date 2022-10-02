@@ -60,3 +60,8 @@ menuCursor
 public FPObjectState inputMethod;
 // In FPEventSequence
 targetPlayer.inputMethod = targetPlayer.GetInputFromPlayer1;
+
+---
+
+public static List<FPPlayer> FindFPPlayers(bool includeInactivePlayers)
+

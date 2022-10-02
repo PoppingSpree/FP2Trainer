@@ -115,6 +115,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKRestartStage;
         
         public static MelonPreferences_Entry<string> PHKTogglePlaneSwitcherVisualizers;
+        public static MelonPreferences_Entry<string> PHKToggleShowColliders;
 
         public static MelonPreferences_Entry<string> PHKToggleRecordGhostData;
         public static MelonPreferences_Entry<string> PHKToggleEnableNetworkPlayers;
@@ -124,6 +125,7 @@ namespace Fp2Trainer
         
         public static MelonPreferences_Entry<bool> MultiCharStartLastSetting;
         public static MelonPreferences_Entry<bool> ShowPlaneSwitcherVisualizersLastSetting;
+        public static MelonPreferences_Entry<bool> ShowCollidersLastSetting;
         public static MelonPreferences_Entry<string> PreferredAllyControlTypeLastSetting;
         public static MelonPreferences_Entry<bool> ShowInstructionsOnStart;
         public static MelonPreferences_Entry<bool> ShowInputNamesInTerminal;
@@ -236,6 +238,8 @@ namespace Fp2Trainer
 
         public static bool waitingForNextFrameForSpoilerGimmick = false;
 
+        public FPStage fpStage;
+
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
             fp2TrainerInstance = this;
@@ -296,6 +300,7 @@ namespace Fp2Trainer
             
             MultiCharStartLastSetting = fp2Trainer.CreateEntry("MultiCharStartLastSetting", false);
             ShowPlaneSwitcherVisualizersLastSetting = fp2Trainer.CreateEntry("ShowPlaneSwitcherVisualizersLastSetting", false);
+            ShowCollidersLastSetting = fp2Trainer.CreateEntry("ShowPlaneSwitcherVisualizersLastSetting", true);
             PreferredAllyControlTypeLastSetting = fp2Trainer.CreateEntry("PreferredAllyControlTypeLastSetting", 
                 FP2TrainerAllyControls.AllyControlTypeName(AllyControlType.SINGLE_PLAYER));
             ShowInstructionsOnStart = fp2Trainer.CreateEntry("ShowInstructionsOnStart", true);
@@ -348,6 +353,7 @@ namespace Fp2Trainer
             PHKRestartStage = CreateEntryAndBindHotkey("PHKRestartStage", "Shift+R");
             
             PHKTogglePlaneSwitcherVisualizers = CreateEntryAndBindHotkey("PHKTogglePlaneSwitcherVisualizers", "F3");
+            PHKToggleShowColliders = CreateEntryAndBindHotkey("PHKToggleShowColliders", "Shift+F3");
 
             //PHKNextWarppointSaveSlot = CreateEntryAndBindHotkey("PHKNextWarppointSaveSlot", "F10");
             //PHKPrevWarppointSaveSlot = CreateEntryAndBindHotkey("PHKPrevWarppointSaveSlot", "F9");
@@ -757,9 +763,12 @@ namespace Fp2Trainer
                 {
                     player = GetFirstPlayerGameObject();
                     fpplayer = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+                    fpStage = FPStage.currentStage;
 
                     if (player != null) MelonLogger.Msg("Trainer found a Player Object: ");
                 }
+
+                EnforceTimerPenalty();
 
                 if (stageHUD != null)
                 {
@@ -847,6 +856,20 @@ namespace Fp2Trainer
             {
                 Log("Trainer Error During Update: " + e.Message + "(" + e.InnerException?.Message + ") @@" +
                     e.StackTrace);
+            }
+
+            if (fpStage != null)
+            {
+                FPStage.showColliders = ShowCollidersLastSetting.Value;
+                EnforceTenMinuteTimerPenalty();
+            }
+        }
+
+        private void EnforceTenMinuteTimerPenalty()
+        {
+            if (fpStage.minutes < 10)
+            {
+                fpStage.minutes += 10;
             }
         }
 
@@ -1082,10 +1105,12 @@ namespace Fp2Trainer
                                                   "Set Warp Point: {2}\n" +
                                                   "Teleport to Warp Point: {3}\n" +
                                                   "Toggle PlaneSwitcherVisualizers: {4}\n\n" +
+                                                  "Toggle Show All Debug Colliders: {6}\n\n" +
                                                   "Load ANY Stage Menu: {5}\n" +
                                                   "Confirm Stage Menu Choice: (Jump Button)\n",
                                         PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKSetWarpPoint.Value,
-                                        PHKGotoWarpPoint.Value, PHKTogglePlaneSwitcherVisualizers.Value, PHKGoToLevelSelectMenu.Value);
+                                        PHKGotoWarpPoint.Value, PHKTogglePlaneSwitcherVisualizers.Value, 
+                                        PHKGoToLevelSelectMenu.Value, PHKToggleShowColliders.Value);
                     break;
                 case InstructionPage.QUICK_RESTART:
                     debugDisplay += "**Quick Restart**\n" +
@@ -1450,6 +1475,11 @@ namespace Fp2Trainer
                 ShowPlaneSwitcherVisualizersLastSetting.Value = planeSwitchVisualizersVisible;
                 Log(String.Format("Toggle PlaneSwitcher Visualizers: {0} -> {1}", !planeSwitchVisualizersVisible, planeSwitchVisualizersVisible));
             }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleShowColliders))
+            {
+                ToggleShowColliders();
+            }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGetOutGetOutGetOut))
             {
@@ -1493,6 +1523,13 @@ namespace Fp2Trainer
             */
 
             HandleNoClip();
+        }
+
+        public static void ToggleShowColliders()
+        {
+            ShowCollidersLastSetting.Value = !ShowCollidersLastSetting.Value;
+            Log(String.Format("Toggle Show Debug Colliders: {0} -> {1}", !ShowCollidersLastSetting.Value,
+                ShowCollidersLastSetting.Value));
         }
 
         private void ToggleShowInstructions()
@@ -2521,6 +2558,17 @@ namespace Fp2Trainer
 	        var sr = File.CreateText(fileName);
 	        sr.WriteLine(fppVars);
 	        sr.Close();
+        }
+
+        public void EnforceTimerPenalty()
+        {
+            if (fpStage != null)
+            {
+                if (fpStage.tim)
+                {
+                    
+                }
+            }
         }
     }
 }
