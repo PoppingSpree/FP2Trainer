@@ -300,7 +300,7 @@ namespace Fp2Trainer
             
             MultiCharStartLastSetting = fp2Trainer.CreateEntry("MultiCharStartLastSetting", false);
             ShowPlaneSwitcherVisualizersLastSetting = fp2Trainer.CreateEntry("ShowPlaneSwitcherVisualizersLastSetting", false);
-            ShowCollidersLastSetting = fp2Trainer.CreateEntry("ShowPlaneSwitcherVisualizersLastSetting", true);
+            ShowCollidersLastSetting = fp2Trainer.CreateEntry("ShowCollidersLastSetting", true);
             PreferredAllyControlTypeLastSetting = fp2Trainer.CreateEntry("PreferredAllyControlTypeLastSetting", 
                 FP2TrainerAllyControls.AllyControlTypeName(AllyControlType.SINGLE_PLAYER));
             ShowInstructionsOnStart = fp2Trainer.CreateEntry("ShowInstructionsOnStart", true);
