@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -132,6 +133,8 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> EnableNetworking;
         public static MelonPreferences_Entry<bool> SaveGhostFiles;
         public static MelonPreferences_Entry<int> MultiCharStartNumChars;
+        
+        public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFile;
 
         public static bool hotkeysLoaded = false;
 
@@ -250,7 +253,7 @@ namespace Fp2Trainer
             InitPrefs();
 
             Log("Testing the ghost loader: \n");
-            Log( FP2TrainerInputQueue.LoadQueueToFileMostRecent().ToString() + "\n");
+            Log( FP2TrainerInputQueue.LoadQueueFromFileMostRecent().ToString() + "\n");
             Log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
             loadedAssetBundles = new List<AssetBundle>();
@@ -313,6 +316,7 @@ namespace Fp2Trainer
             EnableNetworking = fp2Trainer.CreateEntry("EnableNetworking", false);
             SaveGhostFiles = fp2Trainer.CreateEntry("SaveGhostFiles", false);
             MultiCharStartNumChars = fp2Trainer.CreateEntry("MultiCharStartNumChars", 2);
+            DEBUG_LoadSpecificGhostFile = fp2Trainer.CreateEntry("DEBUG_LoadSpecificGhostFile", "");
 
             InitPrefsCustomHotkeys();
         }
@@ -1600,6 +1604,13 @@ namespace Fp2Trainer
             
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwapBetweenSpawnedChars))
             {
+                Log("Attempting to dump character info.");
+                foreach (var fpp in fpplayers)
+                {
+                    DumpAllPlayerVarsAndComponents(fpp);
+                }//DELETEME
+                Log("Dumped character info.");
+                
                 FPPlayer2p.SwapBetweenActiveCharacters();
             }
             
@@ -2576,6 +2587,35 @@ namespace Fp2Trainer
 	        var sr = File.CreateText(fileName);
 	        sr.WriteLine(fppVars);
 	        sr.Close();
+        }
+        
+        public static void DumpAllPlayerVarsAndComponents(FPPlayer fpp)
+        {
+            var fppVars = "";
+            var components = fpp.gameObject.GetComponents<Component>();
+
+            fppVars += $"{fpp.name} - {fpp.GetInstanceID()}\n";
+            foreach (var component in components)
+            {
+                fppVars += $"-----({component.name})-----\n";
+                var fields = component.GetType().GetFields(BindingFlags.NonPublic | 
+                                                           BindingFlags.Instance);
+                foreach (var field in fields)
+                {
+                    fppVars += $"{field.Name} = {field.GetValue(component)}\n";
+                }
+                fppVars += "\n";
+            }
+            var fileName = "fppVarsAndComponents.txt";
+            if (File.Exists(fileName))
+            {
+                Debug.Log(fileName + " already exists.");
+                return;
+            }
+
+            var sr = File.AppendText(fileName);
+            sr.WriteLine(fppVars);
+            sr.Close();
         }
     }
 }

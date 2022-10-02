@@ -1,7 +1,5 @@
 LAST LEFT OFF ON: 
-> NEed to write code to parse .ghost back to a queue. 
-> Need to add play ID and level to header.
-> Repurpose the "has saved" flag to only add the header once?
+> dump vars and components on all players to file for comparing.
 
 > Want to add splitscreen
 > Want to add tidy menu

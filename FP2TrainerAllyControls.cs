@@ -20,6 +20,7 @@ namespace Fp2Trainer
         public static float targetObjHunterMinAttackDistanceHorizontal = 64f;
 
         public static bool showAllyControlDebugs = false;
+        public static bool needToLoadInputs = false;
 
         public static void LogDebugOnly(string str)
         {
@@ -68,6 +69,32 @@ namespace Fp2Trainer
 	        else
 	        {
 		        ipq = RecordInput(fpp);
+		        inputQueueForPlayers.Add(fpp.GetInstanceID(), ipq);
+	        }
+
+	        return ipq;
+        }
+
+        public static FP2TrainerInputQueue LoadFileInputQueueForPlayer(FPPlayer fpp)
+        {
+	        FP2TrainerInputQueue ipq;
+	        if (String.IsNullOrEmpty(Fp2Trainer.DEBUG_LoadSpecificGhostFile.Value))
+	        {
+		        ipq = FP2TrainerInputQueue.LoadQueueFromFileMostRecent();
+	        }
+	        else
+	        {
+		        ipq = FP2TrainerInputQueue.LoadQueueFromFile(Fp2Trainer.DEBUG_LoadSpecificGhostFile.Value);
+	        }
+	        
+	        if (inputQueueForPlayers.ContainsKey(fpp.GetInstanceID()))
+	        {
+		        // Overwrite if present.
+		        inputQueueForPlayers[fpp.GetInstanceID()] = ipq;
+	        }
+	        else
+	        {
+		        // If it isn't, we need to Add the entry.
 		        inputQueueForPlayers.Add(fpp.GetInstanceID(), ipq);
 	        }
 
@@ -151,7 +178,7 @@ namespace Fp2Trainer
 
         public static void HandleAllyControlsFollow(this FPPlayer fpp)
         {
-	        
+	        needToLoadInputs = false;
             GetUpdatedPlayerList();
 
             
@@ -178,7 +205,7 @@ namespace Fp2Trainer
                 
                 try
                 {
-	                AddTime(GetInputQueue(fpp), Time.deltaTime);
+	                AddTime(GetInputQueue(fpp), FPStage.deltaTime);
 	                //RecordInput(fpp);
 	                MapPlayerPressesFromPreviousInputs(fpp);
                 }
@@ -200,6 +227,7 @@ namespace Fp2Trainer
         public static void HandleAllyControlsHunter(this FPPlayer fpp)
         {
 	        bool isTargetingAlly = false;
+	        needToLoadInputs = false;
 	        GetUpdatedPlayerList();
 	        
 	        if (fpp != leadPlayer)
@@ -295,7 +323,7 @@ namespace Fp2Trainer
 			        }
 		        }
 		        
-		        AddTime(GetInputQueue(fpp), Time.deltaTime);
+		        AddTime(GetInputQueue(fpp), FPStage.deltaTime);
 		        //RecordInput(fpp);
 		        MapPlayerPressesFromPreviousInputs(fpp);
 	        }
@@ -303,6 +331,54 @@ namespace Fp2Trainer
 	        {
 		        LogDebugOnly("A character is attempting to follow itself as lead. Control types may be misassigned.");
 	        }
+        }
+        
+        public static void HandleAllyControlsGhost(this FPPlayer fpp)
+        {
+	        
+	        GetUpdatedPlayerList();
+
+	        if (needToLoadInputs)
+	        {
+		        LoadFileInputQueueForPlayer(fpp);
+		        Fp2Trainer.Log("Need to load inputs from file. Grabbing most recent.");
+		        needToLoadInputs = false;
+	        }
+
+	        var ipq = GetInputQueue(fpp);
+	        if (ipq.charID == (int)fpp.characterID)
+	        {
+	        }
+	        else
+	        {
+		        Fp2Trainer.Log($"Ghost is expecting characterID {ipq.charID.ToString()}, " +
+		                       $"but is controlling a character of charID {((int)fpp.characterID).ToString()}");
+	        }
+
+	        if (ipq.stageName.Equals(FPStage.currentStage.stageName))
+	        {
+	        }
+	        else
+	        {
+		        Fp2Trainer.Log($"Ghost is expecting stage {ipq.stageName}, " +
+		                       $"but the current stage appears to be {FPStage.currentStage.stageName}");
+	        }
+
+	        var tsi = ipq.GetClosestToTimestamp(ipq.GetTimeElapsed(), 0);
+	        tsi.MapInputsToFPPlayer(fpp);
+	        
+	        Fp2Trainer.Log($"Debug: {tsi.ToString()}");
+	        
+            
+	        if (fpp != leadPlayer)
+	        {
+	            
+	        }
+	        else
+	        {
+		        LogDebugOnly("Ghost player set as leader. Intentional?");
+	        }
+
         }
         
         public static void HandleAllyControlsNetplay(this FPPlayer fpp)
@@ -356,7 +432,7 @@ namespace Fp2Trainer
 	        
 	        try
 	        {
-		        AddTime(GetInputQueue(fpp), Time.deltaTime);
+		        AddTime(GetInputQueue(fpp), FPStage.deltaTime);
 		        //GetInputQueue(fpp).SetMaxLength(fiveMinutesAsFrames);
 		        RecordInput(fpp);
 		        MapPlayerPressesFromPreviousInputs(fpp);
@@ -670,7 +746,16 @@ namespace Fp2Trainer
             {
                 preferredAllyControlType = AllyControlType.SINGLE_PLAYER;
             }
-            
+
+            if (preferredAllyControlType == AllyControlType.NPC_GHOST)
+            {
+	            needToLoadInputs = true;
+            }
+            else
+            {
+	            needToLoadInputs = false;
+            }
+
             string allyControlTypeName = AllyControlTypeName(preferredAllyControlType);
             Fp2Trainer.PreferredAllyControlTypeLastSetting.Value = allyControlTypeName;
             Fp2Trainer.Log("Preferred Ally Control Type Set To: " + allyControlTypeName);
@@ -696,6 +781,10 @@ namespace Fp2Trainer
 		        case AllyControlType.NPC_HUNTER:
 			        result = fpp.HandleAllyControlsHunter;
 			        actually = "Hunter";
+			        break;
+		        case AllyControlType.NPC_GHOST:
+			        result = fpp.HandleAllyControlsGhost;
+			        actually = "Ghost";
 			        break;
 		        case AllyControlType.NETWORK_MULTIPLAYER:
 			        if (Fp2Trainer.EnableNetworking.Value)

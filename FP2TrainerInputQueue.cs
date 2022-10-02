@@ -34,6 +34,9 @@ namespace Fp2Trainer
         protected int maxLength = 30;
         protected int maxPurgeListLength = 150;
         protected int countSteps = 0;
+        public int charID = 0;
+        public string stageName = "";
+        public string userName = "";
         protected float elapsedTime;
         
         protected bool shouldSkipAddingHeader = false;
@@ -60,6 +63,11 @@ namespace Fp2Trainer
         public void AddTime(float amountOfTime)
         {
             elapsedTime += amountOfTime;
+        }
+        
+        public float GetTimeElapsed()
+        {
+            return elapsedTime;
         }
         
         public void SetMaxLength(int newMaxLength)
@@ -268,6 +276,12 @@ namespace Fp2Trainer
                     fileName = $"{fpp.name}-{fpp.GetInstanceID().ToString()}-{fileName}";
                 }
 
+                if (FPStage.currentStage != null)
+                {
+                    fileName = Path.Combine($"{FPStage.currentStage.stageName}\\", fileName);
+                    System.IO.Directory.CreateDirectory($"ghosts\\{FPStage.currentStage.stageName}\\");
+                }
+                
                 fileName = Path.Combine("ghosts\\", fileName);
                 Fp2Trainer.Log($"Finna write {fileName}");
 
@@ -289,32 +303,32 @@ namespace Fp2Trainer
             }
         }
         
-        public static FP2TrainerInputQueue LoadQueueToFileMostRecent()
+        public static FP2TrainerInputQueue LoadQueueFromFileMostRecent()
         {
             var result = new FP2TrainerInputQueue();
             result.maxLength = 1_000_000; //Roughly 4 hours. Probably needs more memory than a PC would have.
-            
-            string ghostLevel = "";
-            int ghostCharacter = -1;
-            string ghostScreenName = "Speedrunner";
-            
+
             if (Fp2Trainer.SaveGhostFiles.Value)
             {
                 string fileName = "";
+
+                if (FPStage.currentStage != null)
+                {
+                    fileName = Path.Combine($"{FPStage.currentStage.stageName}\\", fileName);
+                }
                 
                 fileName = Path.Combine("ghosts\\", fileName);
 
-                
+
                 try
                 {
-                    var pathApp = Application.dataPath;
-                    var pathMod = Path.Combine(Directory.GetParent(pathApp).FullName, "Mods");
-                    var pathModAssetBundles = Path.Combine(pathMod, "AssetBundles");
 
-
-                    var directory = new DirectoryInfo("Ghosts\\");
+                    var directory = new DirectoryInfo(fileName);
                     var ghostFilePaths = directory.GetFiles("*.ghost");
                     var latestGhostFile = ghostFilePaths.OrderByDescending(f => f.LastWriteTime).First();
+
+                    int fileCharID = -1;
+                    string fileStageName = String.Empty;
                     
                     string[] lines = System.IO.File.ReadAllLines(latestGhostFile.FullName);
 
@@ -322,36 +336,32 @@ namespace Fp2Trainer
 
                     foreach (var line in lines)
                     {
+                        // Level and Character data
+                        if (line.Contains("charID"))
+                        {
+                            result.charID = int.Parse(line.Split('|')[1]);
+                        }
+                        
+                        if (line.Contains("stageName"))
+                        {
+                            result.stageName = line.Split('|')[1];
+                        }
+                        
+                        if (line.Contains("userName"))
+                        {
+                            result.userName = line.Split('|')[1];
+                        }
+
+                        // Input Data
                         if (rxInputQueueLine.IsMatch(line))
                         {
                             var segments = line.Split('|');
-                            result.Add(new TimestampedInputs(
+                            var tsi = new TimestampedInputs(
                                 Convert.ToInt32(segments[0]),
                                 Convert.ToSingle(segments[1]),
-                                    Convert.ToInt16(segments[2], 2)));
+                                Convert.ToInt16(segments[2], 2));
+                            result.Add(tsi);
                         }
-
-                        /*
-                        foreach (var gfp in ghostFilePaths)
-                        {
-                            Fp2Trainer.Log(gfp);
-                            if (gfp.Contains("."))
-                            {
-                                Fp2Trainer.Log("Skipping this file, as it appears to have a " +
-                                    "file extension (.whatever) at the end, " +
-                                    "and is probably not an asset bundle.");
-                                continue;
-                            }
-                            */
-
-                        /*
-                        var currentAB = AssetBundle.LoadFromFile(gfp);
-
-                        if (currentAB == null)
-                        {
-                            Fp2Trainer.Log("Failed to load AssetBundle. Bundle may already be loaded, or the file may be corrupt.");
-                            continue;
-                        }*/
                     }
                 }
                 catch (NullReferenceException e)
@@ -365,10 +375,73 @@ namespace Fp2Trainer
             return result;
         }
         
+        public static FP2TrainerInputQueue LoadQueueFromFile(string filename)
+        {
+            var result = new FP2TrainerInputQueue();
+            try
+            {
+            
+                result.maxLength = 1_000_000; //Roughly 4 hours. Probably needs more memory than a PC would have.
+                
+                string ghostLevel = "";
+                int ghostCharacter = -1;
+                string ghostScreenName = "Speedrunner";
+                
+                if (Fp2Trainer.SaveGhostFiles.Value)
+                {
+                    try
+                    {
+                        string[] lines = System.IO.File.ReadAllLines(filename);
+
+                        Regex rxInputQueueLine = new Regex(@"^\d+\|[\d\.]+\|\d+");
+
+                        foreach (var line in lines)
+                        {
+                            // Level and Character data
+                            if (line.Contains("charID"))
+                            {
+                                result.charID = int.Parse(line.Split('|')[1]);
+                            }
+                        
+                            if (line.Contains("stageName"))
+                            {
+                                result.stageName = line.Split('|')[1];
+                            }
+                            
+                            // Input Data
+                            if (rxInputQueueLine.IsMatch(line))
+                            {
+                                var segments = line.Split('|');
+                                result.Add(new TimestampedInputs(
+                                    Convert.ToInt32(segments[0]),
+                                    Convert.ToSingle(segments[1]),
+                                        Convert.ToInt16(segments[2], 2)));
+                            }
+                        }
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        Fp2Trainer.Log("Null reference exception when trying to load ghost file. Canceling.");
+                        Fp2Trainer.Log(e.StackTrace);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Fp2Trainer.Log(e.ToString());
+                Fp2Trainer.Log(e.StackTrace);
+            }
+            
+            return result;
+        }
+        
         public void SavePurgeQueueToFile(FPPlayer fpp = null, 
             List<TimestampedInputs> timestampedInputsListToWrite = null, string additionalHeaderText = "")
         {
-            SaveQueueToFile(fpp, timestampedInputsPurgedForFileWrite, additionalHeaderText);
+            if (fpp == FP2TrainerAllyControls.leadPlayer)
+            {
+                SaveQueueToFile(fpp, timestampedInputsPurgedForFileWrite, additionalHeaderText);
+            }
         }
     }
 
@@ -430,7 +503,7 @@ namespace Fp2Trainer
             return (theFlags & flagCondition) == flagCondition;
         }
         
-        public void MapInputsToFPPlayer(FPPlayer fpp, BitwiseInputState bitwiseInputState)
+        public void MapInputsToFPPlayer(FPPlayer fpp)
         {
             fpp.input.up = HasFlag(bitwiseInputs, BitwiseInputState.UP);
             fpp.input.down = HasFlag(bitwiseInputs, BitwiseInputState.DOWN);
