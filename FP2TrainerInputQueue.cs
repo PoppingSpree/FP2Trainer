@@ -27,17 +27,23 @@ namespace Fp2Trainer
     {
         // 9 bools, an index, and a timestamp.
         protected List<TimestampedInputs> timestampedInputsList;
+        protected List<TimestampedInputs> timestampedInputsPurgedForFileWrite;
         //protected int maxLength = 30;
         protected int maxLength = 30;
+        protected int maxPurgeListLength = 150;
         protected int countSteps = 0;
         protected float elapsedTime;
         
         protected bool savedInputQueue = false;
+        protected bool usePurgeListForFileContentBuffer = true;
 
         public FP2TrainerInputQueue()
         {
             timestampedInputsList = new List<TimestampedInputs>();
             timestampedInputsList.Capacity = this.maxLength;
+            
+            timestampedInputsList = new List<TimestampedInputs>();
+            timestampedInputsList.Capacity = this.maxPurgeListLength;
             elapsedTime = 0f;
         }
         
@@ -63,7 +69,7 @@ namespace Fp2Trainer
         public TimestampedInputs Add(TimestampedInputs timestampedInputs)
         {
             TimestampedInputs purgedInputs = null;
-            if (timestampedInputsList.Count >= maxLength && maxLength > 0)
+            if (timestampedInputsList.Count >= maxLength && maxLength > 0 && !usePurgeListForFileContentBuffer)
             {
                 SaveQueueToFile(); // only wrote this once using the flag to check.
             }
@@ -73,7 +79,35 @@ namespace Fp2Trainer
                 purgedInputs = timestampedInputsList[0];
                 //Fp2Trainer.Log("Purging: \n" + purgedInputs.ToString());
                 timestampedInputsList.RemoveAt(0);
+                
+                if (usePurgeListForFileContentBuffer)
+                {
+                    if (timestampedInputsPurgedForFileWrite == null)
+                    {
+                        timestampedInputsPurgedForFileWrite = new List<TimestampedInputs>();
+                        // We need to basically do the same behavior of this function on this other set... oops.
+                    }
+                    timestampedInputsPurgedForFileWrite.Add(purgedInputs);
+                    if (timestampedInputsPurgedForFileWrite.Count >= maxPurgeListLength && maxPurgeListLength > 0)
+                    {
+                        // Write to file then drain.
+                        SaveQueueToFile(null, timestampedInputsPurgedForFileWrite, String.Empty);
+                        Fp2Trainer.Log("Purge is full, flushing.");
+                        timestampedInputsPurgedForFileWrite.Clear();
+                        Fp2Trainer.Log("Drained");
+                    }
+                }
             }
+            
+            /*
+            if (usePurgeListForFileContentBuffer)
+            {
+                if (timestampedInputsPurgedForFileWrite != null && timestampedInputsPurgedForFileWrite.Count >= maxPurgeListLength && maxPurgeListLength > 0 )
+                {
+                    SavePurgeQueueToFile();
+                }
+            }
+            */
 
             if (timestampedInputs.timestamp == 0f)
             {
@@ -171,40 +205,97 @@ namespace Fp2Trainer
             return str;
         }
 
-        public void SaveQueueToFile(string additionalHeaderText = "")
+        public void SaveQueueToFile(FPPlayer fpp = null, 
+            List<TimestampedInputs> timestampedInputsListToWrite = null, string additionalHeaderText = "")
         {
-            if (Fp2Trainer.SaveGhostFiles.Value && !savedInputQueue)
+            Fp2Trainer.Log("1");
+            if (Fp2Trainer.SaveGhostFiles.Value)
             {
+                Fp2Trainer.Log("2");
                 savedInputQueue = true;
 
+                Fp2Trainer.Log("3");
+                if (timestampedInputsListToWrite == null)
+                {
+                    Fp2Trainer.Log("4");
+                    if (usePurgeListForFileContentBuffer)
+                    {
+                        timestampedInputsListToWrite = this.timestampedInputsPurgedForFileWrite;
+                    }
+                    else
+                    {
+                        timestampedInputsListToWrite = this.timestampedInputsList;
+                    }
+                }
+
+                Fp2Trainer.Log("5");
+                if (fpp == null && FPStage.currentStage != null)
+                {
+                    fpp = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+                }
+
+
+                Fp2Trainer.Log("6");
                 var allTimestampedInputs = "";
 
-                allTimestampedInputs += $"maxLength | {maxLength}\r\n";
-                allTimestampedInputs += $"countSteps | {countSteps}\r\n";
-                allTimestampedInputs += $"elapsedTime | {elapsedTime}\r\n";
+                allTimestampedInputs += $"maxLength|{maxLength}\r\n";
+                allTimestampedInputs += $"countSteps|{countSteps}\r\n";
+                allTimestampedInputs += $"elapsedTime|{elapsedTime}\r\n";
                 
                 allTimestampedInputs += additionalHeaderText;
                 
-                foreach (var tsi in timestampedInputsList)
+                Fp2Trainer.Log("7");
+                foreach (var tsi in timestampedInputsListToWrite)
                 {
+                    Fp2Trainer.Log("8");
                     allTimestampedInputs += tsi.ToString() + "\r\n";
                 }
 
-                var fileName = "LastInputRecords" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".ghost";
-                if (File.Exists(fileName))
+                Fp2Trainer.Log("9");
+                var fileName = "Inputs" + string.Format("{0:yyyy-MM-dd}", DateTime.Now) + ".ghost"; // Need to make this so that once a file starts writing it appends to the same file.
+                if (fpp!= null)
                 {
-                    Debug.Log(fileName + " already exists... Overwriting.");
-                    //return;
+                    Fp2Trainer.Log("10");
+                    if (FPStage.currentStage != null)
+                    {
+                        Fp2Trainer.Log("11");
+                        fileName = $"{FPStage.currentStage.stageName}-{fileName}";
+                    }
+                    
+                    Fp2Trainer.Log("12");
+                    fileName = $"{fpp.name}-{fpp.GetInstanceID().ToString()}-{fileName}";
                 }
 
-                var sr = File.CreateText(fileName);
-                sr.WriteLine(allTimestampedInputs);
-                sr.Close();
+                Fp2Trainer.Log("13");
+                fileName = Path.Combine("ghosts\\", fileName);
+                Fp2Trainer.Log($"Finna write {fileName}");
+
+                Fp2Trainer.Log("14");
+                
+                if (File.Exists(fileName))
+                {
+                    Fp2Trainer.Log(fileName + " already exists... Appending.");
+                    //return;
+                }
+                
+                Fp2Trainer.Log("15");
+
+                var sr = File.AppendText(fileName);Fp2Trainer.Log("16");
+                sr.WriteLine(allTimestampedInputs);Fp2Trainer.Log("17");
+                sr.Close();Fp2Trainer.Log("18");
+
+                Fp2Trainer.Log("File written and closed.");
             }
             else
             {
                 //MelonLogger.Msg("Warped already...");
             }
+        }
+        
+        public void SavePurgeQueueToFile(FPPlayer fpp = null, 
+            List<TimestampedInputs> timestampedInputsListToWrite = null, string additionalHeaderText = "")
+        {
+            SaveQueueToFile(fpp, timestampedInputsPurgedForFileWrite, additionalHeaderText);
         }
     }
 
@@ -274,7 +365,7 @@ namespace Fp2Trainer
 
         override public string ToString()
         {
-            return String.Format("{0} | {1} | {2,3} | {3:G}\n", numStep, timestamp, bitwiseInputs, (BitwiseInputState)bitwiseInputs);
+            return String.Format("{0}|{1}|{2}\n", numStep, timestamp, Convert.ToString((int)bitwiseInputs, 2).PadLeft(8, '0'));
         }
     }
 }

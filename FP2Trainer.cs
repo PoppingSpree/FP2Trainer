@@ -239,6 +239,7 @@ namespace Fp2Trainer
         public static bool waitingForNextFrameForSpoilerGimmick = false;
 
         public FPStage fpStage;
+        public FP2TrainerInputQueue p1inputQueue;
 
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
@@ -471,7 +472,7 @@ namespace Fp2Trainer
             }
             else
             {
-                FP2TrainerAllyControls.inputQueueForPlayers = new Dictionary<string, FP2TrainerInputQueue>();
+                FP2TrainerAllyControls.inputQueueForPlayers = new Dictionary<int, FP2TrainerInputQueue>();
             }
         }
 
@@ -860,6 +861,17 @@ namespace Fp2Trainer
             {
                 FPStage.showColliders = ShowCollidersLastSetting.Value;
                 EnforceTenMinuteTimerPenalty();
+            }
+
+            RecordPlayer1Input();
+        }
+
+        private void RecordPlayer1Input()
+        {
+            if (fpplayer != null)
+            {
+                var ipq = FP2TrainerAllyControls.RecordInput(fpplayer);
+                FP2TrainerAllyControls.inputQueueForPlayers.Add(fpplayer.GetInstanceID(), ipq);
             }
         }
 

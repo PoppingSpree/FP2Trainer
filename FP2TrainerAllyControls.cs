@@ -11,7 +11,7 @@ namespace Fp2Trainer
     {
         public static FPPlayer leadPlayer;
         public static List<FPPlayer> allPlayers;
-        public static Dictionary<string, FP2TrainerInputQueue> inputQueueForPlayers = new Dictionary<string, FP2TrainerInputQueue>();
+        public static Dictionary<int, FP2TrainerInputQueue> inputQueueForPlayers = new Dictionary<int, FP2TrainerInputQueue>();
         public static AllyControlType preferredAllyControlType = AllyControlType.SINGLE_PLAYER;
 
         public static float playerFollowMinimumDistanceHorizontal = 32f;
@@ -35,14 +35,14 @@ namespace Fp2Trainer
         {
 	        
 	        FP2TrainerInputQueue ipq;
-	        if (!inputQueueForPlayers.ContainsKey(fpp.name))
+	        if (!inputQueueForPlayers.ContainsKey(fpp.GetInstanceID()))
 	        {
 		        
-		        inputQueueForPlayers.Add(fpp.name, new FP2TrainerInputQueue());
+		        inputQueueForPlayers.Add(fpp.GetInstanceID(), new FP2TrainerInputQueue());
 	        }
 
 	        
-	        ipq = inputQueueForPlayers[fpp.name];
+	        ipq = inputQueueForPlayers[fpp.GetInstanceID()];
 	        
 	        
 	        ipq.Add(new TimestampedInputs(fpp.input.up, fpp.input.down, fpp.input.left, fpp.input.right,
@@ -60,15 +60,15 @@ namespace Fp2Trainer
         public static FP2TrainerInputQueue GetInputQueue(FPPlayer fpp)
         {
 	        FP2TrainerInputQueue ipq;
-	        if (inputQueueForPlayers.ContainsKey(fpp.name))
+	        if (inputQueueForPlayers.ContainsKey(fpp.GetInstanceID()))
 	        {
 		        
-		        ipq = inputQueueForPlayers[fpp.name];
+		        ipq = inputQueueForPlayers[fpp.GetInstanceID()];
 	        }
 	        else
 	        {
 		        ipq = RecordInput(fpp);
-		        inputQueueForPlayers.Add(fpp.name, ipq);
+		        inputQueueForPlayers.Add(fpp.GetInstanceID(), ipq);
 	        }
 
 	        return ipq;
@@ -89,10 +89,10 @@ namespace Fp2Trainer
 
         public static void MapPlayerPressesFromPreviousInputs(FPPlayer fpp)
         {
-	        if (inputQueueForPlayers.ContainsKey(fpp.name))
+	        if (inputQueueForPlayers.ContainsKey(fpp.GetInstanceID()))
 	        {
-		        var prevInputs = inputQueueForPlayers[fpp.name].GetPrevious();
-		        var latestInputs = inputQueueForPlayers[fpp.name].GetLatest();
+		        var prevInputs = inputQueueForPlayers[fpp.GetInstanceID()].GetPrevious();
+		        var latestInputs = inputQueueForPlayers[fpp.GetInstanceID()].GetLatest();
 
 		        SetBoolIfFlagJustSet(out fpp.input.upPress,
 			        prevInputs.bitwiseInputs, 
@@ -179,7 +179,7 @@ namespace Fp2Trainer
                 try
                 {
 	                AddTime(GetInputQueue(fpp), Time.deltaTime);
-	                RecordInput(fpp);
+	                //RecordInput(fpp);
 	                MapPlayerPressesFromPreviousInputs(fpp);
                 }
                 catch (Exception e)
@@ -199,6 +199,7 @@ namespace Fp2Trainer
         
         public static void HandleAllyControlsHunter(this FPPlayer fpp)
         {
+	        bool isTargetingAlly = false;
 	        GetUpdatedPlayerList();
 	        
 	        if (fpp != leadPlayer)
@@ -208,6 +209,7 @@ namespace Fp2Trainer
 		        {
 			        //FPStage.FindNearestPlayer(fpp, 360f); //Doesn't work, it will always return itself.
 			        targetObj = leadPlayer;
+			        isTargetingAlly = true;
 		        }
 		        if (targetObj == null)
 		        {
@@ -219,15 +221,15 @@ namespace Fp2Trainer
 			        LogDebugOnly("A character is attempting to follow itself. Probably could not find a valid target.");
 		        }
 
-		        LogDebugOnly(String.Format("Hunter {2} Target set to {0} - ({1})", 
-			        targetObj.name, targetObj.position, fpp.name));
+		        LogDebugOnly(String.Format("Hunter {2} Target set to {0} - ({1}[{3}])", 
+			        targetObj.name, targetObj.position, fpp.name, fpp.GetInstanceID()));
 
 		        if (targetObj != null)
 		        {
 			        FollowTargetObjectHorizontal(fpp, targetObj);
 			        FollowTargetObjectVertical(fpp, targetObj);
 			        float distToEnemy = Vector2.Distance(fpp.position, targetObj.position); 
-			        if ( distToEnemy <= targetObjHunterMinAttackDistanceHorizontal)
+			        if (!isTargetingAlly && distToEnemy <= targetObjHunterMinAttackDistanceHorizontal)
 			        {
 				        LogDebugOnly(String.Format("Attempting to attack. Dist to Target: {0}.", distToEnemy));
 				        if (fpp.characterID == FPCharacterID.MILLA)
@@ -294,7 +296,7 @@ namespace Fp2Trainer
 		        }
 		        
 		        AddTime(GetInputQueue(fpp), Time.deltaTime);
-		        RecordInput(fpp);
+		        //RecordInput(fpp);
 		        MapPlayerPressesFromPreviousInputs(fpp);
 	        }
 	        else if (fpp == leadPlayer)
@@ -363,7 +365,7 @@ namespace Fp2Trainer
 		        {
 			        string additionalHeader = $"fpp.characterID | {fpp.characterID}\r\n" +
 			                                  $"FPStage.currentStage.stageName | {FPStage.currentStage.stageName}\r\n";
-			        GetInputQueue(fpp).SaveQueueToFile();
+			        GetInputQueue(fpp).SaveQueueToFile(fpp, null, additionalHeader);
 		        }
 	        }
 	        catch (Exception e)
