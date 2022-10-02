@@ -768,8 +768,6 @@ namespace Fp2Trainer
                     if (player != null) MelonLogger.Msg("Trainer found a Player Object: ");
                 }
 
-                EnforceTimerPenalty();
-
                 if (stageHUD != null)
                 {
                 }
@@ -2558,17 +2556,6 @@ namespace Fp2Trainer
 	        var sr = File.CreateText(fileName);
 	        sr.WriteLine(fppVars);
 	        sr.Close();
-        }
-
-        public void EnforceTimerPenalty()
-        {
-            if (fpStage != null)
-            {
-                if (fpStage.tim)
-                {
-                    
-                }
-            }
         }
     }
 }
