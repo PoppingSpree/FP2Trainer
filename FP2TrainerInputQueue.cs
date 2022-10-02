@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Fp2Trainer
@@ -34,7 +36,7 @@ namespace Fp2Trainer
         protected int countSteps = 0;
         protected float elapsedTime;
         
-        protected bool savedInputQueue = false;
+        protected bool shouldSkipAddingHeader = false;
         protected bool usePurgeListForFileContentBuffer = true;
 
         public FP2TrainerInputQueue()
@@ -71,7 +73,7 @@ namespace Fp2Trainer
             TimestampedInputs purgedInputs = null;
             if (timestampedInputsList.Count >= maxLength && maxLength > 0 && !usePurgeListForFileContentBuffer)
             {
-                SaveQueueToFile(); // only wrote this once using the flag to check.
+                SaveQueueToFile();
             }
 
             while (timestampedInputsList.Count >= maxLength && maxLength > 0)
@@ -208,16 +210,11 @@ namespace Fp2Trainer
         public void SaveQueueToFile(FPPlayer fpp = null, 
             List<TimestampedInputs> timestampedInputsListToWrite = null, string additionalHeaderText = "")
         {
-            Fp2Trainer.Log("1");
             if (Fp2Trainer.SaveGhostFiles.Value)
             {
-                Fp2Trainer.Log("2");
-                savedInputQueue = true;
 
-                Fp2Trainer.Log("3");
                 if (timestampedInputsListToWrite == null)
                 {
-                    Fp2Trainer.Log("4");
                     if (usePurgeListForFileContentBuffer)
                     {
                         timestampedInputsListToWrite = this.timestampedInputsPurgedForFileWrite;
@@ -228,61 +225,61 @@ namespace Fp2Trainer
                     }
                 }
 
-                Fp2Trainer.Log("5");
                 if (fpp == null && FPStage.currentStage != null)
                 {
                     fpp = FPStage.currentStage.GetPlayerInstance_FPPlayer();
                 }
 
 
-                Fp2Trainer.Log("6");
                 var allTimestampedInputs = "";
 
-                allTimestampedInputs += $"maxLength|{maxLength}\r\n";
-                allTimestampedInputs += $"countSteps|{countSteps}\r\n";
-                allTimestampedInputs += $"elapsedTime|{elapsedTime}\r\n";
-                
-                allTimestampedInputs += additionalHeaderText;
-                
-                Fp2Trainer.Log("7");
-                foreach (var tsi in timestampedInputsListToWrite)
+                if (!shouldSkipAddingHeader)
                 {
-                    Fp2Trainer.Log("8");
-                    allTimestampedInputs += tsi.ToString() + "\r\n";
+                    shouldSkipAddingHeader = true;
+                    allTimestampedInputs += $"maxLength|{maxLength}\n";
+                    allTimestampedInputs += $"countSteps|{countSteps}\n";
+                    allTimestampedInputs += $"elapsedTime|{elapsedTime}\n";
+                    
+                    if (fpp!= null)
+                    {
+                        if (FPStage.currentStage != null)
+                        {
+                            allTimestampedInputs += $"stageName|{FPStage.currentStage.stageName}\n";
+                            allTimestampedInputs += $"charID|{(int)fpp.characterID}\n";
+                        }
+                    }
+                
+                    allTimestampedInputs += additionalHeaderText;
                 }
 
-                Fp2Trainer.Log("9");
+                foreach (var tsi in timestampedInputsListToWrite)
+                {
+                    allTimestampedInputs += tsi.ToString() + "\n";
+                }
+
                 var fileName = "Inputs" + string.Format("{0:yyyy-MM-dd}", DateTime.Now) + ".ghost"; // Need to make this so that once a file starts writing it appends to the same file.
                 if (fpp!= null)
                 {
-                    Fp2Trainer.Log("10");
                     if (FPStage.currentStage != null)
                     {
-                        Fp2Trainer.Log("11");
                         fileName = $"{FPStage.currentStage.stageName}-{fileName}";
                     }
                     
-                    Fp2Trainer.Log("12");
                     fileName = $"{fpp.name}-{fpp.GetInstanceID().ToString()}-{fileName}";
                 }
 
-                Fp2Trainer.Log("13");
                 fileName = Path.Combine("ghosts\\", fileName);
                 Fp2Trainer.Log($"Finna write {fileName}");
 
-                Fp2Trainer.Log("14");
-                
                 if (File.Exists(fileName))
                 {
                     Fp2Trainer.Log(fileName + " already exists... Appending.");
                     //return;
                 }
-                
-                Fp2Trainer.Log("15");
 
-                var sr = File.AppendText(fileName);Fp2Trainer.Log("16");
-                sr.WriteLine(allTimestampedInputs);Fp2Trainer.Log("17");
-                sr.Close();Fp2Trainer.Log("18");
+                var sr = File.AppendText(fileName);
+                sr.WriteLine(allTimestampedInputs);
+                sr.Close();
 
                 Fp2Trainer.Log("File written and closed.");
             }
@@ -290,6 +287,82 @@ namespace Fp2Trainer
             {
                 //MelonLogger.Msg("Warped already...");
             }
+        }
+        
+        public static FP2TrainerInputQueue LoadQueueToFileMostRecent()
+        {
+            var result = new FP2TrainerInputQueue();
+            result.maxLength = 1_000_000; //Roughly 4 hours. Probably needs more memory than a PC would have.
+            
+            string ghostLevel = "";
+            int ghostCharacter = -1;
+            string ghostScreenName = "Speedrunner";
+            
+            if (Fp2Trainer.SaveGhostFiles.Value)
+            {
+                string fileName = "";
+                
+                fileName = Path.Combine("ghosts\\", fileName);
+
+                
+                try
+                {
+                    var pathApp = Application.dataPath;
+                    var pathMod = Path.Combine(Directory.GetParent(pathApp).FullName, "Mods");
+                    var pathModAssetBundles = Path.Combine(pathMod, "AssetBundles");
+
+
+                    var directory = new DirectoryInfo("Ghosts\\");
+                    var ghostFilePaths = directory.GetFiles("*.ghost");
+                    var latestGhostFile = ghostFilePaths.OrderByDescending(f => f.LastWriteTime).First();
+                    
+                    string[] lines = System.IO.File.ReadAllLines(latestGhostFile.FullName);
+
+                    Regex rxInputQueueLine = new Regex(@"^\d+\|[\d\.]+\|\d+");
+
+                    foreach (var line in lines)
+                    {
+                        if (rxInputQueueLine.IsMatch(line))
+                        {
+                            var segments = line.Split('|');
+                            result.Add(new TimestampedInputs(
+                                Convert.ToInt32(segments[0]),
+                                Convert.ToSingle(segments[1]),
+                                    Convert.ToInt16(segments[2], 2)));
+                        }
+
+                        /*
+                        foreach (var gfp in ghostFilePaths)
+                        {
+                            Fp2Trainer.Log(gfp);
+                            if (gfp.Contains("."))
+                            {
+                                Fp2Trainer.Log("Skipping this file, as it appears to have a " +
+                                    "file extension (.whatever) at the end, " +
+                                    "and is probably not an asset bundle.");
+                                continue;
+                            }
+                            */
+
+                        /*
+                        var currentAB = AssetBundle.LoadFromFile(gfp);
+
+                        if (currentAB == null)
+                        {
+                            Fp2Trainer.Log("Failed to load AssetBundle. Bundle may already be loaded, or the file may be corrupt.");
+                            continue;
+                        }*/
+                    }
+                }
+                catch (NullReferenceException e)
+                {
+                    Fp2Trainer.Log("Null reference exception when trying to load asset bundles for modding. Canceling.");
+                    Fp2Trainer.Log(e.StackTrace);
+                }
+                
+                //asdfasdfasfd
+            }
+            return result;
         }
         
         public void SavePurgeQueueToFile(FPPlayer fpp = null, 
@@ -310,6 +383,13 @@ namespace Fp2Trainer
             numStep = -1;
             timestamp = 0f;
             bitwiseInputs = BitwiseInputState.NONE;
+        }
+        
+        public TimestampedInputs(int numStep, float timestamp, short flags)
+        {
+            this.numStep = numStep;
+            this.timestamp = timestamp;
+            bitwiseInputs = (BitwiseInputState)flags;
         }
         
         public TimestampedInputs(bool u, bool d, bool l, bool r, 

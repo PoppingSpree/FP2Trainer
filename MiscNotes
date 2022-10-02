@@ -1,3 +1,19 @@
+LAST LEFT OFF ON: 
+> NEed to write code to parse .ghost back to a queue. 
+> Need to add play ID and level to header.
+> Repurpose the "has saved" flag to only add the header once?
+
+> Want to add splitscreen
+> Want to add tidy menu
+
+^\d+\|[\d\.]+\|\d+
+
+
+
+
+
+
+
 MonoBehaviors
 
 FPBaseObject: Every active FP game object is based on this. Player, Enemy, Boss, or otherwise. Because of this, if you can achieve everything you need with this type, you can downcast those other types and use this.

@@ -249,6 +249,10 @@ namespace Fp2Trainer
             MelonPreferences.Load();
             InitPrefs();
 
+            Log("Testing the ghost loader: \n");
+            Log( FP2TrainerInputQueue.LoadQueueToFileMostRecent().ToString() + "\n");
+            Log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
+
             loadedAssetBundles = new List<AssetBundle>();
 
             playerValuesToShow = new HashSet<string>();
@@ -868,8 +872,9 @@ namespace Fp2Trainer
 
         private void RecordPlayer1Input()
         {
-            if (fpplayer != null)
+            if (fpplayer != null && FP2TrainerAllyControls.inputQueueForPlayers != null)
             {
+                FP2TrainerAllyControls.GetInputQueue(fpplayer).AddTime(FPStage.deltaTime);
                 var ipq = FP2TrainerAllyControls.RecordInput(fpplayer);
                 FP2TrainerAllyControls.inputQueueForPlayers.Add(fpplayer.GetInstanceID(), ipq);
             }
