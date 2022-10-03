@@ -2672,5 +2672,10 @@ namespace Fp2Trainer
             sr.WriteLine(fppVars);
             sr.Close();
         }
+
+        public static Vector3 GetPositionRelativeToCamera(FPCamera cam, Vector3 pos)
+        {
+            return pos - cam.transform.position;
+        }
     }
 }

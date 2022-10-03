@@ -1,5 +1,8 @@
+using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using Object = UnityEngine.Object;
 
 namespace Fp2Trainer
 {
@@ -9,15 +12,8 @@ namespace Fp2Trainer
         public Dictionary<int, GameObject> goNametags;
         public Dictionary<int, TextMesh> tmNametags;
         private List<string> placeholderNames;
-        
-        [Header("Screen Boundaries")]
-        public bool top;
 
-        public bool left;
-
-        public bool right;
-
-        public bool bottom;
+        public Vector3 posRelativeToCam = Vector3.zero;
         
         public void Start()
         {
@@ -30,12 +26,18 @@ namespace Fp2Trainer
                 instance = this;
                 this.transform.parent = Fp2Trainer.goFP2Trainer.transform;
             }
+            Fp2Trainer.Log("banan");
+
+            goNametags = new Dictionary<int, GameObject>();
+            tmNametags = new Dictionary<int, TextMesh>();
 
             placeholderNames = new List<string>();
             placeholderNames.Add("Ann");
             placeholderNames.Add("Dazl");
             placeholderNames.Add("Sparks");
             placeholderNames.Add("Edna");
+            
+            Fp2Trainer.Log("banan2");
             
             if (Fp2Trainer.fpplayers != null)
             {
@@ -44,6 +46,7 @@ namespace Fp2Trainer
                     GameObject goNametag = InstantiateNewNametag(fpp);
                     goNametags.Add(fpp.GetInstanceID(), goNametag);
                     tmNametags.Add(fpp.GetInstanceID(), goNametag.GetComponent<TextMesh>());
+                    Fp2Trainer.Log("banan3");
                 }
             }
         }
@@ -67,29 +70,63 @@ namespace Fp2Trainer
 
                 var go = goNametags[fpp.GetInstanceID()];
                 var tm = tmNametags[fpp.GetInstanceID()];
-                go.transform.position = new Vector3(fpp.transform.position.x, fpp.transform.position.y + 32f, go.transform.position.z );
+                
+                try
+                {
+                    posRelativeToCam = Fp2Trainer.GetPositionRelativeToCamera(FPCamera.stageCamera, fpp.transform.position);
+                    Fp2Trainer.Log("apple6");
+                }
+                catch (Exception e)
+                {
+                    Fp2Trainer.Log(e.Message + e.StackTrace);
+                }
+                
+                //go.transform.position = new Vector3(fpp.transform.position.x, fpp.transform.position.y + 32f, go.transform.position.z );
+                
+                //go.transform.position = new Vector3(64, 64, go.transform.position.z );
+                go.transform.position = posRelativeToCam + new Vector3(0, 16, 0);
+                Fp2Trainer.Log($"gopos: {go.transform.position} | posrel: {posRelativeToCam}");
+                
+                /*
+                 *goFancyTextPosition.transform.parent = goStageHUD.transform;
+                    goFancyTextPosition.transform.localPosition = new Vector3(10, 20, 0);
+                 * 
+                 */
 
-                var guessedWidth = tm.text.Length * tm.characterSize;
-                var guessedHeight = tm.characterSize;
-                if (transform.position.x + (guessedWidth / 2) > FPCamera.stageCamera.right)
+                tm.text = Regex.Replace(tm.text, @"\(.+\)",
+                    $"({Mathf.Round(fpp.health)} / {Mathf.Round(fpp.healthMax)})");
+
+                try
                 {
-                    transform.position += new Vector3(FPCamera.stageCamera.right - (guessedWidth / 2f), 0, 0);
-                }
+                    var guessedWidth = tm.text.Length * tm.characterSize;
+                    var guessedHeight = tm.characterSize;
+                    if (transform.position.x + (guessedWidth / 2) > FPCamera.stageCamera.right)
+                    {
+                        transform.position += new Vector3(FPCamera.stageCamera.right - (guessedWidth / 2f), 0, 0);
+                    }
                 
-                if (transform.position.x - (guessedWidth / 2) < FPCamera.stageCamera.left)
-                {
-                    transform.position += new Vector3(FPCamera.stageCamera.left + (guessedWidth / 2f), 0, 0);
-                }
+                    if (transform.position.x - (guessedWidth / 2) < FPCamera.stageCamera.left)
+                    {
+                        transform.position += new Vector3(FPCamera.stageCamera.left + (guessedWidth / 2f), 0, 0);
+                    }
                 
-                if (transform.position.y + (guessedHeight / 2) > FPCamera.stageCamera.top)
-                {
-                    transform.position += new Vector3(0, FPCamera.stageCamera.top - (guessedHeight / 2f), 0);
-                }
+                    if (transform.position.y + (guessedHeight / 2) > FPCamera.stageCamera.top)
+                    {
+                        transform.position += new Vector3(0, FPCamera.stageCamera.top - (guessedHeight / 2f), 0);
+                    }
                 
-                if (transform.position.y - (guessedHeight / 2) < FPCamera.stageCamera.bottom)
-                {
-                    transform.position += new Vector3(0, FPCamera.stageCamera.bottom + (guessedHeight / 2f), 0);
+                    if (transform.position.y - (guessedHeight / 2) < FPCamera.stageCamera.bottom)
+                    {
+                        transform.position += new Vector3(0, FPCamera.stageCamera.bottom + (guessedHeight / 2f), 0);
+                    }
                 }
+
+                catch (Exception e)
+                {
+                    Fp2Trainer.Log(e.Message + e.StackTrace);
+                }
+
+                
             }
         }
 
@@ -135,14 +172,14 @@ namespace Fp2Trainer
                 tm.GetComponent<MeshRenderer>().materials[0] = Fp2Trainer.fpMenuMaterial;
                 tm.characterSize = 10;
                 tm.anchor = TextAnchor.LowerCenter;
-
                 tm.text = $"{fpp.name} ({Mathf.Round(fpp.health)} / {Mathf.Round(fpp.healthMax)})";
-                
+
                 // Stopgap measure just to make this look more interesting than it actually is:
                 if (goNametags != null)
                 {
                     int index = goNametags.Count % placeholderNames.Count;
-                    tm.text = placeholderNames[index];
+                    tm.text = $"{placeholderNames[index]} ({Mathf.Round(fpp.health)} / {Mathf.Round(fpp.healthMax)})";
+                    Fp2Trainer.Log($"index {index} - newName {tm.text}\n");
                 }
             }
 
