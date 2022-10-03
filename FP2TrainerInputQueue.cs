@@ -203,6 +203,24 @@ namespace Fp2Trainer
             return ti;
         }
 
+        public TimestampedInputs GetByIndexStep(int step)
+        {
+            TimestampedInputs ti = null;
+            
+            if (step >= timestampedInputsList.Count)
+            {
+                step = timestampedInputsList.Count - 1;
+            }
+            else if (step < 0)
+            {
+                step = 0;
+            }
+
+            ti = timestampedInputsList[step];
+
+            return ti;
+        }
+
         override public string ToString()
         {
             string str = "---{InputQueue}---";

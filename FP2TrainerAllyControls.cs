@@ -171,6 +171,62 @@ namespace Fp2Trainer
 			    */
 	        }
         }
+        
+        public static void MapPlayerPressesBasedOnGhostIndexes(FPPlayer fpp, int stepCurrent)
+        {
+	        if (inputQueueForPlayers.ContainsKey(fpp.GetInstanceID()))
+	        {
+		        var prevInputs = inputQueueForPlayers[fpp.GetInstanceID()].GetByIndexStep(stepCurrent);
+		        var latestInputs = inputQueueForPlayers[fpp.GetInstanceID()].GetByIndexStep(stepCurrent - 1);
+
+		        SetBoolIfFlagJustSet(out fpp.input.upPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.UP);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.downPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.DOWN);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.leftPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.LEFT);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.rightPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.RIGHT);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.jumpPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.JUMP);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.attackPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.ATTACK);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.specialPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.SPECIAL);
+		        
+		        SetBoolIfFlagJustSet(out fpp.input.guardPress,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.GUARD);
+		        
+		        /*
+		        SetBoolIfFlagJustSet(out fpp.input.pause,
+			        prevInputs.bitwiseInputs, 
+			        latestInputs.bitwiseInputs,
+			        BitwiseInputState.PAUSE);
+			    */
+	        }
+        }
 
         public static void GetUpdatedPlayerList()
         {
@@ -374,7 +430,7 @@ namespace Fp2Trainer
 
 	        var tsi = ipq.GetClosestToTimestamp(ipq.GetTimeElapsed(), 0);
 	        tsi.MapInputsToFPPlayer(fpp);
-	        MapPlayerPressesFromPreviousInputs(fpp);
+	        MapPlayerPressesBasedOnGhostIndexes(fpp, tsi.numStep);
 
 	        string funky = $"Debug: {tsi.ToFriendlyString()}";
 	        funky += $"ipq.GetTimeElapsed() => {ipq.GetTimeElapsed()}\n";

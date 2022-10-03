@@ -136,6 +136,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> SaveGhostFiles;
         public static MelonPreferences_Entry<int> MultiCharStartNumChars;
 
+        public static MelonPreferences_Entry<bool> LockP1ToGhostFiles;
         public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFile;
 
         public static bool hotkeysLoaded = false;
@@ -320,6 +321,7 @@ namespace Fp2Trainer
             ShowInputNamesInTerminal = fp2Trainer.CreateEntry("ShowInputNamesInTerminal", false);
             EnableNetworking = fp2Trainer.CreateEntry("EnableNetworking", false);
             SaveGhostFiles = fp2Trainer.CreateEntry("SaveGhostFiles", false);
+            LockP1ToGhostFiles = fp2Trainer.CreateEntry("LockP1ToGhostFiles", false);
             MultiCharStartNumChars = fp2Trainer.CreateEntry("MultiCharStartNumChars", 2);
             DEBUG_LoadSpecificGhostFile = fp2Trainer.CreateEntry("DEBUG_LoadSpecificGhostFile", "");
 
@@ -492,7 +494,8 @@ namespace Fp2Trainer
                 FP2TrainerAllyControls.inputQueueForPlayers = new Dictionary<int, FP2TrainerInputQueue>();
             }
 
-            skipRecording = false;
+            skipRecording = LockP1ToGhostFiles.Value;
+            FP2TrainerAllyControls.needToLoadInputs = LockP1ToGhostFiles.Value;
         }
 
         private static void CreateFP2TrainerGameObject()
@@ -889,6 +892,12 @@ namespace Fp2Trainer
                 if (!skipRecording)
                 {
                     RecordPlayer1Input();
+                }
+
+                if (LockP1ToGhostFiles.Value && fpplayer != null)
+                {
+                    //This is probably resource intensive. Maybe there's a better way to prevent this value from being overwritten.
+                    fpplayer.inputMethod = fpplayer.HandleAllyControlsGhost; 
                 }
             }
             catch (Exception e)
