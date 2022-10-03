@@ -525,5 +525,9 @@ namespace Fp2Trainer
         {
             return String.Format("{0}|{1}|{2}\n", numStep, timestamp, Convert.ToString((int)bitwiseInputs, 2).PadLeft(8, '0'));
         }
+        public string ToFriendlyString()
+        {
+            return String.Format("{0}|{1}|{2}\n", numStep, timestamp, bitwiseInputs);
+        }
     }
 }

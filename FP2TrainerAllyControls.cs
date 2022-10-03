@@ -376,7 +376,7 @@ namespace Fp2Trainer
 	        tsi.MapInputsToFPPlayer(fpp);
 	        MapPlayerPressesFromPreviousInputs(fpp);
 
-	        string funky = $"Debug: {tsi.ToString()}";
+	        string funky = $"Debug: {tsi.ToFriendlyString()}";
 	        funky += $"ipq.GetTimeElapsed() => {ipq.GetTimeElapsed()}\n";
 	        Fp2Trainer.Log(funky);
 	        Fp2Trainer.debugDisplay = funky + "\n" + Fp2Trainer.debugDisplay;
