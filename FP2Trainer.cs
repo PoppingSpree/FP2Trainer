@@ -89,6 +89,8 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKSwapBetweenSpawnedChars;
         public static MelonPreferences_Entry<string> PHKToggleMultiCharStart;
         public static MelonPreferences_Entry<string> PHKCyclePreferredAllyControlType;
+        
+        public static MelonPreferences_Entry<string> PHKStartInputPlayback;
 
         public static MelonPreferences_Entry<string> PHKGetOutGetOutGetOut;
 
@@ -114,7 +116,7 @@ namespace Fp2Trainer
 
         public static MelonPreferences_Entry<string> PHKReturnToCheckpoint;
         public static MelonPreferences_Entry<string> PHKRestartStage;
-        
+
         public static MelonPreferences_Entry<string> PHKTogglePlaneSwitcherVisualizers;
         public static MelonPreferences_Entry<string> PHKToggleShowColliders;
 
@@ -122,8 +124,8 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKToggleEnableNetworkPlayers;
 
         public static MelonPreferences_Entry<string> PHKRebindAllHotkeys;
-        
-        
+
+
         public static MelonPreferences_Entry<bool> MultiCharStartLastSetting;
         public static MelonPreferences_Entry<bool> ShowPlaneSwitcherVisualizersLastSetting;
         public static MelonPreferences_Entry<bool> ShowCollidersLastSetting;
@@ -133,7 +135,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<bool> EnableNetworking;
         public static MelonPreferences_Entry<bool> SaveGhostFiles;
         public static MelonPreferences_Entry<int> MultiCharStartNumChars;
-        
+
         public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFile;
 
         public static bool hotkeysLoaded = false;
@@ -169,7 +171,7 @@ namespace Fp2Trainer
         private InstructionPage currentInstructionPage = InstructionPage.BASICS;
         public static bool showInstructions = true;
 
-        private string debugDisplay = "Never Updated";
+        public static string debugDisplay = "Never Updated";
 
         public float dps;
         public List<float> dpsHits;
@@ -244,6 +246,8 @@ namespace Fp2Trainer
         public FPStage fpStage;
         public FP2TrainerInputQueue p1inputQueue;
 
+        public static bool skipRecording = false;
+
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
             fp2TrainerInstance = this;
@@ -253,7 +257,7 @@ namespace Fp2Trainer
             InitPrefs();
 
             Log("Testing the ghost loader: \n");
-            Log( FP2TrainerInputQueue.LoadQueueFromFileMostRecent().ToString() + "\n");
+            Log(FP2TrainerInputQueue.LoadQueueFromFileMostRecent().ToString() + "\n");
             Log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
             loadedAssetBundles = new List<AssetBundle>();
@@ -289,13 +293,13 @@ namespace Fp2Trainer
 
             multiplayerStart = MultiCharStartLastSetting.Value;
             planeSwitchVisualizersVisible = ShowPlaneSwitcherVisualizersLastSetting.Value;
-            FP2TrainerAllyControls.preferredAllyControlType = (AllyControlType)(Enum.Parse(typeof(AllyControlType), PreferredAllyControlTypeLastSetting.Value));
+            FP2TrainerAllyControls.preferredAllyControlType = (AllyControlType)(Enum.Parse(typeof(AllyControlType),
+                PreferredAllyControlTypeLastSetting.Value));
             showInstructions = ShowInstructionsOnStart.Value;
 
             Log("blep" + multiplayerStart);
             Log("blep" + planeSwitchVisualizersVisible);
             Log("blep" + FP2TrainerAllyControls.preferredAllyControlType);
-
         }
 
         private void InitPrefs()
@@ -305,11 +309,12 @@ namespace Fp2Trainer
             BootupLevel = fp2Trainer.CreateEntry("bootupLevel", "");
             showDebug = fp2Trainer.CreateEntry("showDebug", true);
             enableNoClip = fp2Trainer.CreateEntry("enableNoClip", false);
-            
+
             MultiCharStartLastSetting = fp2Trainer.CreateEntry("MultiCharStartLastSetting", false);
-            ShowPlaneSwitcherVisualizersLastSetting = fp2Trainer.CreateEntry("ShowPlaneSwitcherVisualizersLastSetting", false);
+            ShowPlaneSwitcherVisualizersLastSetting =
+                fp2Trainer.CreateEntry("ShowPlaneSwitcherVisualizersLastSetting", false);
             ShowCollidersLastSetting = fp2Trainer.CreateEntry("ShowCollidersLastSetting", true);
-            PreferredAllyControlTypeLastSetting = fp2Trainer.CreateEntry("PreferredAllyControlTypeLastSetting", 
+            PreferredAllyControlTypeLastSetting = fp2Trainer.CreateEntry("PreferredAllyControlTypeLastSetting",
                 FP2TrainerAllyControls.AllyControlTypeName(AllyControlType.SINGLE_PLAYER));
             ShowInstructionsOnStart = fp2Trainer.CreateEntry("ShowInstructionsOnStart", true);
             ShowInputNamesInTerminal = fp2Trainer.CreateEntry("ShowInputNamesInTerminal", false);
@@ -335,7 +340,10 @@ namespace Fp2Trainer
             PHKSpawnExtraChar = CreateEntryAndBindHotkey("PHKSpawnExtraChar", "F12");
             PHKSwapBetweenSpawnedChars = CreateEntryAndBindHotkey("PHKSwapBetweenSpawnedChars", "F11");
             PHKToggleMultiCharStart = CreateEntryAndBindHotkey("PHKToggleMultiCharStart", "Shift+F12");
-            PHKCyclePreferredAllyControlType = CreateEntryAndBindHotkey("PHKCyclePreferredAllyControlType", "Shift+F11");
+            PHKCyclePreferredAllyControlType =
+                CreateEntryAndBindHotkey("PHKCyclePreferredAllyControlType", "Shift+F11");
+            PHKStartInputPlayback =
+                CreateEntryAndBindHotkey("PHKStartInputPlayback", "Insert");
 
             PHKGetOutGetOutGetOut = CreateEntryAndBindHotkey("PHKGetOutGetOutGetOut", "Delete");
 
@@ -357,10 +365,10 @@ namespace Fp2Trainer
 
             PHKIncreaseFontSize = CreateEntryAndBindHotkey("PHKIncreaseFontSize", "Shift+KeypadPlus");
             PHKDecreaseFontSize = CreateEntryAndBindHotkey("PHKDecreaseFontSize", "Shift+KeypadMinus");
-            
+
             PHKReturnToCheckpoint = CreateEntryAndBindHotkey("PHKReturnToCheckpoint", "R");
             PHKRestartStage = CreateEntryAndBindHotkey("PHKRestartStage", "Shift+R");
-            
+
             PHKTogglePlaneSwitcherVisualizers = CreateEntryAndBindHotkey("PHKTogglePlaneSwitcherVisualizers", "F3");
             PHKToggleShowColliders = CreateEntryAndBindHotkey("PHKToggleShowColliders", "Shift+F3");
 
@@ -471,6 +479,7 @@ namespace Fp2Trainer
                 planeSwitcherVisualizer.Reset();
                 planeSwitcherVisualizer.SpawnVisualizers();
             }
+
             planeSwitchVisualizersCreated = false;
             planeSwitchVisualizersVisible = ShowPlaneSwitcherVisualizersLastSetting.Value;
 
@@ -482,6 +491,8 @@ namespace Fp2Trainer
             {
                 FP2TrainerAllyControls.inputQueueForPlayers = new Dictionary<int, FP2TrainerInputQueue>();
             }
+
+            skipRecording = false;
         }
 
         private static void CreateFP2TrainerGameObject()
@@ -653,10 +664,11 @@ namespace Fp2Trainer
                 {
                     Fp2Trainer.Log("PSV Is Null");
                     planeSwitchVisualizers = new List<GameObject>();
-                
+
                     List<PlaneSwitcher> planeSwitchers;
                     planeSwitchers = new List<PlaneSwitcher>((GameObject.FindObjectsOfType<PlaneSwitcher>()));
-                    Debug.Log(System.String.Format("Found {0} PlaneSwitchers. Attempting to visualize.\n", planeSwitchers.Count));
+                    Debug.Log(System.String.Format("Found {0} PlaneSwitchers. Attempting to visualize.\n",
+                        planeSwitchers.Count));
                     GameObject goCube;
                     Renderer renCube;
                     foreach (PlaneSwitcher ps in planeSwitchers)
@@ -664,10 +676,11 @@ namespace Fp2Trainer
                         Fp2Trainer.Log(System.String.Format("Adding Cube to {0} PlaneSwitchers.\n", ps.name));
                         goCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         goCube.name = ("Visualizer " + ps.name);
-                        goCube.transform.position = new Vector3(ps.transform.position.x, ps.transform.position.y, ps.transform.position.z);
+                        goCube.transform.position = new Vector3(ps.transform.position.x, ps.transform.position.y,
+                            ps.transform.position.z);
                         goCube.transform.localScale = new Vector3(ps.xsize, ps.ysize, 1f);
                         renCube = goCube.GetComponent<Renderer>();
-			
+
                         //renCube.material.color = new Color(1, 0, 0, 0.7f);
                         renCube.material.color = new Color(1, 0, 0, 1f);
                         goCube.SetActive(planeSwitchVisualizersVisible);
@@ -675,18 +688,16 @@ namespace Fp2Trainer
                         //renCube.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
                         //renCube.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
                     }
-                    
-                    planeSwitchVisualizersCreated = true; 
-                }
 
-            
+                    planeSwitchVisualizersCreated = true;
+                }
             }
         }
 
         public void ShowPlaneSwitchVisualizers()
         {
             planeSwitchVisualizersVisible = true;
-            
+
             if (planeSwitcherVisualizer != null)
             {
                 planeSwitcherVisualizer.SetActiveOfSpawnedVisualizers(planeSwitchVisualizersVisible);
@@ -697,17 +708,17 @@ namespace Fp2Trainer
             {
                 return;
             }
+
             foreach (var psv in planeSwitchVisualizers)
             {
                 psv.SetActive(planeSwitchVisualizersVisible);
             }
-            
         }
-        
+
         public void HidePlaneSwitchVisualizers()
         {
             planeSwitchVisualizersVisible = false;
-            
+
             if (planeSwitcherVisualizer != null)
             {
                 planeSwitcherVisualizer.SetActiveOfSpawnedVisualizers(planeSwitchVisualizersVisible);
@@ -718,7 +729,7 @@ namespace Fp2Trainer
             {
                 return;
             }
-            
+
             foreach (var psv in planeSwitchVisualizers)
             {
                 psv.SetActive(planeSwitchVisualizersVisible);
@@ -752,126 +763,141 @@ namespace Fp2Trainer
 
         public void OnGameObjectUpdate()
         {
-            if (introSkipped < 1)
-            {
-                SkipBootIntros();
-            }
-
-            if (waitingForNextFrameForSpoilerGimmick)
-            {
-                GetReferencesToSpoilerGimmickPart2();
-            }
-
-            if (dpsTracker != null) dpsTracker.Update();
-
-            if (timeoutShowWarpInfo > 0) timeoutShowWarpInfo -= FPStage.frameTime;
-            if (timeoutShowWarpInfo < 0) timeoutShowWarpInfo = 0;
             try
             {
-                if (player == null)
+                if (introSkipped < 1)
                 {
-                    player = GetFirstPlayerGameObject();
-                    fpplayer = FPStage.currentStage.GetPlayerInstance_FPPlayer();
-                    fpStage = FPStage.currentStage;
-
-                    if (player != null) MelonLogger.Msg("Trainer found a Player Object: ");
+                    SkipBootIntros();
                 }
 
-                if (stageHUD != null)
+                if (waitingForNextFrameForSpoilerGimmick)
                 {
+                    GetReferencesToSpoilerGimmickPart2();
                 }
-                else
+
+                if (dpsTracker != null) dpsTracker.Update();
+
+                if (timeoutShowWarpInfo > 0) timeoutShowWarpInfo -= FPStage.frameTime;
+                if (timeoutShowWarpInfo < 0) timeoutShowWarpInfo = 0;
+                try
                 {
-                    stageHUD = GetStageHUD();
+                    if (player == null)
+                    {
+                        player = GetFirstPlayerGameObject();
+                        fpplayer = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+                        fpStage = FPStage.currentStage;
+
+                        if (player != null) MelonLogger.Msg("Trainer found a Player Object: ");
+                    }
+
                     if (stageHUD != null)
                     {
-                        positionDigits = new List<FPHudDigit>();
-                        for (var i = 0; i < 10; i++)
-                        {
-                            positionDigits.Add(stageHUD.AddComponent<FPHudDigit>());
-                            if (i < 5)
-                                positionDigits[i].transform.position = new Vector3(i * 16, 64,
-                                    positionDigits[i].transform.position.z);
-                            else
-                                positionDigits[i].transform.position = new Vector3(i * 16 + 16, 64,
-                                    positionDigits[i].transform.position.z);
-                        }
                     }
-                }
-
-                debugDisplay = "";
-
-                if (fpplayer != null)
-                {
-                    if (hotkeysLoaded)
-                    {
-                        HandleHotkeys();
-                    }
-                    
-                    if (multiplayerStart && !doneMultiplayerStart)
-                    {
-                        currentDataPage = DataPage.MULTIPLAYER_DEBUG;
-                        while (fpplayers.Count < MultiCharStartNumChars.Value)
-                        {
-                            FPPlayer2p.SpawnExtraCharacter();
-                        }
-                        doneMultiplayerStart = true;
-                    }
-
-                    if (showInstructions)
-                    {
-                        HandleInstructionPageDisplay();
-                    }
-
                     else
                     {
-                        UpdateDPS();
-                        if (timeoutShowWarpInfo > 0) debugDisplay += warpMessage + "\n";
-
-                        if (fptls != null)
+                        stageHUD = GetStageHUD();
+                        if (stageHUD != null)
                         {
-                            var snp = fptls.availableScenes[fptls.menuSelection];
-                            debugDisplay += "Warp to: " + fptls.menuSelection + " | " + snp.name + "\n";
-                            debugDisplay += "Level Select Parent Pos: " + stageSelectMenu.transform.position + "\n";
-                            var tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
-                            debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position + "\n";
-                            debugDisplay += "Level Select Button LocalPos: " + tempGoButton.transform.localPosition +
-                                            "\n";
+                            positionDigits = new List<FPHudDigit>();
+                            for (var i = 0; i < 10; i++)
+                            {
+                                positionDigits.Add(stageHUD.AddComponent<FPHudDigit>());
+                                if (i < 5)
+                                    positionDigits[i].transform.position = new Vector3(i * 16, 64,
+                                        positionDigits[i].transform.position.z);
+                                else
+                                    positionDigits[i].transform.position = new Vector3(i * 16 + 16, 64,
+                                        positionDigits[i].transform.position.z);
+                            }
                         }
-
-
-                        HandleDataPageDisplay();
-                        //FPPlayer2p.ShowPressedButtons();
                     }
 
-                    FPPlayer2p.CatchupIfPlayerTooFarAway();
+                    debugDisplay = "";
+
+                    if (fpplayer != null)
+                    {
+                        if (hotkeysLoaded)
+                        {
+                            HandleHotkeys();
+                        }
+
+                        if (multiplayerStart && !doneMultiplayerStart)
+                        {
+                            currentDataPage = DataPage.MULTIPLAYER_DEBUG;
+                            while (fpplayers.Count < MultiCharStartNumChars.Value)
+                            {
+                                FPPlayer2p.SpawnExtraCharacter();
+                            }
+
+                            doneMultiplayerStart = true;
+                        }
+
+                        if (showInstructions)
+                        {
+                            HandleInstructionPageDisplay();
+                        }
+
+                        else
+                        {
+                            UpdateDPS();
+                            if (timeoutShowWarpInfo > 0) debugDisplay += warpMessage + "\n";
+
+                            if (fptls != null)
+                            {
+                                var snp = fptls.availableScenes[fptls.menuSelection];
+                                debugDisplay += "Warp to: " + fptls.menuSelection + " | " + snp.name + "\n";
+                                debugDisplay += "Level Select Parent Pos: " + stageSelectMenu.transform.position + "\n";
+                                var tempGoButton = stageSelectMenu.transform.Find("AnnStagePlayIcon").gameObject;
+                                debugDisplay += "Level Select Button Pos: " + tempGoButton.transform.position + "\n";
+                                debugDisplay += "Level Select Button LocalPos: " +
+                                                tempGoButton.transform.localPosition +
+                                                "\n";
+                            }
+
+
+                            HandleDataPageDisplay();
+                            //FPPlayer2p.ShowPressedButtons();
+                        }
+
+                        FPPlayer2p.CatchupIfPlayerTooFarAway();
+                    }
+
+
+                    if (goFancyTextPosition != null)
+                        UpdateFancyText();
+                    else
+                        CreateFancyTextObjects();
+
+                    if (ShowInputNamesInTerminal.Value)
+                    {
+                        FPPlayer2p.ShowPressedButtons();
+                    }
                 }
 
-
-                if (goFancyTextPosition != null)
-                    UpdateFancyText();
-                else
-                    CreateFancyTextObjects();
-
-                if (ShowInputNamesInTerminal.Value)
+                catch (Exception e)
                 {
-                    FPPlayer2p.ShowPressedButtons();
+                    Log("Trainer Error During Update: " + e.Message + "(" + e.InnerException?.Message + ") @@" +
+                        e.StackTrace);
+                }
+
+                if (fpStage != null)
+                {
+                    FPStage.showColliders = ShowCollidersLastSetting.Value;
+                    EnforceTenMinuteTimerPenalty();
+                }
+
+                if (!skipRecording)
+                {
+                    RecordPlayer1Input();
                 }
             }
-
             catch (Exception e)
             {
-                Log("Trainer Error During Update: " + e.Message + "(" + e.InnerException?.Message + ") @@" +
-                    e.StackTrace);
+                Log("EXCEPTION\n");
+                Log(e.ToString());
+                Log(e.Message);
+                Log(e.StackTrace);
             }
-
-            if (fpStage != null)
-            {
-                FPStage.showColliders = ShowCollidersLastSetting.Value;
-                EnforceTenMinuteTimerPenalty();
-            }
-
-            RecordPlayer1Input();
         }
 
         private void RecordPlayer1Input()
@@ -880,7 +906,10 @@ namespace Fp2Trainer
             {
                 FP2TrainerAllyControls.GetInputQueue(fpplayer).AddTime(FPStage.deltaTime);
                 var ipq = FP2TrainerAllyControls.RecordInput(fpplayer);
-                FP2TrainerAllyControls.inputQueueForPlayers.Add(fpplayer.GetInstanceID(), ipq);
+                if (!FP2TrainerAllyControls.inputQueueForPlayers.ContainsKey(fpplayer.GetInstanceID()))
+                {
+                    FP2TrainerAllyControls.inputQueueForPlayers.Add(fpplayer.GetInstanceID(), ipq);
+                }
             }
         }
 
@@ -924,7 +953,7 @@ namespace Fp2Trainer
                     debugDisplay += "Air Accel: " + fpplayer.airAceleration + "\n";
                     debugDisplay += "Air Drag: " + fpplayer.airDrag + "\n";
                 }
-                
+
                 debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
                 debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
                 debugDisplay += "Show Debug Colliders: " + ShowCollidersLastSetting.Value.ToString() + "\n";
@@ -932,7 +961,7 @@ namespace Fp2Trainer
             else if (currentDataPage == DataPage.MOVEMENT_2)
             {
                 debugDisplay += "Movement (2/2): \n";
-                
+
                 debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
                 debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
                 debugDisplay += "Show Debug Colliders: " + ShowCollidersLastSetting.Value.ToString() + "\n";
@@ -1089,7 +1118,7 @@ namespace Fp2Trainer
             int numHotkeyLinesPerPage = 7;
             debugDisplay += String.Format("--[Instructions: ({0} / {1})]--\n",
                 (int)(currentInstructionPage + 1), ((int)(InstructionPage.NONE) + 1));
-            
+
             switch (currentInstructionPage)
             {
                 /*
@@ -1131,7 +1160,7 @@ namespace Fp2Trainer
                                                   "Load ANY Stage Menu: {5}\n" +
                                                   "Confirm Stage Menu Choice: (Jump Button)\n",
                                         PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKSetWarpPoint.Value,
-                                        PHKGotoWarpPoint.Value, PHKTogglePlaneSwitcherVisualizers.Value, 
+                                        PHKGotoWarpPoint.Value, PHKTogglePlaneSwitcherVisualizers.Value,
                                         PHKGoToLevelSelectMenu.Value, PHKToggleShowColliders.Value);
                     break;
                 case InstructionPage.QUICK_RESTART:
@@ -1164,11 +1193,12 @@ namespace Fp2Trainer
                                                   "Cycle Ally Playstyle: {3}\n" +
                                                   "Insta-KO Current Character: {4}\n",
                                         PHKSpawnExtraChar.Value, PHKSwapBetweenSpawnedChars.Value,
-                                        PHKToggleMultiCharStart.Value, PHKCyclePreferredAllyControlType.Value, 
+                                        PHKToggleMultiCharStart.Value, PHKCyclePreferredAllyControlType.Value,
                                         PHKKOCharacter.Value);
                     break;
                 /*case InstructionPage.NETPLAY:
                     debugDisplay += "**Basics**\n";
+                    // PHKStartInputPlayback
                     break;*/
                 case InstructionPage.BUGS:
                     debugDisplay += "**Bugs**\n" +
@@ -1239,7 +1269,7 @@ namespace Fp2Trainer
                     debugDisplay += "this is bugged. i have no idea how you got here.\n";
                     break;
             }
-            
+
             debugDisplay += String.Format(
                 "{0} / {1} -> View Next / Prev Page.\nPress {2} to toggle Instructions on or off.\n",
                 PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKToggleInstructions.Value);
@@ -1447,7 +1477,7 @@ namespace Fp2Trainer
                     Log("Previous Data Page (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
                 }
             }
-            
+
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKGoToLevelAtLastIndex))
             {
                 Log("Load last located scene: ");
@@ -1490,14 +1520,15 @@ namespace Fp2Trainer
                 Log("NoClip Toggle");
                 ToggleNoClip();
             }
-            
+
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKTogglePlaneSwitcherVisualizers))
             {
                 TogglePlaneSwitchVisualizers();
                 ShowPlaneSwitcherVisualizersLastSetting.Value = planeSwitchVisualizersVisible;
-                Log(String.Format("Toggle PlaneSwitcher Visualizers: {0} -> {1}", !planeSwitchVisualizersVisible, planeSwitchVisualizersVisible));
+                Log(String.Format("Toggle PlaneSwitcher Visualizers: {0} -> {1}", !planeSwitchVisualizersVisible,
+                    planeSwitchVisualizersVisible));
             }
-            
+
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleShowColliders))
             {
                 ToggleShowColliders();
@@ -1594,29 +1625,43 @@ namespace Fp2Trainer
                     Log("Shift + F2 -> Attempted to start 2P but could not find 1P");
                 }
             }
-            
+
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleMultiCharStart))
             {
                 multiplayerStart = !multiplayerStart;
                 MultiCharStartLastSetting.Value = multiplayerStart;
                 Log(String.Format("Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
             }
-            
+
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwapBetweenSpawnedChars))
             {
                 Log("Attempting to dump character info.");
                 foreach (var fpp in fpplayers)
                 {
                     DumpAllPlayerVarsAndComponents(fpp);
-                }//DELETEME
+                } //DELETEME
+
                 Log("Dumped character info.");
-                
+
                 FPPlayer2p.SwapBetweenActiveCharacters();
             }
-            
+
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKCyclePreferredAllyControlType))
             {
                 FP2TrainerAllyControls.CyclePreferredAllyControlType();
+            }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKStartInputPlayback))
+            {
+                Log("Attempting to force player to replay ghost.");
+                skipRecording = true;
+                fpplayer.inputMethod = fpplayer.HandleAllyControlsGhost;
+                FP2TrainerAllyControls.needToLoadInputs = true;
+                
+                foreach (var fpp in fpplayers)
+                {
+                    DumpAllPlayerVarsAndComponents(fpp);
+                }
             }
         }
 
@@ -1867,6 +1912,7 @@ namespace Fp2Trainer
             {
                 currentInstructionPage--;
             }
+
             UpdateAfterDataPageChange();
         }
 
@@ -2302,7 +2348,6 @@ namespace Fp2Trainer
             else
             {
                 GetReferencesToSpoilerGimmickPart3();
-                
             }
         }
 
@@ -2317,8 +2362,8 @@ namespace Fp2Trainer
             SceneManager.LoadScene("SpoilerGimmick", LoadSceneMode.Additive);
             // The scenes will appear as available immediately, but will not actually load until the next update frame.
             waitingForNextFrameForSpoilerGimmick = true;
-            
-            
+
+
             /*
             Log("@@@@@3");
             if (goHunter != null)
@@ -2329,7 +2374,7 @@ namespace Fp2Trainer
                 SceneManager.MoveGameObjectToScene(goHunterKO, SceneManager.GetActiveScene());
                 SceneManager.MoveGameObjectToScene(goArc, SceneManager.GetActiveScene());
                 SceneManager.MoveGameObjectToScene(goMeter, SceneManager.GetActiveScene());
-                *//*
+                */ /*
                 
                 GameObject.DontDestroyOnLoad(goHunter);
                 GameObject.DontDestroyOnLoad(goHunterKO);
@@ -2386,9 +2431,10 @@ namespace Fp2Trainer
         {
             waitingForNextFrameForSpoilerGimmick = false;
             ListScenesToLog();
-            Log("Are scenes loaded? " + SceneManager.GetSceneAt(0).isLoaded.ToString() + SceneManager.GetSceneAt(1).isLoaded.ToString() );
+            Log("Are scenes loaded? " + SceneManager.GetSceneAt(0).isLoaded.ToString() +
+                SceneManager.GetSceneAt(1).isLoaded.ToString());
             SceneManager.MergeScenes(SceneManager.GetSceneAt(0), SceneManager.GetSceneAt(1));
-            
+
             //SceneManager.SetActiveScene(currentScene);
 
             Log("@@@@@1");
@@ -2404,26 +2450,27 @@ namespace Fp2Trainer
             GameObject goMeter = GameObject.Find("Hud Stealth Meter");
 
             Log("@@@@@3");
-            Log(String.Format("Gimmick Objects: ({0},{1},{2},{3},{4})\n", goHunter, goHunterKO, goArc, goMeter, goHunterKOScreen));
+            Log(String.Format("Gimmick Objects: ({0},{1},{2},{3},{4})\n", goHunter, goHunterKO, goArc, goMeter,
+                goHunterKOScreen));
             Log("@@@@@4");
 
             cacheGameObjectHunter = new GameObject("cacheHunter");
-            
+
             goHunter.transform.parent = cacheGameObjectHunter.transform;
             goHunterKO.transform.parent = cacheGameObjectHunter.transform;
             goHunterKOScreen.transform.parent = cacheGameObjectHunter.transform;
             goArc.transform.parent = cacheGameObjectHunter.transform;
             goMeter.transform.parent = cacheGameObjectHunter.transform;
-            
+
             //move this to part 2
             cacheGameObjectHunter.SetActive(false);
             Log("~~~~3");
             GameObject.DontDestroyOnLoad(cacheGameObjectHunter);
             Log("~~~~4");
-            
+
             var temp = goHunter.transform.GetComponent<BFSyntaxHunt>();
             GameObject.Destroy(temp);
-            
+
             var temp2 = goHunter.AddComponent<BFSyntaxHunt>();
             temp2.hudStealthMeter = goMeter.GetComponent<SpriteRenderer>();
             temp2.hudStealthMeterBar = goMeter.transform.Find("bar").GetComponent<SpriteRenderer>();
@@ -2432,9 +2479,8 @@ namespace Fp2Trainer
             temp2.playerBody = goHunterKO.transform.Find("players").gameObject;
             temp2.dbWarn = goHunterKOScreen.transform.Find("DBWarn1").GetComponent<SpriteRenderer>();
             temp2.dbWarn2 = goHunterKOScreen.transform.Find("DBWarn2").GetComponent<SpriteRenderer>();
-            
-            
-            
+
+
             GetReferencesToSpoilerGimmickPart3();
         }
 
@@ -2453,6 +2499,7 @@ namespace Fp2Trainer
                 Log("~~~~8");
                 Log(child.name + " " + child.transform.position + " " + child.gameObject.activeInHierarchy);
             }
+
             Log("~~~~9");
         }
 
@@ -2547,48 +2594,48 @@ namespace Fp2Trainer
         {
             MelonLogger.Msg(txt);
         }
-        
+
         public static void DumpSpriteRendererVars(GameObject go)
         {
             var fppVars = "";
             var sren = go.GetComponent<SpriteRenderer>();
 
 
-		        /*
-		        fppVars += String.Format(
-			        "{0}:\r\n" +
-			        "{1} = {2}\r\n"));
-			        */
+            /*
+            fppVars += String.Format(
+                "{0}:\r\n" +
+                "{1} = {2}\r\n"));
+                */
 
-                /*
-                fppVars += $"{go.name}: \r\n" +
-                           $"{nameof(sren.blah)} : {sren.barTimer}" +
-                           $"{nameof(go.inputLock)} : {go.inputLock}" +
-                           $"{nameof(go.idleTimer)} : {go.idleTimer}" +
-                           $"{nameof(go.targetGimmick)} : {go.targetGimmick}" +
-                           $"{nameof(sren.targetWaterSurface)} : {sren.targetWaterSurface}" +
-                           $"{nameof(sren.chaseMode)} : {sren.chaseMode}" +
-                           $"{nameof(sren.swapCharacter)} : {sren.swapCharacter}" +
-                           $"{nameof(sren.hideChildObject)} : {sren.hideChildObject}" +
-                           $"{nameof(sren.lastGround)} : {sren.lastGround}" +
-                           $"{nameof(sren.lastSafePosition)} : {sren.lastSafePosition}";
-                           
-                           */
+            /*
+            fppVars += $"{go.name}: \r\n" +
+                       $"{nameof(sren.blah)} : {sren.barTimer}" +
+                       $"{nameof(go.inputLock)} : {go.inputLock}" +
+                       $"{nameof(go.idleTimer)} : {go.idleTimer}" +
+                       $"{nameof(go.targetGimmick)} : {go.targetGimmick}" +
+                       $"{nameof(sren.targetWaterSurface)} : {sren.targetWaterSurface}" +
+                       $"{nameof(sren.chaseMode)} : {sren.chaseMode}" +
+                       $"{nameof(sren.swapCharacter)} : {sren.swapCharacter}" +
+                       $"{nameof(sren.hideChildObject)} : {sren.hideChildObject}" +
+                       $"{nameof(sren.lastGround)} : {sren.lastGround}" +
+                       $"{nameof(sren.lastSafePosition)} : {sren.lastSafePosition}";
+                       
+                       */
 
-	        // UMFGUI.AddConsoleText(allObjects);
+            // UMFGUI.AddConsoleText(allObjects);
 
-	        var fileName = "fppVars.txt";
-	        if (File.Exists(fileName))
-	        {
-		        Debug.Log(fileName + " already exists.");
-		        return;
-	        }
+            var fileName = "fppVars.txt";
+            if (File.Exists(fileName))
+            {
+                Debug.Log(fileName + " already exists.");
+                return;
+            }
 
-	        var sr = File.CreateText(fileName);
-	        sr.WriteLine(fppVars);
-	        sr.Close();
+            var sr = File.CreateText(fileName);
+            sr.WriteLine(fppVars);
+            sr.Close();
         }
-        
+
         public static void DumpAllPlayerVarsAndComponents(FPPlayer fpp)
         {
             var fppVars = "";
@@ -2598,14 +2645,16 @@ namespace Fp2Trainer
             foreach (var component in components)
             {
                 fppVars += $"-----({component.name})-----\n";
-                var fields = component.GetType().GetFields(BindingFlags.NonPublic | 
+                var fields = component.GetType().GetFields(BindingFlags.NonPublic |
                                                            BindingFlags.Instance);
                 foreach (var field in fields)
                 {
                     fppVars += $"{field.Name} = {field.GetValue(component)}\n";
                 }
+
                 fppVars += "\n";
             }
+
             var fileName = "fppVarsAndComponents.txt";
             if (File.Exists(fileName))
             {

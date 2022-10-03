@@ -103,9 +103,6 @@ namespace Fp2Trainer
         {
             foreach (GameObject go in planeSwitchersVisualizers)
             {
-                Fp2Trainer.Log($"Hello {go.name}\n" +
-                               $"Has Renderer: {go.GetComponent<SpriteRenderer>().ToString()}\n" +
-                               $"Sort Order: {go.GetComponent<SpriteRenderer>().sortingOrder}\n");
                 go.SetActive(planeSwitchVisualizersVisible);
             }
         }

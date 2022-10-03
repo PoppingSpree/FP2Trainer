@@ -254,6 +254,7 @@ namespace Fp2Trainer
                         {
                             allTimestampedInputs += $"stageName|{FPStage.currentStage.stageName}\n";
                             allTimestampedInputs += $"charID|{(int)fpp.characterID}\n";
+                            allTimestampedInputs += "userName|SpeedRunner\n";
                         }
                     }
                 
@@ -397,7 +398,6 @@ namespace Fp2Trainer
 
                         foreach (var line in lines)
                         {
-                            // Level and Character data
                             if (line.Contains("charID"))
                             {
                                 result.charID = int.Parse(line.Split('|')[1]);
@@ -406,6 +406,11 @@ namespace Fp2Trainer
                             if (line.Contains("stageName"))
                             {
                                 result.stageName = line.Split('|')[1];
+                            }
+                        
+                            if (line.Contains("userName"))
+                            {
+                                result.userName = line.Split('|')[1];
                             }
                             
                             // Input Data

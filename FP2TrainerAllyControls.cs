@@ -69,7 +69,7 @@ namespace Fp2Trainer
 	        else
 	        {
 		        ipq = RecordInput(fpp);
-		        inputQueueForPlayers.Add(fpp.GetInstanceID(), ipq);
+		        //inputQueueForPlayers.Add(fpp.GetInstanceID(), ipq);
 	        }
 
 	        return ipq;
@@ -80,10 +80,12 @@ namespace Fp2Trainer
 	        FP2TrainerInputQueue ipq;
 	        if (String.IsNullOrEmpty(Fp2Trainer.DEBUG_LoadSpecificGhostFile.Value))
 	        {
+		        Fp2Trainer.Log("Loading most recent");
 		        ipq = FP2TrainerInputQueue.LoadQueueFromFileMostRecent();
 	        }
 	        else
 	        {
+		        Fp2Trainer.Log($"Loading from file: {Fp2Trainer.DEBUG_LoadSpecificGhostFile.Value}");
 		        ipq = FP2TrainerInputQueue.LoadQueueFromFile(Fp2Trainer.DEBUG_LoadSpecificGhostFile.Value);
 	        }
 	        
@@ -340,12 +342,18 @@ namespace Fp2Trainer
 
 	        if (needToLoadInputs)
 	        {
+		        Fp2Trainer.Log("Need to load inputs from file. Grabbing most recent / from configs.");
 		        LoadFileInputQueueForPlayer(fpp);
-		        Fp2Trainer.Log("Need to load inputs from file. Grabbing most recent.");
+		        Fp2Trainer.Log("Done loading..");
 		        needToLoadInputs = false;
 	        }
 
 	        var ipq = GetInputQueue(fpp);
+	        AddTime(GetInputQueue(fpp), FPStage.deltaTime);
+	        
+	        string funky2 = $"ipq.GetTimeElapsed() => {ipq.GetTimeElapsed()}\n";
+	        Fp2Trainer.Log(funky2);
+	        
 	        if (ipq.charID == (int)fpp.characterID)
 	        {
 	        }
@@ -366,8 +374,12 @@ namespace Fp2Trainer
 
 	        var tsi = ipq.GetClosestToTimestamp(ipq.GetTimeElapsed(), 0);
 	        tsi.MapInputsToFPPlayer(fpp);
-	        
-	        Fp2Trainer.Log($"Debug: {tsi.ToString()}");
+	        MapPlayerPressesFromPreviousInputs(fpp);
+
+	        string funky = $"Debug: {tsi.ToString()}";
+	        funky += $"ipq.GetTimeElapsed() => {ipq.GetTimeElapsed()}\n";
+	        Fp2Trainer.Log(funky);
+	        Fp2Trainer.debugDisplay = funky + "\n" + Fp2Trainer.debugDisplay;
 	        
             
 	        if (fpp != leadPlayer)
@@ -393,6 +405,8 @@ namespace Fp2Trainer
 		        TimestampedInputs tsi = null;
 		        FP2TrainerInputQueue tiq = GetLatestInputQueueFromNetworkPlayer(0);
 		        RollingQueue<TimestampedTransform> transformQueue = GetLatestTransformQueueFromNetworkPlayer(0);
+		        
+		        AddTime(GetInputQueue(fpp), FPStage.deltaTime);
 		        
 		        // thisplayer, timestampedInputs, currentTime, expectedOffsetTime
 		        MapPlayerClosestTimedInputFromInputQueue(fpp, tiq, 0f, 0f);
