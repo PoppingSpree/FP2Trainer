@@ -314,7 +314,7 @@ namespace Fp2Trainer
                 fppi.inputMethod = fppi.GetInputFromPlayer1;
 
                 FPCamera.SetCameraTarget(fppi.gameObject);
-                fppi.Action_PlayVoiceArray("Clear");
+                fppi.Action_PlayerVoiceArrayStart();
                 if (Fp2Trainer.goFP2TrainerYourPlayerIndicator != null)
                 {
                     Fp2Trainer.goFP2Trainer.transform.position =
@@ -468,6 +468,12 @@ namespace Fp2Trainer
             newPlayer.oxygenLevel = 1f;
             newPlayer.heatLevel = 0f;
             newPlayer.interactWithObjects = true;
+            
+            newPlayer.powerups = fppi.powerups;
+            newPlayer.potions = fppi.potions;
+            newPlayer.totalCrystals = fppi.crystals;
+            newPlayer.hasSpecialItem = fppi.hasSpecialItem;
+            //newPlayer.name = playerName;
 
             Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
             Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance_FPPlayer().name + " joins the party!");

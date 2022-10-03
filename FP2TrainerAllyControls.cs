@@ -522,6 +522,12 @@ namespace Fp2Trainer
 	        }
         }
         
+        public static void Action_PlayerVoiceArrayStart(this FPPlayer fpp)
+        {
+	        int num = UnityEngine.Random.Range(0, fpp.vaStart.Length);
+	        fpp.audioChannel[0].PlayOneShot(fpp.vaStart[num]);
+        }
+        
         private static FP2TrainerInputQueue GetLatestInputQueueFromNetworkPlayer(int connectionId)
         {
 	        FP2TrainerInputQueue tiq = null;

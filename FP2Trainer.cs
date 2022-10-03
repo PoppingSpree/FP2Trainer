@@ -55,6 +55,7 @@ namespace Fp2Trainer
             QUICK_RESTART,
             NO_CLIP,
             MULTICHARACTER,
+            CHAR_INSTASWAP,
 
             //NETPLAY,
             BUGS,
@@ -89,6 +90,14 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKSwapBetweenSpawnedChars;
         public static MelonPreferences_Entry<string> PHKToggleMultiCharStart;
         public static MelonPreferences_Entry<string> PHKCyclePreferredAllyControlType;
+        
+        public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToLilac;
+        public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToCarol;
+        public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToCarolBike;
+        public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToMilla;
+        public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToNeera;
+        public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToNext;
+        public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToPrev;
         
         public static MelonPreferences_Entry<string> PHKStartInputPlayback;
 
@@ -346,6 +355,14 @@ namespace Fp2Trainer
                 CreateEntryAndBindHotkey("PHKCyclePreferredAllyControlType", "Shift+F11");
             PHKStartInputPlayback =
                 CreateEntryAndBindHotkey("PHKStartInputPlayback", "Insert");
+            
+            PHKSwitchCurrentPlayerToLilac = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToLilac", "Keypad0");
+            PHKSwitchCurrentPlayerToCarol = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToCarol", "Keypad1");
+            PHKSwitchCurrentPlayerToCarolBike = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToCarolBike", "Keypad2");
+            PHKSwitchCurrentPlayerToMilla = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToMilla", "Keypad3");
+            PHKSwitchCurrentPlayerToNeera = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToNeera", "Keypad4");
+            PHKSwitchCurrentPlayerToNext = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToNext", "Keypad9");
+            PHKSwitchCurrentPlayerToPrev = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToPrev", "Keypad8");
 
             PHKGetOutGetOutGetOut = CreateEntryAndBindHotkey("PHKGetOutGetOutGetOut", "Delete");
 
@@ -1210,6 +1227,24 @@ namespace Fp2Trainer
                                         PHKToggleMultiCharStart.Value, PHKCyclePreferredAllyControlType.Value,
                                         PHKKOCharacter.Value);
                     break;
+                case InstructionPage.CHAR_INSTASWAP:
+                    debugDisplay += "**Character Insta-swap**\n" +
+                                    "WIP. Switch to any character on the fly." +
+                                    "Defaults to being set via numpad numbers." +
+                                    "If you're a gamepad player, you'll want to remap those.\n" +
+                                    String.Format("PHKSwitchCurrentPlayerToLilac: {0}\n" +
+                                                  "PHKSwitchCurrentPlayerToCarol: {1}\n" +
+                                                  "PHKSwitchCurrentPlayerToCarolBike: {2}\n" +
+                                                  "PHKSwitchCurrentPlayerToMilla: {3}\n" +
+                                                  "PHKSwitchCurrentPlayerToNeera: {4}\n" +
+                                                  "PHKSwitchCurrentPlayerToNext: {5}\n" +
+                                                  "PHKSwitchCurrentPlayerToPrev: {6}\n",
+                                        PHKSwitchCurrentPlayerToLilac.Value, PHKSwitchCurrentPlayerToCarol.Value, 
+                                        PHKSwitchCurrentPlayerToCarolBike.Value, PHKSwitchCurrentPlayerToMilla.Value,
+                                        PHKSwitchCurrentPlayerToNeera.Value,
+                                        PHKSwitchCurrentPlayerToNext.Value,
+                                        PHKSwitchCurrentPlayerToPrev.Value);
+                    break;
                 /*case InstructionPage.NETPLAY:
                     debugDisplay += "**Basics**\n";
                     // PHKStartInputPlayback
@@ -1555,6 +1590,7 @@ namespace Fp2Trainer
             }
 
             HandleMultiplayerSpawnHotkeys();
+            HandleInstaSwapHotkeys();
             HandleResizeFontHotkeys();
             HandleCameraHotkeys();
 
@@ -1677,6 +1713,53 @@ namespace Fp2Trainer
                     DumpAllPlayerVarsAndComponents(fpp);
                 }
             }
+        }
+
+        private void HandleInstaSwapHotkeys()
+        {
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToLilac))
+            {
+                fpplayer.characterID = FPCharacterID.LILAC;
+            }
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToCarol))
+            {
+                fpplayer.characterID = FPCharacterID.CAROL;
+            }
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToCarolBike))
+            {
+                fpplayer.characterID = FPCharacterID.BIKECAROL;
+            }
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToMilla))
+            {
+                fpplayer.characterID = FPCharacterID.MILLA;
+            }
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToNeera))
+            {
+                fpplayer.characterID = FPCharacterID.NEERA;
+            }
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToNext))
+            {
+                if (fpplayer.characterID >= FPCharacterID.NEERA)
+                {
+                    fpplayer.characterID = FPCharacterID.LILAC;
+                }
+                else
+                {
+                    fpplayer.characterID++;
+                }
+            }
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToPrev))
+            {
+                if (fpplayer.characterID <= 0)
+                {
+                    fpplayer.characterID = FPCharacterID.NEERA;
+                }
+                else
+                {
+                    fpplayer.characterID--;
+                }
+            }
+
         }
 
         private void HandleResizeFontHotkeys()
