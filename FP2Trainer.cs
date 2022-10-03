@@ -190,7 +190,7 @@ namespace Fp2Trainer
 
         private GameObject goDtTracker;
 
-        public GameObject goFancyTextPosition;
+        public static GameObject goFancyTextPosition;
         public GameObject goStageHUD;
         private readonly float howLongToShowWarpInfo = 2f;
 
@@ -256,10 +256,6 @@ namespace Fp2Trainer
             MelonLogger.Msg("OnApplicationStart");
             MelonPreferences.Load();
             InitPrefs();
-
-            Log("Testing the ghost loader: \n");
-            Log(FP2TrainerInputQueue.LoadQueueFromFileMostRecent().ToString() + "\n");
-            Log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
             loadedAssetBundles = new List<AssetBundle>();
 
@@ -504,6 +500,7 @@ namespace Fp2Trainer
             GameObject.DontDestroyOnLoad(goFP2Trainer);
             goFP2Trainer.AddComponent<FP2TrainerCustomHotkeys>();
             planeSwitcherVisualizer = goFP2Trainer.AddComponent<PlaneSwitcherVisualizer>();
+            goFP2Trainer.AddComponent<FP2TrainerCharacterNameTag>();
         }
 
         public static Font GetFPMenuFont()

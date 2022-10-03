@@ -472,9 +472,14 @@ namespace Fp2Trainer
             Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
             Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance_FPPlayer().name + " joins the party!");
 
+            if (FP2TrainerCharacterNameTag.instance != null)
+            {
+                FP2TrainerCharacterNameTag.instance.InstantiateNewNametag(newPlayer);
+            }
+
             //global::Fp2Trainer.Fp2Trainer.CloneHealthBar(newPlayer);
 
-            DestroyMergaCutsceneTriggers();
+            //DestroyMergaCutsceneTriggers();
 
             return newPlayer;
         }
