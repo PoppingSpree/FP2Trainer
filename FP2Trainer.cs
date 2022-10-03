@@ -138,6 +138,8 @@ namespace Fp2Trainer
 
         public static MelonPreferences_Entry<bool> LockP1ToGhostFiles;
         public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFile;
+        
+        public static MelonPreferences_Entry<bool> SixtyFPSHack;
 
         public static bool hotkeysLoaded = false;
 
@@ -320,6 +322,8 @@ namespace Fp2Trainer
             LockP1ToGhostFiles = fp2Trainer.CreateEntry("LockP1ToGhostFiles", false);
             MultiCharStartNumChars = fp2Trainer.CreateEntry("MultiCharStartNumChars", 2);
             DEBUG_LoadSpecificGhostFile = fp2Trainer.CreateEntry("DEBUG_LoadSpecificGhostFile", "");
+            
+            SixtyFPSHack = fp2Trainer.CreateEntry("SixtyFPSHack", false);
 
             InitPrefsCustomHotkeys();
         }
@@ -501,7 +505,10 @@ namespace Fp2Trainer
             goFP2Trainer.AddComponent<FP2TrainerCustomHotkeys>();
             planeSwitcherVisualizer = goFP2Trainer.AddComponent<PlaneSwitcherVisualizer>();
             goFP2Trainer.AddComponent<FP2TrainerCharacterNameTag>();
-            goFP2Trainer.AddComponent<ForceRenderRate>();
+            if (SixtyFPSHack.Value)
+            {
+                goFP2Trainer.AddComponent<ForceRenderRate>();
+            }
         }
 
         public static Font GetFPMenuFont()
