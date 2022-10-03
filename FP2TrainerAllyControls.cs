@@ -176,8 +176,8 @@ namespace Fp2Trainer
         {
 	        if (inputQueueForPlayers.ContainsKey(fpp.GetInstanceID()))
 	        {
-		        var prevInputs = inputQueueForPlayers[fpp.GetInstanceID()].GetByIndexStep(stepCurrent);
-		        var latestInputs = inputQueueForPlayers[fpp.GetInstanceID()].GetByIndexStep(stepCurrent - 1);
+		        var prevInputs = inputQueueForPlayers[fpp.GetInstanceID()].GetByIndexStep(stepCurrent - 1);
+		        var latestInputs = inputQueueForPlayers[fpp.GetInstanceID()].GetByIndexStep(stepCurrent);
 
 		        SetBoolIfFlagJustSet(out fpp.input.upPress,
 			        prevInputs.bitwiseInputs, 
