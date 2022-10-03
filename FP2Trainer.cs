@@ -501,6 +501,7 @@ namespace Fp2Trainer
             goFP2Trainer.AddComponent<FP2TrainerCustomHotkeys>();
             planeSwitcherVisualizer = goFP2Trainer.AddComponent<PlaneSwitcherVisualizer>();
             goFP2Trainer.AddComponent<FP2TrainerCharacterNameTag>();
+            goFP2Trainer.AddComponent<ForceRenderRate>();
         }
 
         public static Font GetFPMenuFont()
