@@ -7,6 +7,7 @@ namespace Fp2Trainer
     {
         public FPCamera FpCamera;
         public Camera RenderCamera;
+        public RenderTexture SplitCamRenderTexture;
         public GameObject GoRenderCamera;
         
         //cam order: quartertopleft, quaterbottomleft, quatertopright, quater bottomright;
@@ -25,6 +26,18 @@ namespace Fp2Trainer
             this.FpCamera = newFpCamScript;
             this.GoRenderCamera = goRenderCamera;
             this.RenderCamera = goRenderCamera.GetComponent<Camera>();
+            if (this.RenderCamera == null)
+            {
+                MelonLogger.Warning("Null render cam in split screen info, try fetching later.");
+            }
+        }
+        
+        public SplitScreenCamInfo(FPCamera newFpCamScript, GameObject goRenderCamera, RenderTexture renderTexture)
+        {
+            this.FpCamera = newFpCamScript;
+            this.GoRenderCamera = goRenderCamera;
+            this.RenderCamera = goRenderCamera.GetComponent<Camera>();
+            this.SplitCamRenderTexture = renderTexture;
             if (this.RenderCamera == null)
             {
                 MelonLogger.Warning("Null render cam in split screen info, try fetching later.");

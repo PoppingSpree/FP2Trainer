@@ -3035,7 +3035,7 @@ namespace Fp2Trainer
                     // Short verison for first player.
                     if (p == 0)
                     {
-                        SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera)); // First cam is pretty much guarenteed.
+                        SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera, stageCamera.renderTarget)); // First cam is pretty much guarenteed.
                         stageCamera.target = fpplayers[p];
                         goRenderCamera.GetComponent<Camera>().rect = new Rect(cameraRect);
                         continue;
@@ -3056,7 +3056,7 @@ namespace Fp2Trainer
                 
                     var splitScreenStageCamera = goSplitScreenStageCamera.GetComponent<FPCamera>(); Log($"{splitScreenStageCamera}");
 
-                    SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.gameObject));
+                    SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.gameObject, stageCamera.renderTarget));
                     
                     /*
                      *SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera.GetComponent<Camera>()));
@@ -3137,21 +3137,92 @@ namespace Fp2Trainer
                     if (camInfo.FpCamera.lightingCamera != null)
                     {
                         camInfo.FpCamera.lightingCamera.rect = camInfo.RenderCamera.rect;
-                        camInfo.FpCamera.lightingCamera.targetTexture = camInfo.RenderCamera.targetTexture;
+                        camInfo.FpCamera.lightingCamera.targetTexture = camInfo.SplitCamRenderTexture;
                     }
 
-                    foreach (var pl in camInfo.FpCamera.parallaxLayers)
+
+                    ParallaxLayer pl = null;
+                    var highestLayerDepth = -1f;
+                    int indexOfHighestLayerCam = -1;
+                    bool flag = false;
+                    
+                    for (int pli = 0; pli < camInfo.FpCamera.parallaxLayers.Length; pli++)
                     {
+                        // Set the camera rects to match player rect.
+                        pl = camInfo.FpCamera.parallaxLayers[pli];
                         if (pl != null && pl.cam != null)
                         {
                             pl.cam.rect = camInfo.RenderCamera.rect;
-                            pl.cam.targetTexture = camInfo.RenderCamera.targetTexture; //Causes both views to stop clearing properly...
-                            pl.cam.clearFlags = CameraClearFlags.Color;
+                            pl.cam.targetTexture = camInfo.SplitCamRenderTexture; //Causes both views to stop clearing properly...
+
+                            // Imitate CameraStart for handling Lighting and Foreground
+                            if (pl.layerMask != StageLayerIDs.LIGHTING)
+                            {
+                                pl.cam.targetTexture = camInfo.FpCamera.renderTarget;
+                                pl.cam.clearFlags = CameraClearFlags.Nothing;
+                            }
+                            else
+                            {
+                                pl.cam.targetTexture = camInfo.FpCamera.lightingTarget;
+                                pl.cam.clearFlags = CameraClearFlags.Color;
+                                pl.cam.backgroundColor = camInfo.FpCamera.shadowTint;
+                                camInfo.FpCamera.lightingCamera = pl.cam;
+                                flag = true;
+                            }
+                            if (pl.layerMask == StageLayerIDs.FG_PLANE)
+                            {
+                                pl.cam.cullingMask = 3856;
+                            }
+                            
+                            // Get layer with highest depth.
+                            if ( pl.cam.depth > highestLayerDepth)
+                            {
+                                highestLayerDepth = pl.cam.depth;
+                                indexOfHighestLayerCam = pli;
+                            }
+                            
+                            //UI Cam is affected by Lighting flag?
+                            //... except the UI cam isn't accessible.
+                            /*
+                            if (!flag)
+                            {
+                                camInfo.FpCamera.uiCam.targetTexture = camInfo.FpCamera.renderTarget;
+                                camInfo.FpCamera.uiCam.clearFlags = CameraClearFlags.Nothing;
+                            }
+                            else
+                            {
+                                camInfo.FpCamera.uiCam.targetTexture = camInfo.FpCamera.uiTarget;
+                                camInfo.FpCamera.uiCam.clearFlags = CameraClearFlags.Color;
+                                camInfo.FpCamera.uiCam.backgroundColor = Color.clear;
+                            }
+                            */
                         }
                         else
                         {
                             Log("funky parallax null");
                         }
+                    }
+                    pl = camInfo.FpCamera.parallaxLayers[indexOfHighestLayerCam];
+                    pl.cam.clearFlags = CameraClearFlags.Color;
+                    
+                    
+                    int num = -1;
+                    float num2 = -1f;
+                    for (int j = 0; j < camInfo.FpCamera.parallaxLayers.Length; j++)
+                    {
+                        //var pl = camInfo.FpCamera.parallaxLayers[j];
+                        //pl.cam.rect = camInfo.RenderCamera.rect;
+                        //pl.cam.targetTexture = camInfo.RenderCamera.targetTexture; //Causes both views to stop clearing properly...
+                        
+                        if (camInfo.FpCamera.parallaxLayers[j].layerDepth > num2)
+                        {
+                            num2 = camInfo.FpCamera.parallaxLayers[j].layerDepth;
+                            num = j;
+                        }
+                    }
+                    if (num > -1)
+                    {
+                        camInfo.FpCamera.parallaxLayers[num].cam.clearFlags = CameraClearFlags.Color;
                     }
                 }
             }
