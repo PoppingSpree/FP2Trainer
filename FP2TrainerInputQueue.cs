@@ -65,11 +65,26 @@ namespace Fp2Trainer
             elapsedTime += amountOfTime;
         }
         
+        public void IncrementStep()
+        {
+            countSteps++;
+        }
+        
         public float GetTimeElapsed()
         {
             return elapsedTime;
         }
+
+        public int GetCountSteps()
+        {
+            return this.countSteps;
+        }
         
+        public void SetCountSteps(int val)
+        {
+            this.countSteps = val;
+        }
+
         public void SetMaxLength(int newMaxLength)
         {
             maxLength += newMaxLength;

@@ -26,6 +26,8 @@ namespace Fp2Trainer
         public static float catchupDistance = 512f+128f;
 
         public static Dictionary<string, KeyMapping> customControls;
+        
+        public static List<FPPlayer> instaswapCharacterInstances = new List<FPPlayer>();
 
 
         protected new void Start()
@@ -410,13 +412,13 @@ namespace Fp2Trainer
             FPPlayer newPlayer = null;
             FPPlayer fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
             bool playerObjectValidated = false;
-            
+
             extraPlayerCount++;
             if (extraPlayerCount % 5 == 2) //Skip Bike Carol.
             {
                 extraPlayerCount++;
             }
-            
+
             int playerNumModulus = extraPlayerCount % 5;
 
             // Spawn all possible characters before allowing duplicates.
@@ -430,7 +432,7 @@ namespace Fp2Trainer
                 // Bike Carol is 2. Skip.
                 availableCharIDs.Add(3);
                 availableCharIDs.Add(4);
-                
+
                 int charID = -1;
                 for (int i = 0; i < Fp2Trainer.fpplayers.Count; i++)
                 {
@@ -464,11 +466,11 @@ namespace Fp2Trainer
             newPlayer.name = String.Format("Player {0}", extraPlayerCount);
 
             newPlayer.inputMethod = FP2TrainerAllyControls.GetInputMethodFromPreferredAllyControlType(newPlayer);
-            
+
             newPlayer.oxygenLevel = 1f;
             newPlayer.heatLevel = 0f;
             newPlayer.interactWithObjects = true;
-            
+
             newPlayer.powerups = fppi.powerups;
             newPlayer.potions = fppi.potions;
             newPlayer.totalCrystals = fppi.crystals;
@@ -488,6 +490,133 @@ namespace Fp2Trainer
             //DestroyMergaCutsceneTriggers();
 
             return newPlayer;
+        }
+
+        public static void SpawnExtraCharactersViaSpawnPoint()
+        {
+            try
+            {
+                PlayerSpawnPoint spawnPoint = GameObject.FindObjectOfType<PlayerSpawnPoint>();
+                if (spawnPoint != null)
+                {
+                    FPPlayer fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+
+                    bool playerObjectValidated = false;
+                    extraPlayerCount++;
+                    // DON'T skip bike carol here.
+                    int playerNumModulus = extraPlayerCount % 5;
+
+                    // Spawn all possible characters
+
+                    for (int i = 0; i < (int)FPCharacterID.NEERA; i++)
+                    {
+                        spawnPoint.character = (FPCharacterID)i;
+                        Fp2Trainer.Log($"Sending START message to spawn point.");
+                        spawnPoint.SendMessage("Start");
+                        Fp2Trainer.Log($"SENT START message to spawn point.");
+                    }
+
+                    Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
+                    instaswapCharacterInstances.Clear();
+                    foreach (var fpp in Fp2Trainer.fpplayers)
+                    {
+                        instaswapCharacterInstances.Add(fpp);
+
+                        /*
+                        if (FP2TrainerCharacterNameTag.instance != null)
+                        {
+                            FP2TrainerCharacterNameTag.instance.InstantiateNewNametag(fpp);
+                        }
+                        */
+
+                        if (fpp.characterID == fppi.characterID)
+                        {
+                            fpp.gameObject.SetActive(true);
+                            fpp.activationMode = FPActivationMode.ALWAYS_ACTIVE;
+                            fpp.GetComponent<SpriteRenderer>().enabled = true;
+                            
+                            fpp.position = fppi.position;
+                            fpp.collisionLayer = fppi.collisionLayer;
+                            FPStage.currentStage.SetPlayerInstance_FPPlayer(fpp);
+                            FPCamera.SetCameraTarget(fpp.gameObject);
+                            Fp2Trainer.fpplayer = fpp;
+                        }
+                        else
+                        {
+                            fpp.gameObject.SetActive(false);
+                            fpp.activationMode = FPActivationMode.NEVER_ACTIVE;
+                            fpp.GetComponent<SpriteRenderer>().enabled = false;
+                        }
+
+
+                        fppi.gameObject.SetActive(false);
+                        fppi.activationMode = FPActivationMode.NEVER_ACTIVE;
+                        fppi.GetComponent<SpriteRenderer>().enabled = false;
+                        FPStage.DestroyStageObject(fppi);
+                    }
+                }
+                else
+                {
+                    Fp2Trainer.Log("Attempted to spawn additional characters for InstaSwap, but did not find a Spawn Point.");
+                }
+            }
+            catch (Exception e)
+            {
+
+                Fp2Trainer.Log(e.Message + e.StackTrace);
+            }
+
+        }//SpawnExtraCharactersViaSpawnPoint()
+
+        public static void PerformInstaSwap(FPCharacterID charID)
+        {
+
+            try
+            {
+                if (instaswapCharacterInstances != null)
+                {
+                    Fp2Trainer.Log($"Instaswap to {charID}");
+                    foreach (var fpp in instaswapCharacterInstances)
+                    {
+                        if (fpp.characterID == charID)
+                        {
+                            fpp.gameObject.SetActive(true);
+                            fpp.activationMode = FPActivationMode.ALWAYS_ACTIVE;
+                            fpp.GetComponent<SpriteRenderer>().enabled = true;
+                            
+                            //fpp.animator = fpp.GetComponent<Animator>();
+                            fpp.animator = FPStage.player[(int)charID].GetComponent<Animator>();
+                            
+                            fpp.position = Fp2Trainer.fpplayer.position;
+                            fpp.collisionLayer = Fp2Trainer.fpplayer.collisionLayer;
+                            fpp.velocity = Fp2Trainer.fpplayer.velocity;
+                            fpp.health = Fp2Trainer.fpplayer.health;
+                            fpp.heatLevel = Fp2Trainer.fpplayer.heatLevel;
+                            fpp.oxygenLevel = Fp2Trainer.fpplayer.oxygenLevel;
+                            fpp.gameObject.transform.position = new Vector3(Fp2Trainer.fpplayer.gameObject.transform.position.x,
+                                Fp2Trainer.fpplayer.gameObject.transform.position.y, Fp2Trainer.fpplayer.gameObject.transform.position.z);
+                        
+                            FPStage.currentStage.SetPlayerInstance_FPPlayer(fpp);
+                            FPCamera.SetCameraTarget(fpp.gameObject);
+                            Fp2Trainer.fpplayer = fpp;
+                            
+                            Fp2Trainer.Log($"Instaswap Complete {charID}");
+
+                        }
+                        else
+                        {
+                            fpp.gameObject.SetActive(false);
+                            fpp.activationMode = FPActivationMode.NEVER_ACTIVE;
+                            fpp.GetComponent<SpriteRenderer>().enabled = false;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Fp2Trainer.Log("@@@@@@@@@@@@@@@@@@@@@@");
+                Fp2Trainer.Log(e.Message + e.StackTrace);
+            }
         }
 
         private static void DestroyMergaCutsceneTriggers()

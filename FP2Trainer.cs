@@ -7,6 +7,7 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
+using Random = System.Random;
 
 //using UnityEngine.InputSystem.Controls;
 //using UnityEngine.InputSystem;
@@ -33,6 +34,9 @@ namespace Fp2Trainer
         public static GameObject goFP2Trainer;
         public static PlaneSwitcherVisualizer planeSwitcherVisualizer;
         public static GameObject goFP2TrainerYourPlayerIndicator;
+        
+        public static DateTime fp2ReleaseDate = new DateTime(2022, 9, 13, 12, 0, 0);
+        public static int fp2ReleaseDateInt = 20220913;
 
         public enum DataPage
         {
@@ -98,8 +102,10 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToNeera;
         public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToNext;
         public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToPrev;
+        public static MelonPreferences_Entry<bool> UseInstaSwitch;
         
         public static MelonPreferences_Entry<string> PHKStartInputPlayback;
+        public static MelonPreferences_Entry<string> PHKToggleLockP1ToGhostFiles;
 
         public static MelonPreferences_Entry<string> PHKGetOutGetOutGetOut;
 
@@ -149,6 +155,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFile;
         
         public static MelonPreferences_Entry<bool> SixtyFPSHack;
+        public static MelonPreferences_Entry<bool> DeterministicMode;
 
         public static bool hotkeysLoaded = false;
 
@@ -260,6 +267,10 @@ namespace Fp2Trainer
 
         public static bool skipRecording = false;
 
+        public static FPCharacterID currentPreferredCharacter = FPCharacterID.LILAC;
+
+        public static Dictionary<int, string> FPLayerNames;
+
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
             fp2TrainerInstance = this;
@@ -305,9 +316,7 @@ namespace Fp2Trainer
                 PreferredAllyControlTypeLastSetting.Value));
             showInstructions = ShowInstructionsOnStart.Value;
 
-            Log("blep" + multiplayerStart);
-            Log("blep" + planeSwitchVisualizersVisible);
-            Log("blep" + FP2TrainerAllyControls.preferredAllyControlType);
+            InitFPLayerNames();
         }
 
         private void InitPrefs()
@@ -333,6 +342,9 @@ namespace Fp2Trainer
             DEBUG_LoadSpecificGhostFile = fp2Trainer.CreateEntry("DEBUG_LoadSpecificGhostFile", "");
             
             SixtyFPSHack = fp2Trainer.CreateEntry("SixtyFPSHack", false);
+            DeterministicMode = fp2Trainer.CreateEntry("DeterministicMode", false);
+            
+            UseInstaSwitch = fp2Trainer.CreateEntry("UseInstaSwitch", true);
 
             InitPrefsCustomHotkeys();
         }
@@ -355,6 +367,8 @@ namespace Fp2Trainer
                 CreateEntryAndBindHotkey("PHKCyclePreferredAllyControlType", "Shift+F11");
             PHKStartInputPlayback =
                 CreateEntryAndBindHotkey("PHKStartInputPlayback", "Insert");
+            PHKToggleLockP1ToGhostFiles =
+                CreateEntryAndBindHotkey("PHKToggleLockP1ToGhostFiles", "Shift+Insert");
             
             PHKSwitchCurrentPlayerToLilac = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToLilac", "Keypad0");
             PHKSwitchCurrentPlayerToCarol = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToCarol", "Keypad1");
@@ -405,6 +419,67 @@ namespace Fp2Trainer
             var melonPrefEntry = fp2Trainer.CreateEntry(identifier, default_value);
             FP2TrainerCustomHotkeys.Add(melonPrefEntry);
             return melonPrefEntry;
+        }
+
+        public static void InitFPLayerNames()
+        {
+            FPLayerNames = new Dictionary<int, string>();
+            int layerAsInt = 0;
+            FPLayerNames.Add(layerAsInt, "Default");
+            layerAsInt = 1;
+            FPLayerNames.Add(layerAsInt, "TransparentFX");
+            layerAsInt = 2;
+            FPLayerNames.Add(layerAsInt, "Ignore Raycast");
+            layerAsInt = 8; // Layer 3 (value =  4) is reserved by Unity but unnamed. Skip to Layer 4.
+            FPLayerNames.Add(layerAsInt, "Water");
+            layerAsInt = 16;
+            FPLayerNames.Add(layerAsInt, "UI");
+            
+            // Skip two more layers to layer 8. From here, we can rely on powers of 2.
+            layerAsInt = 128;
+            FPLayerNames.Add(layerAsInt, "FG Plane A");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "FG Plane B");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "FG Plane C");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "FG Plane D");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 0");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 1");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 2");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 3");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 4");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 5");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 6");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 7");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 8");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 9");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 10");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 11");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 12");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 13");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 14");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "BG Layer 15");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "LightingSetup");
+            layerAsInt *= 2;
+            FPLayerNames.Add(layerAsInt, "Lighting");
         }
 
         public override void
@@ -662,6 +737,12 @@ namespace Fp2Trainer
             OnSceneWasInitialized(int buildindex,
                 string sceneName) // Runs when a Scene has Initialized and is passed the Scene's Build Index and Name.
         {
+            if (DeterministicMode.Value)
+            {
+                UnityEngine.Random.InitState(fp2ReleaseDateInt);
+                Log($"Seeding RNG with {fp2ReleaseDate.ToString()} ({fp2ReleaseDateInt})");
+            }
+
             MelonLogger.Msg("OnSceneWasInitialized: " + buildindex + " | " + sceneName);
             SkipBootIntros();
             GrabAndTweakPauseMenu();
@@ -887,6 +968,7 @@ namespace Fp2Trainer
                         FPPlayer2p.CatchupIfPlayerTooFarAway();
                     }
 
+                    debugDisplay = FP2TrainerAllyControls.funky + "\n" + Fp2Trainer.debugDisplay;
 
                     if (goFancyTextPosition != null)
                         UpdateFancyText();
@@ -954,13 +1036,20 @@ namespace Fp2Trainer
 
         private void HandleDataPageDisplay()
         {
+            var collisionLayerName = fpplayer.collisionLayer.ToString();
+            if (fpplayer.collisionLayer >= 0)
+            {
+                //collisionLayerName = $"{collisionLayerName}: {LayerMask.LayerToName(fpplayer.collisionLayer)}";
+                collisionLayerName = $"{collisionLayerName}: {FPLayerNames[fpplayer.collisionLayer]}";
+            }
+
             if (currentDataPage == DataPage.NO_CLIP)
             {
                 debugDisplay += "NoClip Enabled: " + noClip.ToString() + "\n";
                 debugDisplay += "Position: " + fpplayer.position.ToString() + "\n";
                 debugDisplay += "Terrain Collision: " + fpplayer.terrainCollision.ToString() + "\n";
                 debugDisplay += "Physics Enabled: " + fpplayer.enablePhysics.ToString() + "\n";
-                debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
+                debugDisplay += "Collision Layer: " + collisionLayerName + "\n";
                 debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
                 debugDisplay += "Show Debug Colliders: " + ShowCollidersLastSetting.Value.ToString() + "\n";
             }
@@ -985,7 +1074,7 @@ namespace Fp2Trainer
                     debugDisplay += "Air Drag: " + fpplayer.airDrag + "\n";
                 }
 
-                debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
+                debugDisplay += "Collision Layer: " + collisionLayerName + "\n";
                 debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
                 debugDisplay += "Show Debug Colliders: " + ShowCollidersLastSetting.Value.ToString() + "\n";
             }
@@ -993,7 +1082,7 @@ namespace Fp2Trainer
             {
                 debugDisplay += "Movement (2/2): \n";
 
-                debugDisplay += "Collision Layer: " + fpplayer.collisionLayer.ToString() + "\n";
+                debugDisplay += "Collision Layer: " + collisionLayerName + "\n";
                 debugDisplay += "PlaneSwitcherVisualizers: " + planeSwitchVisualizersVisible.ToString() + "\n";
                 debugDisplay += "Show Debug Colliders: " + ShowCollidersLastSetting.Value.ToString() + "\n";
 
@@ -1569,6 +1658,18 @@ namespace Fp2Trainer
                 Log("NoClip Toggle");
                 ToggleNoClip();
             }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKReturnToCheckpoint))
+            {
+                Log("Return to Checkpoint");
+                ReturnToCheckpoint();
+            }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKRestartStage))
+            {
+                Log("Restart Stage");
+                RestartLevel();
+            }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKTogglePlaneSwitcherVisualizers))
             {
@@ -1713,29 +1814,62 @@ namespace Fp2Trainer
                     DumpAllPlayerVarsAndComponents(fpp);
                 }
             }
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleLockP1ToGhostFiles))
+            {
+                LockP1ToGhostFiles.Value = !LockP1ToGhostFiles.Value;
+                Log($"Toggle Lock Player1 To Ghost Files: {!LockP1ToGhostFiles.Value} => {LockP1ToGhostFiles.Value}");
+
+                if (LockP1ToGhostFiles.Value)
+                {
+                    Log("Attempting to force player to replay ghost.");
+                    skipRecording = true;
+                    fpplayer.inputMethod = fpplayer.HandleAllyControlsGhost;
+                    FP2TrainerAllyControls.needToLoadInputs = true;
+                
+                    foreach (var fpp in fpplayers)
+                    {
+                        DumpAllPlayerVarsAndComponents(fpp);
+                    }
+                }
+            }
         }
 
         private void HandleInstaSwapHotkeys()
         {
+            if (!UseInstaSwitch.Value)
+            {
+                return;
+            }
+
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToLilac))
             {
+                currentPreferredCharacter = FPCharacterID.LILAC;
                 fpplayer.characterID = FPCharacterID.LILAC;
+                FPPlayer2p.PerformInstaSwap(currentPreferredCharacter);
             }
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToCarol))
             {
+                currentPreferredCharacter = FPCharacterID.CAROL;
                 fpplayer.characterID = FPCharacterID.CAROL;
+                FPPlayer2p.PerformInstaSwap(currentPreferredCharacter);
             }
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToCarolBike))
             {
+                currentPreferredCharacter = FPCharacterID.BIKECAROL;
                 fpplayer.characterID = FPCharacterID.BIKECAROL;
+                FPPlayer2p.PerformInstaSwap(currentPreferredCharacter);
             }
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToMilla))
             {
+                currentPreferredCharacter = FPCharacterID.MILLA;
                 fpplayer.characterID = FPCharacterID.MILLA;
+                FPPlayer2p.PerformInstaSwap(currentPreferredCharacter);
             }
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToNeera))
             {
+                currentPreferredCharacter = FPCharacterID.NEERA;
                 fpplayer.characterID = FPCharacterID.NEERA;
+                FPPlayer2p.PerformInstaSwap(currentPreferredCharacter);
             }
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToNext))
             {
@@ -1747,6 +1881,9 @@ namespace Fp2Trainer
                 {
                     fpplayer.characterID++;
                 }
+                
+                currentPreferredCharacter = fpplayer.characterID;
+                FPPlayer2p.PerformInstaSwap(currentPreferredCharacter);
             }
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwitchCurrentPlayerToPrev))
             {
@@ -1758,6 +1895,9 @@ namespace Fp2Trainer
                 {
                     fpplayer.characterID--;
                 }
+                
+                currentPreferredCharacter = fpplayer.characterID;
+                FPPlayer2p.PerformInstaSwap(currentPreferredCharacter);
             }
 
         }
@@ -2768,5 +2908,18 @@ namespace Fp2Trainer
         {
             return pos - cam.transform.position;
         }
+
+        /*
+        public void OverwriteDeltaTime(float replacementDeltaTime)
+        {
+            var props = typeof(Time).GetProperties(BindingFlags.NonPublic |
+                                                       BindingFlags.Instance);
+            PropertyInfo prop = typeof(Time).GetProperty("deltaTime", BindingFlags.NonPublic |
+                                                  BindingFlags.Instance);
+            Log($"before prop (deltaTime): {prop.ToString()}");
+            prop.SetValue(null, replacementDeltaTime);
+            Log($"after prop (deltaTime): {prop.ToString()}");
+        }
+        */
     }
 }

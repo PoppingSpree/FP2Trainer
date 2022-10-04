@@ -21,6 +21,8 @@ namespace Fp2Trainer
 
         public static bool showAllyControlDebugs = false;
         public static bool needToLoadInputs = false;
+        
+        public static string funky = "";
 
         public static void LogDebugOnly(string str)
         {
@@ -399,13 +401,21 @@ namespace Fp2Trainer
 	        if (needToLoadInputs)
 	        {
 		        Fp2Trainer.Log("Need to load inputs from file. Grabbing most recent / from configs.");
-		        LoadFileInputQueueForPlayer(fpp);
+		        var ipqTemp = LoadFileInputQueueForPlayer(fpp);
+		        ipqTemp.SetCountSteps(0);
+		        var spawner = GameObject.FindObjectOfType<PlayerSpawnPoint>();
+		        if (spawner != null && ipqTemp.charID > -1)
+		        {
+			        spawner.character = (FPCharacterID)ipqTemp.charID;
+		        }
+
 		        Fp2Trainer.Log("Done loading..");
 		        needToLoadInputs = false;
 	        }
 
 	        var ipq = GetInputQueue(fpp);
 	        AddTime(GetInputQueue(fpp), FPStage.deltaTime);
+	        ipq.IncrementStep();
 	        
 	        string funky2 = $"ipq.GetTimeElapsed() => {ipq.GetTimeElapsed()}\n";
 	        Fp2Trainer.Log(funky2);
@@ -429,13 +439,20 @@ namespace Fp2Trainer
 	        }
 
 	        var tsi = ipq.GetClosestToTimestamp(ipq.GetTimeElapsed(), 0);
+	        if (Fp2Trainer.DeterministicMode.Value)
+	        {
+		        tsi = ipq.GetByIndexStep(ipq.GetCountSteps());
+	        }
+
 	        tsi.MapInputsToFPPlayer(fpp);
 	        MapPlayerPressesBasedOnGhostIndexes(fpp, tsi.numStep);
 
-	        string funky = $"Debug: {tsi.ToFriendlyString()}";
+	        funky = $"Debug: {tsi.ToFriendlyString()}";
 	        funky += $"ipq.GetTimeElapsed() => {ipq.GetTimeElapsed()}\n";
+	        funky += $"ipq.GetCountSteps() => {ipq.GetCountSteps()}\n";
 	        Fp2Trainer.Log(funky);
-	        Fp2Trainer.debugDisplay = funky + "\n" + Fp2Trainer.debugDisplay;
+	        
+	        //Fp2Trainer.debugDisplay = funky + "\n" + Fp2Trainer.debugDisplay;
 	        
             
 	        if (fpp != leadPlayer)

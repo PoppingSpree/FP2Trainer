@@ -28,6 +28,9 @@
         <DebugSymbols>false</DebugSymbols>
     </PropertyGroup>
     <ItemGroup>
+        <Reference Include="0Harmony">
+          <HintPath>E:\SteamLibrary\steamapps\common\Freedom Planet 2\MelonLoader\0Harmony.dll</HintPath>
+        </Reference>
         <Reference Include="Assembly-CSharp">
             <HintPath>E:\SteamLibrary\steamapps\common\Freedom Planet 2\FP2_Data\Managed\Assembly-CSharp.dll</HintPath>
         </Reference>

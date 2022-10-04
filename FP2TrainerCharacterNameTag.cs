@@ -26,7 +26,6 @@ namespace Fp2Trainer
                 instance = this;
                 this.transform.parent = Fp2Trainer.goFP2Trainer.transform;
             }
-            Fp2Trainer.Log("banan");
 
             goNametags = new Dictionary<int, GameObject>();
             tmNametags = new Dictionary<int, TextMesh>();
@@ -36,9 +35,7 @@ namespace Fp2Trainer
             placeholderNames.Add("Dazl");
             placeholderNames.Add("Sparks");
             placeholderNames.Add("Edna");
-            
-            Fp2Trainer.Log("banan2");
-            
+
             if (Fp2Trainer.fpplayers != null)
             {
                 foreach (FPPlayer fpp in Fp2Trainer.fpplayers)
@@ -46,7 +43,6 @@ namespace Fp2Trainer
                     GameObject goNametag = InstantiateNewNametag(fpp);
                     goNametags.Add(fpp.GetInstanceID(), goNametag);
                     tmNametags.Add(fpp.GetInstanceID(), goNametag.GetComponent<TextMesh>());
-                    Fp2Trainer.Log("banan3");
                 }
             }
         }

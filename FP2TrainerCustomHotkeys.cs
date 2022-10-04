@@ -86,6 +86,24 @@ namespace Fp2Trainer
             }
         }
 
+        public void OnLevelWasLoaded(int level)
+        {
+            try
+            {
+                //This should probably be in its own script:
+
+                if (Fp2Trainer.UseInstaSwitch.Value)
+                {
+                    Fp2Trainer.Log("Finna spawn extra chars for instaswap");
+                    FPPlayer2p.SpawnExtraCharactersViaSpawnPoint();
+                }
+            }
+            catch (Exception e)
+            {
+                Fp2Trainer.Log(e.Message + e.StackTrace);
+            }
+        }
+
         public static KeyCode KeyCodeFromString(string strKeyCode)
         {
             return (KeyCode) Enum.Parse(typeof(KeyCode), strKeyCode);

@@ -1,5 +1,7 @@
 LAST LEFT OFF ON: 
 > dump vars and components on all players to file for comparing.
+> RNG Mitigation https://www.gamedeveloper.com/programming/implementing-a-replay-system-in-unity-and-how-i-d-do-it-differently-next-time
+> hook FPStage and force the time and frametime to a fake 60fps value, then do replays based on step number not time.
 
 > Want to add splitscreen
 > Want to add tidy menu
