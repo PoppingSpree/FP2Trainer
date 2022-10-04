@@ -3013,12 +3013,20 @@ namespace Fp2Trainer
 
         public static void StartSplitscreen()
         {
+            foreach (var ssci in SplitScreenCameraInfos)
+            {
+                ssci.SplitCamRenderTexture.Release();
+            }
+
             SplitScreenCameraInfos.Clear();
 
             try
             {
                 var numPlayers = fpplayers.Count;
                 EnableSplitScreen.Value = true;
+                
+                // Memo to go back and dispose these objects since we're creating new ones for player 1 as well...
+                // Would also be nice to duplicate the HUD to give everyone their own...
                 var goStageCamera = GameObject.Find("Stage Camera"); Log($"{goStageCamera}");
                 var goRenderCamera = GameObject.Find("Render Camera"); Log($"{goRenderCamera}");
                 var goPixelArtTarget = GameObject.Find("Pixel Art Target");  Log($"{goPixelArtTarget}");// has render cam as child object.
@@ -3034,6 +3042,7 @@ namespace Fp2Trainer
                     var cameraRect = SplitScreenCamInfo.GetCamRectByPlayerIndexAndCount(p, numPlayers);
                     Log($"Rect: {cameraRect}");
                     // Short verison for first player.
+                    /*
                     if (p == 0)
                     {
                         SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera, stageCamera.renderTarget)); // First cam is pretty much guarenteed.
@@ -3042,6 +3051,7 @@ namespace Fp2Trainer
                         goRenderCamera.GetComponent<Camera>().rect = new Rect(cameraRect);
                         continue;
                     }
+                    */
 
                     var goSplitScreenPixelArtTarget = GameObject.Instantiate(goPixelArtTarget);  Log($"{goSplitScreenPixelArtTarget}");//shouldn't we be using the FPStage instantiate instead???
                     //var goSplitScreenRenderCamera = goSplitScreenPixelArtTarget.transform.Find("Render Camera (Clone)"); Log($"{goSplitScreenRenderCamera}");
@@ -3072,7 +3082,7 @@ namespace Fp2Trainer
                     
                     // Move down to not overlap.
                     goSplitScreenPixelArtTarget.transform.position +=
-                        new Vector3(0, goPixelArtTarget.transform.localScale.y * 2 * p, 0); Log($"{goSplitScreenPixelArtTarget}");
+                        new Vector3(0, goPixelArtTarget.transform.localScale.y * 2 * (p + 1), 0); Log($"{goSplitScreenPixelArtTarget}");
                 
                     // Set the material on the new render target to be unique and use the new renderTexture we just made.
                     goSplitScreenPixelArtTarget.GetComponent<MeshRenderer>().material.mainTexture =
