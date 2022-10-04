@@ -238,6 +238,7 @@ namespace Fp2Trainer
 
         public static void HandleAllyControlsFollow(this FPPlayer fpp)
         {
+	        funky = "";
 	        needToLoadInputs = false;
             GetUpdatedPlayerList();
 
@@ -286,6 +287,7 @@ namespace Fp2Trainer
         
         public static void HandleAllyControlsHunter(this FPPlayer fpp)
         {
+	        funky = "";
 	        bool isTargetingAlly = false;
 	        needToLoadInputs = false;
 	        GetUpdatedPlayerList();
@@ -395,14 +397,14 @@ namespace Fp2Trainer
         
         public static void HandleAllyControlsGhost(this FPPlayer fpp)
         {
-	        
+	        funky = "";
 	        GetUpdatedPlayerList();
 
 	        if (needToLoadInputs)
 	        {
 		        Fp2Trainer.Log("Need to load inputs from file. Grabbing most recent / from configs.");
 		        var ipqTemp = LoadFileInputQueueForPlayer(fpp);
-		        ipqTemp.SetCountSteps(0);
+		        ipqTemp.SetCountSteps(1);
 		        var spawner = GameObject.FindObjectOfType<PlayerSpawnPoint>();
 		        if (spawner != null && ipqTemp.charID > -1)
 		        {
@@ -468,7 +470,7 @@ namespace Fp2Trainer
         
         public static void HandleAllyControlsNetplay(this FPPlayer fpp)
         {
-	        
+	        funky = "";
 	        GetUpdatedPlayerList();
 
             
@@ -514,8 +516,20 @@ namespace Fp2Trainer
         
         public static void GetAndRecordInputFromPlayer1(this FPPlayer fpp)
         {
+	        funky = "";
 	        //int fiveMinutesAsFrames = 60 * 60 * 5;
 	        fpp.GetInputFromPlayer1();
+	        
+	        // I kinda want to visualize the player's inputs too...
+	        var ipq = GetInputQueue(fpp);
+	        AddTime(GetInputQueue(fpp), FPStage.deltaTime);
+	        ipq.IncrementStep();
+	        var tsi = ipq.GetClosestToTimestamp(ipq.GetTimeElapsed(), 0);
+	        if (Fp2Trainer.DeterministicMode.Value)
+	        {
+		        tsi = ipq.GetByIndexStep(ipq.GetCountSteps());
+	        }
+	        // End of visualizing P1's inputs.
 	        
 	        try
 	        {
@@ -523,6 +537,10 @@ namespace Fp2Trainer
 		        //GetInputQueue(fpp).SetMaxLength(fiveMinutesAsFrames);
 		        RecordInput(fpp);
 		        MapPlayerPressesFromPreviousInputs(fpp);
+		        
+		        funky = $"Debug: {tsi.ToFriendlyString()}";
+		        funky += $"ipq.GetTimeElapsed() => {ipq.GetTimeElapsed()}\n";
+		        funky += $"ipq.GetCountSteps() => {ipq.GetCountSteps()}\n";
 
 		        if (fpp.state == new FPObjectState(fpp.State_KO) || fpp.state == new FPObjectState(fpp.State_Victory))
 		        {

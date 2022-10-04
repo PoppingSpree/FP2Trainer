@@ -871,6 +871,12 @@ namespace Fp2Trainer
         {
             try
             {
+                if (DeterministicMode.Value)
+                {
+                    UnityEngine.Random.InitState(fp2ReleaseDateInt);
+                    //Log($"Seeding RNG with {fp2ReleaseDate.ToString()} ({fp2ReleaseDateInt})");
+                }
+                
                 if (introSkipped < 1)
                 {
                     SkipBootIntros();
