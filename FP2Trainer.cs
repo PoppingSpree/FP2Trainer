@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Configuration;
 using System.Reflection;
 using MelonLoader;
@@ -3023,6 +3024,7 @@ namespace Fp2Trainer
             try
             {
                 var numPlayers = fpplayers.Count;
+                var sortedFPPlayers = fpplayers.OrderBy(fpp => fpp.characterID).ToList();
                 EnableSplitScreen.Value = true;
                 
                 // Memo to go back and dispose these objects since we're creating new ones for player 1 as well...
@@ -3089,12 +3091,12 @@ namespace Fp2Trainer
                         splitScreenStageCamera.renderTarget;
                     
                     // Set the targets to the players
-                    if (fpplayers.Count > 1)
+                    if (numPlayers > 1)
                     {
                         // StageCamera has a SetCameraTarget method, but it's static and assumes one camera so we don't use it.
-                        splitScreenStageCamera.target = fpplayers[p];
-                        splitScreenStageCamera.targetPlayer = fpplayers[p];
-                        Log($"Set new target to fpplayers[p] p:{p} fpp: {splitScreenStageCamera.target} : {splitScreenStageCamera.target.name}");
+                        splitScreenStageCamera.target = sortedFPPlayers[p];
+                        splitScreenStageCamera.targetPlayer = sortedFPPlayers[p];
+                        Log($"Set new target to sortedFPPlayers[p] p:{p} fpp: {splitScreenStageCamera.target} : {splitScreenStageCamera.target.name}");
                     }
                     else
                     {
