@@ -69,6 +69,8 @@ namespace Fp2Trainer
             HOTKEYS_4,
             HOTKEYS_5,
             HOTKEYS_6,
+            HOTKEYS_7,
+            HOTKEYS_8,
             QUICKBOOT,
             NONE
         }
@@ -87,6 +89,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKGotoWarpPoint;
 
         public static MelonPreferences_Entry<string> PHKKOCharacter;
+        public static MelonPreferences_Entry<string> PHKKOBoss;
 
         public static MelonPreferences_Entry<string> PHKToggleNoClip;
 
@@ -94,6 +97,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKSwapBetweenSpawnedChars;
         public static MelonPreferences_Entry<string> PHKToggleMultiCharStart;
         public static MelonPreferences_Entry<string> PHKCyclePreferredAllyControlType;
+        public static MelonPreferences_Entry<string> PHKStartSplitscreen;
         
         public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToLilac;
         public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToCarol;
@@ -357,6 +361,7 @@ namespace Fp2Trainer
             PHKGotoWarpPoint = CreateEntryAndBindHotkey("PHKGotoWarpPoint", "F4");
 
             PHKKOCharacter = CreateEntryAndBindHotkey("PHKKOCharacter", "Shift+F1");
+            PHKKOBoss = CreateEntryAndBindHotkey("PHKKOBoss", "Backspace");
 
             PHKToggleNoClip = CreateEntryAndBindHotkey("PHKToggleNoClip", "F2");
 
@@ -364,11 +369,13 @@ namespace Fp2Trainer
             PHKSwapBetweenSpawnedChars = CreateEntryAndBindHotkey("PHKSwapBetweenSpawnedChars", "F11");
             PHKToggleMultiCharStart = CreateEntryAndBindHotkey("PHKToggleMultiCharStart", "Shift+F12");
             PHKCyclePreferredAllyControlType =
-                CreateEntryAndBindHotkey("PHKCyclePreferredAllyControlType", "Shift+F11");
+                CreateEntryAndBindHotkey("F", "Shift+F11");
             PHKStartInputPlayback =
                 CreateEntryAndBindHotkey("PHKStartInputPlayback", "Insert");
             PHKToggleLockP1ToGhostFiles =
                 CreateEntryAndBindHotkey("PHKToggleLockP1ToGhostFiles", "Shift+Insert");
+            
+            PHKStartSplitscreen = CreateEntryAndBindHotkey("PHKStartSplitscreen", "Slash");
             
             PHKSwitchCurrentPlayerToLilac = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToLilac", "Keypad0");
             PHKSwitchCurrentPlayerToCarol = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToCarol", "Keypad1");
@@ -1317,10 +1324,12 @@ namespace Fp2Trainer
                                                   "Switch to Next Remaining Character: {1}\n" +
                                                   "Toggle Ally-spawn on level-start: {2}\n" +
                                                   "Cycle Ally Playstyle: {3}\n" +
-                                                  "Insta-KO Current Character: {4}\n",
+                                                  "Insta-KO Current Character: {4}\n" +
+                                                  "Insta-KO Current Boss: {5}\n" +
+                                                  "Start Splitscreen: {6}\n",
                                         PHKSpawnExtraChar.Value, PHKSwapBetweenSpawnedChars.Value,
                                         PHKToggleMultiCharStart.Value, PHKCyclePreferredAllyControlType.Value,
-                                        PHKKOCharacter.Value);
+                                        PHKKOCharacter.Value, PHKKOBoss.Value, PHKStartSplitscreen.Value);
                     break;
                 case InstructionPage.CHAR_INSTASWAP:
                     debugDisplay += "**Character Insta-swap**\n" +
@@ -1385,6 +1394,16 @@ namespace Fp2Trainer
                     debugDisplay += "**Even MORE More Current Hotkeys**\n";
                     debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 3),
                         1 + (numHotkeyLinesPerPage * 4));
+                    break;
+                case InstructionPage.HOTKEYS_7:
+                    debugDisplay += "**Soooo many More Current Hotkeys**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 4),
+                        1 + (numHotkeyLinesPerPage * 5));
+                    break;
+                case InstructionPage.HOTKEYS_8:
+                    debugDisplay += "**Current Hotkeys Eight**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 5),
+                        1 + (numHotkeyLinesPerPage * 6));
                     break;
                 case InstructionPage.QUICKBOOT:
                     debugDisplay += "**QuickBoot**\n";
@@ -1651,6 +1670,25 @@ namespace Fp2Trainer
                     Log("Attempted to KO the player, but no FPPlayer instance was found");
                 }
             }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKKOBoss))
+            {
+                //TestDamageNumberPopups();
+
+                ReacquireBossHuds();
+                if (fpEnemies.Count > 0)
+                {
+                    Log("KO Boss");
+                    foreach (var enemy in fpEnemies)
+                    {
+                        enemy.health = 0;
+                    }
+                }
+                else
+                {
+                    Log("Attempted to KO all bosses, but no bosses were found... (Check for visible HUDs?)");
+                }
+            }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleInstructions))
             {
@@ -1789,7 +1827,14 @@ namespace Fp2Trainer
                 MultiCharStartLastSetting.Value = multiplayerStart;
                 Log(String.Format("Toggle Multiplayer Start ({0} -> {1})", !multiplayerStart, multiplayerStart));
             }
-
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKStartSplitscreen))
+            {
+                Log("Start Splitscreen");
+                StartSplitscreen();
+                Log("Start Splitscreen");
+            }
+            
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKSwapBetweenSpawnedChars))
             {
                 Log("Attempting to dump character info.");
@@ -2908,6 +2953,59 @@ namespace Fp2Trainer
             var sr = File.AppendText(fileName);
             sr.WriteLine(fppVars);
             sr.Close();
+        }
+
+        public static void StartSplitscreen()
+        {
+
+            try
+            {
+                var goStageCamera = GameObject.Find("Stage Camera"); Log($"{goStageCamera}");
+                var goRenderCamera = GameObject.Find("Render Camera"); Log($"{goRenderCamera}");
+                var goPixelArtTarget = GameObject.Find("Pixel Art Target");  Log($"{goPixelArtTarget}");// has render cam as child object.
+            
+                var stageCamera = goStageCamera.GetComponent<FPCamera>(); Log($"{stageCamera}");
+                var renderCamera = goRenderCamera.GetComponent<FPCameraFit>(); Log($"{renderCamera}");
+                var pixelArtTarget = goPixelArtTarget.GetComponent<MeshRenderer>(); Log($"{pixelArtTarget}");
+
+                var goSplitScreenPixelArtTarget = GameObject.Instantiate(goPixelArtTarget);  Log($"{goSplitScreenPixelArtTarget}");//shouldn't we be using the FPStage instantiate instead???
+                //var goSplitScreenRenderCamera = goSplitScreenPixelArtTarget.transform.Find("Render Camera (Clone)"); Log($"{goSplitScreenRenderCamera}");
+                //var goSplitScreenRenderCamera = GameObject.Find("Render Camera (Clone)"); Log($"{goSplitScreenRenderCamera}");
+                var goSplitScreenRenderCamera = goSplitScreenPixelArtTarget.transform.GetChild(0); Log($"{goSplitScreenRenderCamera}");
+                for (int i = 0; i < goSplitScreenPixelArtTarget.transform.childCount; i++)
+                {
+                    Log($"New Pixel Art Target Children: {goSplitScreenPixelArtTarget.transform.GetChild(i).gameObject.ToString()}");
+                }
+
+                var goSplitScreenStageCamera = GameObject.Instantiate(goStageCamera); Log($"{goSplitScreenStageCamera}");
+                
+                var splitScreenRenderCamera = goSplitScreenRenderCamera.GetComponent<FPCameraFit>(); Log($"{splitScreenRenderCamera}");
+            
+                var splitScreenStageCamera = goSplitScreenStageCamera.GetComponent<FPCamera>(); Log($"{splitScreenStageCamera}");
+            
+                // Move down to not overlap.
+                goSplitScreenPixelArtTarget.transform.position +=
+                    new Vector3(0, goPixelArtTarget.transform.localScale.y, 0); Log($"{goSplitScreenPixelArtTarget}");
+                if (fpplayers.Count > 1)
+                {
+                    splitScreenStageCamera.target = fpplayers[1]; Log($"{splitScreenStageCamera}");
+                }
+                else
+                {
+                    splitScreenStageCamera.target = stageCamera.target; Log($"{splitScreenStageCamera}");
+                }
+                
+                // Adjust viewports. Bottom-Left to Top-Right is 0,0 -> 1,1
+                // Vertical Stack Layout
+                FPSaveManager.SetResolution(640, 360 * 2); Log($"setRes");
+                goRenderCamera.GetComponent<Camera>().rect = new Rect(0, 1 - 0.5f, 1, 0.5f); Log($"{goRenderCamera.GetComponent<Camera>().rect}");
+                goSplitScreenRenderCamera.GetComponent<Camera>().rect = new Rect(0, 1 - 1f, 1, 0.5f); Log($"{goSplitScreenRenderCamera.GetComponent<Camera>().rect}");
+
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error($"{e.ToString()}\n{e.Message}\n{e.StackTrace}");
+            }
         }
 
         public static Vector3 GetPositionRelativeToCamera(FPCamera cam, Vector3 pos)
