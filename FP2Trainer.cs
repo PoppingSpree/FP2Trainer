@@ -1584,7 +1584,8 @@ namespace Fp2Trainer
 
         public static List<FPPlayer> GetFPPlayers()
         {
-            return new List<FPPlayer>(GameObject.FindObjectsOfType<FPPlayer>());
+            var listPlayers =  new List<FPPlayer>(GameObject.FindObjectsOfType<FPPlayer>());
+            return listPlayers.OrderBy(fpp => fpp.characterID).ToList();
         }
 
         private GameObject GetFirstPlayerGameObject()
@@ -3079,8 +3080,9 @@ namespace Fp2Trainer
                      * 
                      */
                     
-                    // Do we need this bit or not???
                     splitScreenStageCamera.renderTarget = new RenderTexture(stageCamera.renderTarget.width, stageCamera.renderTarget.height, stageCamera.renderTarget.depth, stageCamera.renderTarget.format);
+                    // Reminder: RenderTextures are not auto-disposed. I should probably create and cache these at the start for reuse throughout the game rather than creating them on the fly.
+                    
                     
                     // Move down to not overlap.
                     goSplitScreenPixelArtTarget.transform.position +=

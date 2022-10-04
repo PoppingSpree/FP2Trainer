@@ -29,6 +29,8 @@ namespace Fp2Trainer
         
         public static List<FPPlayer> instaswapCharacterInstances = new List<FPPlayer>();
 
+        public static bool ignoreCatchup = false;
+
 
         protected new void Start()
         {
@@ -349,7 +351,7 @@ namespace Fp2Trainer
                 var DestroyThese = new List<FPPlayer>();
                 foreach (FPPlayer fpp in Fp2Trainer.fpplayers)
                 {
-                    if (Vector2.Distance(fppi.transform.position,
+                    if (!ignoreCatchup && Vector2.Distance(fppi.transform.position,
                             fpp.transform.position) >= catchupDistance)
                     {
                         fpp.transform.position =
@@ -489,6 +491,17 @@ namespace Fp2Trainer
 
             //DestroyMergaCutsceneTriggers();
 
+            if (Fp2Trainer.EnableSplitScreen.Value)
+            {
+                Fp2Trainer.StartSplitscreen(); // Probably need to include a way to stop this from happening automatically.
+            }
+
+            return newPlayer;
+        }
+
+        public static FPPlayer SpawnExtraCharacterExperimental1()
+        {
+            FPPlayer newPlayer = null;
             return newPlayer;
         }
 
@@ -553,6 +566,11 @@ namespace Fp2Trainer
                         fppi.activationMode = FPActivationMode.NEVER_ACTIVE;
                         fppi.GetComponent<SpriteRenderer>().enabled = false;
                         FPStage.DestroyStageObject(fppi);
+                        
+                        if (Fp2Trainer.EnableSplitScreen.Value)
+                        {
+                            Fp2Trainer.StartSplitscreen(); // Probably need to include a way to stop this from happening automatically.
+                        }
                     }
                 }
                 else
