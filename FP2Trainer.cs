@@ -3032,6 +3032,7 @@ namespace Fp2Trainer
                 for (int p = 0; p < numPlayers; p++) 
                 {
                     var cameraRect = SplitScreenCamInfo.GetCamRectByPlayerIndexAndCount(p, numPlayers);
+                    Log($"Rect: {cameraRect}");
                     // Short verison for first player.
                     if (p == 0)
                     {
@@ -3045,18 +3046,19 @@ namespace Fp2Trainer
                     //var goSplitScreenRenderCamera = goSplitScreenPixelArtTarget.transform.Find("Render Camera (Clone)"); Log($"{goSplitScreenRenderCamera}");
                     //var goSplitScreenRenderCamera = GameObject.Find("Render Camera (Clone)"); Log($"{goSplitScreenRenderCamera}");
                     var goSplitScreenRenderCamera = goSplitScreenPixelArtTarget.transform.GetChild(0); Log($"{goSplitScreenRenderCamera}");
+                    /*
                     for (int i = 0; i < goSplitScreenPixelArtTarget.transform.childCount; i++)
                     {
                         Log($"New Pixel Art Target Children: {goSplitScreenPixelArtTarget.transform.GetChild(i).gameObject.ToString()}");
-                    }
+                    }*/
 
-                    var goSplitScreenStageCamera = GameObject.Instantiate(goStageCamera); Log($"{goSplitScreenStageCamera}");
+                    var goSplitScreenStageCamera = GameObject.Instantiate(goStageCamera);
                     
-                    var splitScreenRenderCamera = goSplitScreenRenderCamera.GetComponent<FPCameraFit>(); Log($"{splitScreenRenderCamera}");
+                    //var splitScreenRenderCamera = goSplitScreenRenderCamera.GetComponent<FPCameraFit>(); 
                 
-                    var splitScreenStageCamera = goSplitScreenStageCamera.GetComponent<FPCamera>(); Log($"{splitScreenStageCamera}");
+                    var splitScreenStageCamera = goSplitScreenStageCamera.GetComponent<FPCamera>();
 
-                    SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.gameObject, stageCamera.renderTarget));
+                    SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.gameObject, splitScreenStageCamera.renderTarget));
                     
                     /*
                      *SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera.GetComponent<Camera>()));
@@ -3130,6 +3132,7 @@ namespace Fp2Trainer
         {
             try
             {
+                return;
                 foreach (var camInfo in SplitScreenCameraInfos)
                 {
                     camInfo.RenderCamera = camInfo.GoRenderCamera.GetComponent<Camera>();
@@ -3154,6 +3157,48 @@ namespace Fp2Trainer
                         {
                             pl.cam.rect = camInfo.RenderCamera.rect;
                             pl.cam.targetTexture = camInfo.SplitCamRenderTexture; //Causes both views to stop clearing properly...
+
+                            // Imitate CameraStart for handling Lighting and Foreground
+                            if (pl.layerMask != StageLayerIDs.LIGHTING)
+                            {
+                                pl.cam.targetTexture = camInfo.FpCamera.renderTarget;
+                                pl.cam.clearFlags = CameraClearFlags.Nothing;
+                            }
+                            else
+                            {
+                                pl.cam.targetTexture = camInfo.FpCamera.lightingTarget;
+                                pl.cam.clearFlags = CameraClearFlags.Color;
+                                pl.cam.backgroundColor = camInfo.FpCamera.shadowTint;
+                                camInfo.FpCamera.lightingCamera = pl.cam;
+                                flag = true;
+                            }
+                            if (pl.layerMask == StageLayerIDs.FG_PLANE)
+                            {
+                                pl.cam.cullingMask = 3856;
+                            }
+                            
+                            // Get layer with highest depth.
+                            if ( pl.cam.depth > highestLayerDepth)
+                            {
+                                highestLayerDepth = pl.cam.depth;
+                                indexOfHighestLayerCam = pli;
+                            }
+                            
+                            //UI Cam is affected by Lighting flag?
+                            //... except the UI cam isn't accessible.
+                            /*
+                            if (!flag)
+                            {
+                                camInfo.FpCamera.uiCam.targetTexture = camInfo.FpCamera.renderTarget;
+                                camInfo.FpCamera.uiCam.clearFlags = CameraClearFlags.Nothing;
+                            }
+                            else
+                            {
+                                camInfo.FpCamera.uiCam.targetTexture = camInfo.FpCamera.uiTarget;
+                                camInfo.FpCamera.uiCam.clearFlags = CameraClearFlags.Color;
+                                camInfo.FpCamera.uiCam.backgroundColor = Color.clear;
+                            }
+                            */
                         }
                         else
                         {
