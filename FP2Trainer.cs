@@ -3089,7 +3089,7 @@ namespace Fp2Trainer
                         splitScreenStageCamera.renderTarget;
                     
                     // Set the targets to the players
-                    if (fpplayers.Count > 1 && p > 0)
+                    if (fpplayers.Count > 1)
                     {
                         // StageCamera has a SetCameraTarget method, but it's static and assumes one camera so we don't use it.
                         splitScreenStageCamera.target = fpplayers[p];

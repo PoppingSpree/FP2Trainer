@@ -46,7 +46,7 @@ namespace Fp2Trainer
 
         public static Rect GetCamRectByPlayerIndexAndCount(int playerIndex = 0, int playerNum = 1)
         {
-            MelonLogger.Msg($"Was passed playerIndex: {playerIndex} playerNum: {playerNum}");
+            //MelonLogger.Msg($"Was passed playerIndex: {playerIndex} playerNum: {playerNum}");
             if (playerNum <= 1)
             {
                 return SingleFull;
