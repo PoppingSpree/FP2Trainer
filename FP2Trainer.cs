@@ -3038,6 +3038,7 @@ namespace Fp2Trainer
                     {
                         SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera, stageCamera.renderTarget)); // First cam is pretty much guarenteed.
                         stageCamera.target = fpplayers[p];
+                        stageCamera.targetPlayer = fpplayers[p];
                         goRenderCamera.GetComponent<Camera>().rect = new Rect(cameraRect);
                         continue;
                     }
@@ -3071,7 +3072,7 @@ namespace Fp2Trainer
                     
                     // Move down to not overlap.
                     goSplitScreenPixelArtTarget.transform.position +=
-                        new Vector3(0, goPixelArtTarget.transform.localScale.y * 2, 0); Log($"{goSplitScreenPixelArtTarget}");
+                        new Vector3(0, goPixelArtTarget.transform.localScale.y * 2 * p, 0); Log($"{goSplitScreenPixelArtTarget}");
                 
                     // Set the material on the new render target to be unique and use the new renderTexture we just made.
                     goSplitScreenPixelArtTarget.GetComponent<MeshRenderer>().material.mainTexture =
@@ -3081,9 +3082,9 @@ namespace Fp2Trainer
                     if (fpplayers.Count > 1 && p > 0)
                     {
                         // StageCamera has a SetCameraTarget method, but it's static and assumes one camera so we don't use it.
-                        splitScreenStageCamera.target = fpplayers[p]; Log($"{splitScreenStageCamera}");
+                        splitScreenStageCamera.target = fpplayers[p];
                         splitScreenStageCamera.targetPlayer = fpplayers[p];
-                        Log($"Set new target to {splitScreenStageCamera.target}");
+                        Log($"Set new target to fpplayers[p] p:{p} fpp: {splitScreenStageCamera.target} : {splitScreenStageCamera.target.name}");
                     }
                     else
                     {
