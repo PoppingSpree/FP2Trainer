@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using MelonLoader;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -91,6 +92,53 @@ namespace Fp2Trainer
 		        ipq = FP2TrainerInputQueue.LoadQueueFromFile(Fp2Trainer.DEBUG_LoadSpecificGhostFile.Value);
 	        }
 	        
+	        AutoSetInputQueueForPlayer(fpp, ipq);
+
+	        return ipq;
+        }
+        
+        public static FP2TrainerInputQueue LoadFileInputQueueForPlayer(FPPlayer fpp, int playerNum)
+        {
+	        FP2TrainerInputQueue ipq;
+	        MelonPreferences_Entry<string> ghostFilePrefToCheck;
+	        switch (playerNum)
+	        {
+		        case 0:
+			        ghostFilePrefToCheck = Fp2Trainer.DEBUG_LoadSpecificGhostFile;
+			        break;
+		        case 1:
+			        ghostFilePrefToCheck = Fp2Trainer.DEBUG_LoadSpecificGhostFileP2;
+			        break;
+		        case 2:
+			        ghostFilePrefToCheck = Fp2Trainer.DEBUG_LoadSpecificGhostFileP3;
+			        break;
+		        case 3:
+			        ghostFilePrefToCheck = Fp2Trainer.DEBUG_LoadSpecificGhostFileP4;
+			        break;
+		        default:
+			        ghostFilePrefToCheck = Fp2Trainer.DEBUG_LoadSpecificGhostFile;
+			        break;
+
+	        }
+
+	        if (String.IsNullOrEmpty(ghostFilePrefToCheck.Value))
+	        {
+		        Fp2Trainer.Log("Loading most recent");
+		        ipq = FP2TrainerInputQueue.LoadQueueFromFileMostRecent();
+	        }
+	        else
+	        {
+		        Fp2Trainer.Log($"Loading from file: {ghostFilePrefToCheck.Value}");
+		        ipq = FP2TrainerInputQueue.LoadQueueFromFile(ghostFilePrefToCheck.Value);
+	        }
+	        
+	        AutoSetInputQueueForPlayer(fpp, ipq);
+
+	        return ipq;
+        }
+
+        public static void AutoSetInputQueueForPlayer(FPPlayer fpp, FP2TrainerInputQueue ipq)
+        {
 	        if (inputQueueForPlayers.ContainsKey(fpp.GetInstanceID()))
 	        {
 		        // Overwrite if present.
@@ -101,8 +149,6 @@ namespace Fp2Trainer
 		        // If it isn't, we need to Add the entry.
 		        inputQueueForPlayers.Add(fpp.GetInstanceID(), ipq);
 	        }
-
-	        return ipq;
         }
 
         public static bool HasFlag(BitwiseInputState theFlags, BitwiseInputState flagCondition)
@@ -289,12 +335,14 @@ namespace Fp2Trainer
         {
 	        funky = "";
 	        bool isTargetingAlly = false;
+	        float enemyTargetingRange = 512f + 64f;
+	        enemyTargetingRange = (512f + 64f) * 100;
 	        needToLoadInputs = false;
 	        GetUpdatedPlayerList();
 	        
 	        if (fpp != leadPlayer)
 	        {
-		        FPBaseObject targetObj = FPStage.FindNearestEnemy(fpp, 512f+64f, string.Empty);
+		        FPBaseObject targetObj = FPStage.FindNearestEnemy(fpp, enemyTargetingRange, string.Empty);
 		        if (targetObj == null)
 		        {
 			        //FPStage.FindNearestPlayer(fpp, 360f); //Doesn't work, it will always return itself.
