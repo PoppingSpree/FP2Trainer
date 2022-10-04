@@ -114,6 +114,9 @@ namespace Fp2Trainer
         
         public static MelonPreferences_Entry<string> PHKStartInputPlayback;
         public static MelonPreferences_Entry<string> PHKToggleLockP1ToGhostFiles;
+        public static MelonPreferences_Entry<string> PHKToggleLockP2ToGhostFiles;
+        public static MelonPreferences_Entry<string> PHKToggleLockP3ToGhostFiles;
+        public static MelonPreferences_Entry<string> PHKToggleLockP4ToGhostFiles;
 
         public static MelonPreferences_Entry<string> PHKGetOutGetOutGetOut;
 
@@ -161,6 +164,9 @@ namespace Fp2Trainer
 
         public static MelonPreferences_Entry<bool> LockP1ToGhostFiles;
         public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFile;
+        public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFileP2;
+        public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFileP3;
+        public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFileP4;
         
         public static MelonPreferences_Entry<bool> SixtyFPSHack;
         public static MelonPreferences_Entry<bool> DeterministicMode;
@@ -350,6 +356,9 @@ namespace Fp2Trainer
             LockP1ToGhostFiles = fp2Trainer.CreateEntry("LockP1ToGhostFiles", false);
             MultiCharStartNumChars = fp2Trainer.CreateEntry("MultiCharStartNumChars", 2);
             DEBUG_LoadSpecificGhostFile = fp2Trainer.CreateEntry("DEBUG_LoadSpecificGhostFile", "");
+            DEBUG_LoadSpecificGhostFileP2 = fp2Trainer.CreateEntry("DEBUG_LoadSpecificGhostFileP2", "");
+            DEBUG_LoadSpecificGhostFileP3 = fp2Trainer.CreateEntry("DEBUG_LoadSpecificGhostFileP3", "");
+            DEBUG_LoadSpecificGhostFileP4 = fp2Trainer.CreateEntry("DEBUG_LoadSpecificGhostFileP4", "");
             
             SixtyFPSHack = fp2Trainer.CreateEntry("SixtyFPSHack", false);
             DeterministicMode = fp2Trainer.CreateEntry("DeterministicMode", false);
@@ -602,6 +611,8 @@ namespace Fp2Trainer
 
             skipRecording = LockP1ToGhostFiles.Value;
             FP2TrainerAllyControls.needToLoadInputs = LockP1ToGhostFiles.Value;
+            
+            SplitScreenCameraInfos.Clear();
         }
 
         private static void CreateFP2TrainerGameObject()
@@ -1086,7 +1097,7 @@ namespace Fp2Trainer
                 {
                     if (cam.gameObject.name.Contains("Render"))
                     {
-                        var strCamsAreJank = $"{pad}{cam}\n{pad} => {cam.transform.position}\n"; 
+                        var strCamsAreJank = $"{pad}{cam}\n{pad} => {cam.transform.position}:TargText{cam.targetTexture}\n"; 
                         debugDisplay += strCamsAreJank;
                         Log(strCamsAreJank);
                     }
@@ -3006,6 +3017,7 @@ namespace Fp2Trainer
 
             try
             {
+                var numPlayers = fpplayers.Count;
                 EnableSplitScreen.Value = true;
                 var goStageCamera = GameObject.Find("Stage Camera"); Log($"{goStageCamera}");
                 var goRenderCamera = GameObject.Find("Render Camera"); Log($"{goRenderCamera}");
@@ -3014,62 +3026,94 @@ namespace Fp2Trainer
                 var stageCamera = goStageCamera.GetComponent<FPCamera>(); Log($"{stageCamera}");
                 var renderCamera = goRenderCamera.GetComponent<FPCameraFit>(); Log($"{renderCamera}");
                 var pixelArtTarget = goPixelArtTarget.GetComponent<MeshRenderer>(); Log($"{pixelArtTarget}");
-
-                var goSplitScreenPixelArtTarget = GameObject.Instantiate(goPixelArtTarget);  Log($"{goSplitScreenPixelArtTarget}");//shouldn't we be using the FPStage instantiate instead???
-                //var goSplitScreenRenderCamera = goSplitScreenPixelArtTarget.transform.Find("Render Camera (Clone)"); Log($"{goSplitScreenRenderCamera}");
-                //var goSplitScreenRenderCamera = GameObject.Find("Render Camera (Clone)"); Log($"{goSplitScreenRenderCamera}");
-                var goSplitScreenRenderCamera = goSplitScreenPixelArtTarget.transform.GetChild(0); Log($"{goSplitScreenRenderCamera}");
-                for (int i = 0; i < goSplitScreenPixelArtTarget.transform.childCount; i++)
+                
+                
+                
+                for (int p = 0; p < numPlayers; p++) 
                 {
-                    Log($"New Pixel Art Target Children: {goSplitScreenPixelArtTarget.transform.GetChild(i).gameObject.ToString()}");
+                    var cameraRect = SplitScreenCamInfo.GetCamRectByPlayerIndexAndCount(p, numPlayers);
+                    // Short verison for first player.
+                    if (p == 0)
+                    {
+                        SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera)); // First cam is pretty much guarenteed.
+                        stageCamera.target = fpplayers[p];
+                        goRenderCamera.GetComponent<Camera>().rect = new Rect(cameraRect);
+                        continue;
+                    }
+
+                    var goSplitScreenPixelArtTarget = GameObject.Instantiate(goPixelArtTarget);  Log($"{goSplitScreenPixelArtTarget}");//shouldn't we be using the FPStage instantiate instead???
+                    //var goSplitScreenRenderCamera = goSplitScreenPixelArtTarget.transform.Find("Render Camera (Clone)"); Log($"{goSplitScreenRenderCamera}");
+                    //var goSplitScreenRenderCamera = GameObject.Find("Render Camera (Clone)"); Log($"{goSplitScreenRenderCamera}");
+                    var goSplitScreenRenderCamera = goSplitScreenPixelArtTarget.transform.GetChild(0); Log($"{goSplitScreenRenderCamera}");
+                    for (int i = 0; i < goSplitScreenPixelArtTarget.transform.childCount; i++)
+                    {
+                        Log($"New Pixel Art Target Children: {goSplitScreenPixelArtTarget.transform.GetChild(i).gameObject.ToString()}");
+                    }
+
+                    var goSplitScreenStageCamera = GameObject.Instantiate(goStageCamera); Log($"{goSplitScreenStageCamera}");
+                    
+                    var splitScreenRenderCamera = goSplitScreenRenderCamera.GetComponent<FPCameraFit>(); Log($"{splitScreenRenderCamera}");
+                
+                    var splitScreenStageCamera = goSplitScreenStageCamera.GetComponent<FPCamera>(); Log($"{splitScreenStageCamera}");
+
+                    SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.gameObject));
+                    
+                    /*
+                     *SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera.GetComponent<Camera>()));
+                    SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.GetComponent<Camera>()));
+                     * 
+                     */
+                    
+                    // Do we need this bit or not???
+                    splitScreenStageCamera.renderTarget = new RenderTexture(stageCamera.renderTarget.width, stageCamera.renderTarget.height, stageCamera.renderTarget.depth, stageCamera.renderTarget.format);
+                    
+                    // Move down to not overlap.
+                    goSplitScreenPixelArtTarget.transform.position +=
+                        new Vector3(0, goPixelArtTarget.transform.localScale.y * 2, 0); Log($"{goSplitScreenPixelArtTarget}");
+                
+                    // Set the material on the new render target to be unique and use the new renderTexture we just made.
+                    goSplitScreenPixelArtTarget.GetComponent<MeshRenderer>().material.mainTexture =
+                        splitScreenStageCamera.renderTarget;
+                    
+                    // Set the targets to the players
+                    if (fpplayers.Count > 1 && p > 0)
+                    {
+                        // StageCamera has a SetCameraTarget method, but it's static and assumes one camera so we don't use it.
+                        splitScreenStageCamera.target = fpplayers[p]; Log($"{splitScreenStageCamera}");
+                        splitScreenStageCamera.targetPlayer = fpplayers[p];
+                        Log($"Set new target to {splitScreenStageCamera.target}");
+                    }
+                    else
+                    {
+                        splitScreenStageCamera.target = stageCamera.target; Log($"{splitScreenStageCamera}");
+                        Log($"Set target to {splitScreenStageCamera.target}, the original player.");
+                    }
+
+                    //cameraRect = SplitScreenCamInfo.GetCamRectByPlayerIndexAndCount(p, numPlayers);
+
+                    goSplitScreenRenderCamera.GetComponent<Camera>().rect = new Rect(cameraRect);
+                    
                 }
 
-                var goSplitScreenStageCamera = GameObject.Instantiate(goStageCamera); Log($"{goSplitScreenStageCamera}");
-                
-                var splitScreenRenderCamera = goSplitScreenRenderCamera.GetComponent<FPCameraFit>(); Log($"{splitScreenRenderCamera}");
-            
-                var splitScreenStageCamera = goSplitScreenStageCamera.GetComponent<FPCamera>(); Log($"{splitScreenStageCamera}");
-                
-                SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera));
-                SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.gameObject));
-                
-                /*
-                 *SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera.GetComponent<Camera>()));
-                SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.GetComponent<Camera>()));
-                 * 
-                 */
-                
-                splitScreenStageCamera.renderTarget = new RenderTexture(stageCamera.renderTarget.width, stageCamera.renderTarget.height, stageCamera.renderTarget.depth, stageCamera.renderTarget.format);
-            
-                FPSaveManager.SetResolution(640, 360 * 2); Log($"setRes");
-                // Move down to not overlap.
-                /*goSplitScreenPixelArtTarget.transform.position +=
-                    new Vector3(0, goPixelArtTarget.transform.localScale.y, 0); Log($"{goSplitScreenPixelArtTarget}");*/
-                
-                goSplitScreenPixelArtTarget.transform.position +=
-                    new Vector3(0, 360, 0); Log($"{goSplitScreenPixelArtTarget}");
-                
-                
-                if (fpplayers.Count > 1)
+                if (numPlayers > 2)
                 {
-                    splitScreenStageCamera.target = fpplayers[1]; Log($"{splitScreenStageCamera}");
-                    Log($"Set new target to {splitScreenStageCamera.target}");
+                    FPSaveManager.SetResolution(640 * 2, 360 * 2);
+                }
+                else if (numPlayers == 2)
+                {
+                    FPSaveManager.SetResolution(640, 360 * 2);
                 }
                 else
                 {
-                    splitScreenStageCamera.target = stageCamera.target; Log($"{splitScreenStageCamera}");
-                    Log($"Set target to {splitScreenStageCamera.target}, the original player.");
+                    FPSaveManager.SetResolution(640, 360 * 1);
                 }
-                
-                
-                // Adjust viewports. Bottom-Left to Top-Right is 0,0 -> 1,1
-                // Vertical Stack Layout
-                goRenderCamera.GetComponent<Camera>().rect = new Rect(0, 1 - 0.5f, 1, 0.5f); Log($"{goRenderCamera.GetComponent<Camera>().rect}");
-                goSplitScreenRenderCamera.GetComponent<Camera>().rect = new Rect(0, 1 - 1f, 1, 0.5f); Log($"{goSplitScreenRenderCamera.GetComponent<Camera>().rect}");
+
+                /*goSplitScreenPixelArtTarget.transform.position +=
+                    new Vector3(0, 360, 0); Log($"{goSplitScreenPixelArtTarget}");*/
                 
                     //DEBUG
-                    goRenderCamera.GetComponent<Camera>().rect = new Rect(0, 0, 1, 1); Log($"{goRenderCamera.GetComponent<Camera>().rect}");
-                    goSplitScreenRenderCamera.GetComponent<Camera>().rect = new Rect(0, 0, 1, 1); Log($"{goSplitScreenRenderCamera.GetComponent<Camera>().rect}");
+                    //goRenderCamera.GetComponent<Camera>().rect = new Rect(0, 0, 1, 1); Log($"{goRenderCamera.GetComponent<Camera>().rect}");
+                    //goSplitScreenRenderCamera.GetComponent<Camera>().rect = new Rect(0, 0, 1, 1); Log($"{goSplitScreenRenderCamera.GetComponent<Camera>().rect}");
 
                     //END DEBUG
                 
@@ -3095,17 +3139,14 @@ namespace Fp2Trainer
                         camInfo.FpCamera.lightingCamera.rect = camInfo.RenderCamera.rect;
                         camInfo.FpCamera.lightingCamera.targetTexture = camInfo.RenderCamera.targetTexture;
                     }
-                    else
-                    {
-                        Log("Funky Null lighting");
-                    }
 
                     foreach (var pl in camInfo.FpCamera.parallaxLayers)
                     {
                         if (pl != null && pl.cam != null)
                         {
                             pl.cam.rect = camInfo.RenderCamera.rect;
-                            pl.cam.targetTexture = camInfo.RenderCamera.targetTexture;
+                            pl.cam.targetTexture = camInfo.RenderCamera.targetTexture; //Causes both views to stop clearing properly...
+                            pl.cam.clearFlags = CameraClearFlags.Color;
                         }
                         else
                         {
