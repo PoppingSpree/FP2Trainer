@@ -436,7 +436,7 @@ namespace Fp2Trainer
             FPLayerNames.Add(layerAsInt, "UI");
             
             // Skip two more layers to layer 8. From here, we can rely on powers of 2.
-            layerAsInt = 128;
+            layerAsInt = 256;
             FPLayerNames.Add(layerAsInt, "FG Plane A");
             layerAsInt *= 2;
             FPLayerNames.Add(layerAsInt, "FG Plane B");
