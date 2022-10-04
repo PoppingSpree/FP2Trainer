@@ -3154,48 +3154,6 @@ namespace Fp2Trainer
                         {
                             pl.cam.rect = camInfo.RenderCamera.rect;
                             pl.cam.targetTexture = camInfo.SplitCamRenderTexture; //Causes both views to stop clearing properly...
-
-                            // Imitate CameraStart for handling Lighting and Foreground
-                            if (pl.layerMask != StageLayerIDs.LIGHTING)
-                            {
-                                pl.cam.targetTexture = camInfo.FpCamera.renderTarget;
-                                pl.cam.clearFlags = CameraClearFlags.Nothing;
-                            }
-                            else
-                            {
-                                pl.cam.targetTexture = camInfo.FpCamera.lightingTarget;
-                                pl.cam.clearFlags = CameraClearFlags.Color;
-                                pl.cam.backgroundColor = camInfo.FpCamera.shadowTint;
-                                camInfo.FpCamera.lightingCamera = pl.cam;
-                                flag = true;
-                            }
-                            if (pl.layerMask == StageLayerIDs.FG_PLANE)
-                            {
-                                pl.cam.cullingMask = 3856;
-                            }
-                            
-                            // Get layer with highest depth.
-                            if ( pl.cam.depth > highestLayerDepth)
-                            {
-                                highestLayerDepth = pl.cam.depth;
-                                indexOfHighestLayerCam = pli;
-                            }
-                            
-                            //UI Cam is affected by Lighting flag?
-                            //... except the UI cam isn't accessible.
-                            /*
-                            if (!flag)
-                            {
-                                camInfo.FpCamera.uiCam.targetTexture = camInfo.FpCamera.renderTarget;
-                                camInfo.FpCamera.uiCam.clearFlags = CameraClearFlags.Nothing;
-                            }
-                            else
-                            {
-                                camInfo.FpCamera.uiCam.targetTexture = camInfo.FpCamera.uiTarget;
-                                camInfo.FpCamera.uiCam.clearFlags = CameraClearFlags.Color;
-                                camInfo.FpCamera.uiCam.backgroundColor = Color.clear;
-                            }
-                            */
                         }
                         else
                         {
