@@ -62,6 +62,7 @@
         <Compile Include="FP2Trainer.cs" />
         <Compile Include="RollingQueue.cs" />
         <Compile Include="SceneNamePair.cs" />
+        <Compile Include="SplitScreenCamInfo.cs" />
         <Compile Include="TimestampedTransform.cs" />
         <Compile Include="TrainerPauseMenu.cs" />
         <Compile Include="FP2TrainerYourPlayerIndicator.cs" />

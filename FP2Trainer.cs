@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Configuration;
 using System.Reflection;
 using MelonLoader;
 using UnityEngine;
@@ -48,6 +49,8 @@ namespace Fp2Trainer
             MULTIPLAYER_DEBUG,
             BOSS,
             NO_CLIP,
+            CAMERA,
+            CAMERA_ALL,
             NONE
         }
 
@@ -98,6 +101,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKToggleMultiCharStart;
         public static MelonPreferences_Entry<string> PHKCyclePreferredAllyControlType;
         public static MelonPreferences_Entry<string> PHKStartSplitscreen;
+        public static MelonPreferences_Entry<bool> EnableSplitScreen;
         
         public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToLilac;
         public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToCarol;
@@ -275,6 +279,8 @@ namespace Fp2Trainer
 
         public static Dictionary<int, string> FPLayerNames;
 
+        public static List<SplitScreenCamInfo> SplitScreenCameraInfos = new List<SplitScreenCamInfo>();
+
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
             fp2TrainerInstance = this;
@@ -349,6 +355,7 @@ namespace Fp2Trainer
             DeterministicMode = fp2Trainer.CreateEntry("DeterministicMode", false);
             
             UseInstaSwitch = fp2Trainer.CreateEntry("UseInstaSwitch", true);
+            EnableSplitScreen = fp2Trainer.CreateEntry("EnableSplitScreen", false);
 
             InitPrefsCustomHotkeys();
         }
@@ -1016,6 +1023,11 @@ namespace Fp2Trainer
                     //This is probably resource intensive. Maybe there's a better way to prevent this value from being overwritten.
                     fpplayer.inputMethod = fpplayer.HandleAllyControlsGhost; 
                 }
+
+                if (EnableSplitScreen.Value)
+                {
+                    UpdateSplitScreens();
+                }
             }
             catch (Exception e)
             {
@@ -1067,6 +1079,33 @@ namespace Fp2Trainer
                 debugDisplay += "Show Debug Colliders: " + ShowCollidersLastSetting.Value.ToString() + "\n";
             }
 
+            string pad = "                    ";
+            if (currentDataPage == DataPage.CAMERA)
+            {
+                foreach (var cam in GameObject.FindObjectsOfType<Camera>())
+                {
+                    if (cam.gameObject.name.Contains("Render"))
+                    {
+                        var strCamsAreJank = $"{pad}{cam}\n{pad} => {cam.transform.position}\n"; 
+                        debugDisplay += strCamsAreJank;
+                        Log(strCamsAreJank);
+                    }
+                }
+
+                debugDisplay += "Position: " + fpplayer.position.ToString() + "\n";
+            }
+            if (currentDataPage == DataPage.CAMERA_ALL)
+            {
+                var strCamsAreJank = "";
+                foreach (var cam in GameObject.FindObjectsOfType<Camera>())
+                {
+                    strCamsAreJank = $"{pad}{cam}\n{pad} => {cam.transform.position}:d:{cam.depth}\n"; 
+                    debugDisplay += strCamsAreJank;
+                    Log(strCamsAreJank);
+                }
+
+                debugDisplay += "Position: " + fpplayer.position.ToString() + "\n";
+            }
 
             if (noClip)
             {
@@ -2955,11 +2994,19 @@ namespace Fp2Trainer
             sr.Close();
         }
 
+        public static void ToggleSplitScreen()
+        {
+            EnableSplitScreen.Value = !EnableSplitScreen.Value;
+            Log("Toggle Splitscreen... NOT IMPLEMENTED YET.");
+        }
+
         public static void StartSplitscreen()
         {
+            SplitScreenCameraInfos.Clear();
 
             try
             {
+                EnableSplitScreen.Value = true;
                 var goStageCamera = GameObject.Find("Stage Camera"); Log($"{goStageCamera}");
                 var goRenderCamera = GameObject.Find("Render Camera"); Log($"{goRenderCamera}");
                 var goPixelArtTarget = GameObject.Find("Pixel Art Target");  Log($"{goPixelArtTarget}");// has render cam as child object.
@@ -2982,29 +3029,94 @@ namespace Fp2Trainer
                 var splitScreenRenderCamera = goSplitScreenRenderCamera.GetComponent<FPCameraFit>(); Log($"{splitScreenRenderCamera}");
             
                 var splitScreenStageCamera = goSplitScreenStageCamera.GetComponent<FPCamera>(); Log($"{splitScreenStageCamera}");
+                
+                SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera));
+                SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.gameObject));
+                
+                /*
+                 *SplitScreenCameraInfos.Add(new SplitScreenCamInfo(stageCamera, goRenderCamera.GetComponent<Camera>()));
+                SplitScreenCameraInfos.Add(new SplitScreenCamInfo(splitScreenStageCamera, goSplitScreenRenderCamera.GetComponent<Camera>()));
+                 * 
+                 */
+                
+                splitScreenStageCamera.renderTarget = new RenderTexture(stageCamera.renderTarget.width, stageCamera.renderTarget.height, stageCamera.renderTarget.depth, stageCamera.renderTarget.format);
             
+                FPSaveManager.SetResolution(640, 360 * 2); Log($"setRes");
                 // Move down to not overlap.
+                /*goSplitScreenPixelArtTarget.transform.position +=
+                    new Vector3(0, goPixelArtTarget.transform.localScale.y, 0); Log($"{goSplitScreenPixelArtTarget}");*/
+                
                 goSplitScreenPixelArtTarget.transform.position +=
-                    new Vector3(0, goPixelArtTarget.transform.localScale.y, 0); Log($"{goSplitScreenPixelArtTarget}");
+                    new Vector3(0, 360, 0); Log($"{goSplitScreenPixelArtTarget}");
+                
+                
                 if (fpplayers.Count > 1)
                 {
                     splitScreenStageCamera.target = fpplayers[1]; Log($"{splitScreenStageCamera}");
+                    Log($"Set new target to {splitScreenStageCamera.target}");
                 }
                 else
                 {
                     splitScreenStageCamera.target = stageCamera.target; Log($"{splitScreenStageCamera}");
+                    Log($"Set target to {splitScreenStageCamera.target}, the original player.");
                 }
+                
                 
                 // Adjust viewports. Bottom-Left to Top-Right is 0,0 -> 1,1
                 // Vertical Stack Layout
-                FPSaveManager.SetResolution(640, 360 * 2); Log($"setRes");
                 goRenderCamera.GetComponent<Camera>().rect = new Rect(0, 1 - 0.5f, 1, 0.5f); Log($"{goRenderCamera.GetComponent<Camera>().rect}");
                 goSplitScreenRenderCamera.GetComponent<Camera>().rect = new Rect(0, 1 - 1f, 1, 0.5f); Log($"{goSplitScreenRenderCamera.GetComponent<Camera>().rect}");
+                
+                    //DEBUG
+                    goRenderCamera.GetComponent<Camera>().rect = new Rect(0, 0, 1, 1); Log($"{goRenderCamera.GetComponent<Camera>().rect}");
+                    goSplitScreenRenderCamera.GetComponent<Camera>().rect = new Rect(0, 0, 1, 1); Log($"{goSplitScreenRenderCamera.GetComponent<Camera>().rect}");
+
+                    //END DEBUG
+                
+                // FPCamera.CreateNewCamera is used to make Lighting cameras, but I don't know when or where it's used so for now it's not factored into this. Fix later.
 
             }
             catch (Exception e)
             {
                 MelonLogger.Error($"{e.ToString()}\n{e.Message}\n{e.StackTrace}");
+            }
+        }
+
+        public static void UpdateSplitScreens()
+        {
+            try
+            {
+                foreach (var camInfo in SplitScreenCameraInfos)
+                {
+                    camInfo.RenderCamera = camInfo.GoRenderCamera.GetComponent<Camera>();
+                    MelonLogger.Msg($"UpdateRenderCam: {camInfo.RenderCamera}");
+                    if (camInfo.FpCamera.lightingCamera != null)
+                    {
+                        camInfo.FpCamera.lightingCamera.rect = camInfo.RenderCamera.rect;
+                        camInfo.FpCamera.lightingCamera.targetTexture = camInfo.RenderCamera.targetTexture;
+                    }
+                    else
+                    {
+                        Log("Funky Null lighting");
+                    }
+
+                    foreach (var pl in camInfo.FpCamera.parallaxLayers)
+                    {
+                        if (pl != null && pl.cam != null)
+                        {
+                            pl.cam.rect = camInfo.RenderCamera.rect;
+                            pl.cam.targetTexture = camInfo.RenderCamera.targetTexture;
+                        }
+                        else
+                        {
+                            Log("funky parallax null");
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error($"{e}\n{e.Message}\n{e.StackTrace}");
             }
         }
 
