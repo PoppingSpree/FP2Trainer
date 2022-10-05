@@ -491,10 +491,12 @@ namespace Fp2Trainer
 
             //DestroyMergaCutsceneTriggers();
 
+            /*
             if (Fp2Trainer.EnableSplitScreen.Value)
             {
                 Fp2Trainer.StartSplitscreen(); // Probably need to include a way to stop this from happening automatically.
             }
+            */
 
             return newPlayer;
         }

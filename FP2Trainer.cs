@@ -899,7 +899,7 @@ namespace Fp2Trainer
             {
                 if (DeterministicMode.Value)
                 {
-                    UnityEngine.Random.InitState(fp2ReleaseDateInt);
+                    //UnityEngine.Random.InitState(fp2ReleaseDateInt);
                     //Log($"Seeding RNG with {fp2ReleaseDate.ToString()} ({fp2ReleaseDateInt})");
                 }
                 
@@ -965,6 +965,10 @@ namespace Fp2Trainer
                             while (fpplayers.Count < MultiCharStartNumChars.Value)
                             {
                                 FPPlayer2p.SpawnExtraCharacter();
+                            }
+                            if (Fp2Trainer.EnableSplitScreen.Value)
+                            {
+                                StartSplitscreen(); // Probably need to include a way to stop this from happening automatically.
                             }
 
                             doneMultiplayerStart = true;
@@ -3086,7 +3090,7 @@ namespace Fp2Trainer
                     
                     // Move down to not overlap.
                     goSplitScreenPixelArtTarget.transform.position +=
-                        new Vector3(0, goPixelArtTarget.transform.localScale.y * 2 * (p + 1), 0); Log($"{goSplitScreenPixelArtTarget}");
+                        new Vector3(0, goPixelArtTarget.transform.localScale.y * (p + 1), 0); Log($"{goSplitScreenPixelArtTarget}");
                 
                     // Set the material on the new render target to be unique and use the new renderTexture we just made.
                     goSplitScreenPixelArtTarget.GetComponent<MeshRenderer>().material.mainTexture =

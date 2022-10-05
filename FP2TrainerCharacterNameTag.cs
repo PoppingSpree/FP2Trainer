@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using MelonLoader;
 using Object = UnityEngine.Object;
 
 namespace Fp2Trainer
@@ -12,6 +13,8 @@ namespace Fp2Trainer
         public Dictionary<int, GameObject> goNametags;
         public Dictionary<int, TextMesh> tmNametags;
         private List<string> placeholderNames;
+
+        public Camera renderCamera = null;
 
         public Vector3 posRelativeToCam = Vector3.zero;
         
@@ -27,6 +30,15 @@ namespace Fp2Trainer
                 this.transform.parent = Fp2Trainer.goFP2Trainer.transform;
             }
 
+            try
+            {
+                renderCamera = GameObject.Find("Render Camera").GetComponent<Camera>();
+            }
+            catch (Exception e)
+            {
+                //do something
+            }
+            
             goNametags = new Dictionary<int, GameObject>();
             tmNametags = new Dictionary<int, TextMesh>();
 
@@ -69,8 +81,20 @@ namespace Fp2Trainer
                 
                 try
                 {
-                    posRelativeToCam = Fp2Trainer.GetPositionRelativeToCamera(FPCamera.stageCamera, fpp.transform.position);
-                    Fp2Trainer.Log("apple6");
+                    if (renderCamera == null)
+                    {
+                        renderCamera = GameObject.Find("Render Camera").GetComponent<Camera>();
+                    }
+
+                    if (renderCamera != null)
+                    {
+                        posRelativeToCam = renderCamera.WorldToScreenPoint(fpp.transform.position);
+                    }
+                    else
+                    {
+                        MelonLogger.Log("dabDABdabDABdabDAB");
+                        posRelativeToCam = Fp2Trainer.GetPositionRelativeToCamera(FPCamera.stageCamera, fpp.transform.position);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -80,7 +104,7 @@ namespace Fp2Trainer
                 //go.transform.position = new Vector3(fpp.transform.position.x, fpp.transform.position.y + 32f, go.transform.position.z );
                 
                 //go.transform.position = new Vector3(64, 64, go.transform.position.z );
-                go.transform.position = posRelativeToCam + new Vector3(0, 16, 0);
+                go.transform.position = posRelativeToCam + new Vector3(0, -64, 0);
                 Fp2Trainer.Log($"gopos: {go.transform.position} | posrel: {posRelativeToCam}");
                 
                 /*
@@ -96,6 +120,8 @@ namespace Fp2Trainer
                 {
                     var guessedWidth = tm.text.Length * tm.characterSize;
                     var guessedHeight = tm.characterSize;
+                    
+                    /*
                     if (transform.position.x + (guessedWidth / 2) > FPCamera.stageCamera.right)
                     {
                         transform.position += new Vector3(FPCamera.stageCamera.right - (guessedWidth / 2f), 0, 0);
@@ -115,6 +141,8 @@ namespace Fp2Trainer
                     {
                         transform.position += new Vector3(0, FPCamera.stageCamera.bottom + (guessedHeight / 2f), 0);
                     }
+                    */
+                    // Temporarily dummying out the code that's supposed to make nametags stay within the camera confines.
                 }
 
                 catch (Exception e)
