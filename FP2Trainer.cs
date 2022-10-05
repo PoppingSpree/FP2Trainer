@@ -102,6 +102,7 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> PHKToggleMultiCharStart;
         public static MelonPreferences_Entry<string> PHKCyclePreferredAllyControlType;
         public static MelonPreferences_Entry<string> PHKStartSplitscreen;
+        public static MelonPreferences_Entry<bool> EnableGetPlayerInstanceMultiplayerPatch;
         public static MelonPreferences_Entry<bool> EnableSplitScreen;
         
         public static MelonPreferences_Entry<string> PHKSwitchCurrentPlayerToLilac;
@@ -366,6 +367,9 @@ namespace Fp2Trainer
             
             UseInstaSwitch = fp2Trainer.CreateEntry("UseInstaSwitch", true);
             EnableSplitScreen = fp2Trainer.CreateEntry("EnableSplitScreen", false);
+            EnableGetPlayerInstanceMultiplayerPatch = fp2Trainer.CreateEntry("EnableGetPlayerInstanceMultiplayerPatch", false);
+            // The only real reason that one defaults to false is because this is still meant to be a trainer.
+            // If it gets moved into a standalone mod, it'll be made true by default.
 
             InitPrefsCustomHotkeys();
         }

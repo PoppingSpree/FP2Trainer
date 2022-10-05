@@ -3,13 +3,36 @@ LAST LEFT OFF ON:
 > RNG Mitigation https://www.gamedeveloper.com/programming/implementing-a-replay-system-in-unity-and-how-i-d-do-it-differently-next-time
 > hook FPStage and force the time and frametime to a fake 60fps value, then do replays based on step number not time.
 
-> Want to add splitscreen
-> Want to add tidy menu
+> Fix additionally-spawned characters not reacting to gimmicks properly.
+> Want to add tidy menus
+> Custom viewpages
+> Twitch Plays FP2? https://github.com/TwitchLib/TwitchLib.Unity
+> Example of Custom Level
+> Example of Custom NPC
+> Make Merga / Gong / Cory / Spade playable
+
+
+> As of 1.1.4r, there are 86 references to GetPlayerInstance_FPPlayer()
+> As of 1.1.4r, there are 24 references to GetPlayerInstance()
+
+> Make "Get Out" actually work.
+
+> lots and lots of testing and bugfixing.
 
 ^\d+\|[\d\.]+\|\d+
+----
+should probably do some kind of enum flag thing like with the inputs to reduce data throughput for sending these commands over net.
+
+CMD_NETID|connectionID|displayName|charID [example -> ]1111_1111|4|"coryfan34"|1]
+step|CMD_SPAWN|
+step|CMD_HURT|dmg (or new health val)
+step|CMD_HEAL|dmg (or new health val)
+step|CMD_SCENE|SceneName
+step|CMD_SYNC|timeOffset
+step|posrot|1.0f|1.0f,|1.0f|0|0|0|0
 
 
-
+Remember to patch around RestorePlayerInput
 
 
 

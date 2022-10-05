@@ -55,6 +55,8 @@
         <Compile Include="FP2TrainerDTTracker.cs" />
         <Compile Include="FP2TrainerHarmonyPatcher.cs" />
         <Compile Include="FP2TrainerInputQueue.cs" />
+        <Compile Include="FP2TrainerPatchGetPlayerInstance.cs" />
+        <Compile Include="FP2TrainerPatchGetPlayerInstanceFPPlayer.cs" />
         <Compile Include="FPPlayer2p.cs" />
         <Compile Include="FPTrainerLevelSelect.cs" />
         <Compile Include="PlaneSwitcherVisualizer.cs" />
