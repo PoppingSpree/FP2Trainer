@@ -61,6 +61,16 @@ namespace Fp2Trainer
 
         public void Update()
         {
+            foreach (var nt in goNametags.Values)
+            {
+                nt.SetActive(Fp2Trainer.DisplayNametags.Value);
+            }
+            
+            if (!Fp2Trainer.DisplayNametags.Value)
+            {
+                return;
+            }
+
             foreach (FPPlayer fpp in Fp2Trainer.fpplayers)
             {
                 if (fpp != null && !goNametags.ContainsKey(fpp.GetInstanceID()))
@@ -115,6 +125,10 @@ namespace Fp2Trainer
 
                 tm.text = Regex.Replace(tm.text, @"\(.+\)",
                     $"({Mathf.Round(fpp.health)} / {Mathf.Round(fpp.healthMax)})");
+
+                this.transform.position = new Vector3(renderCamera.transform.position.x + (640f / 2f), 
+                    renderCamera.transform.position.y - (360f / 2f), 
+                    renderCamera.transform.position.z);
 
                 try
                 {

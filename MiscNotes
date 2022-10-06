@@ -10,6 +10,9 @@ LAST LEFT OFF ON:
 > Example of Custom Level
 > Example of Custom NPC
 > Make Merga / Gong / Cory / Spade playable
+> Remember to purge null objects from goNameTags
+
+> Remember to investigate FPPlayer's swapCharacter field: // 	swapCharacter	{Player Bike Carol (FPPlayer)}	FPPlayer
 
 
 > As of 1.1.4r, there are 86 references to GetPlayerInstance_FPPlayer()
@@ -33,7 +36,10 @@ step|posrot|1.0f|1.0f,|1.0f|0|0|0|0
 
 
 Remember to patch around RestorePlayerInput
+------------
 
+// Snippet used to do a loop across all objects of a type. For example, every object checking against a spring.
+while (FPStage.ForEach(FPPlayer.classID, objRef))
 
 
 
