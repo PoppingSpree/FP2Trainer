@@ -75,6 +75,9 @@ namespace Fp2Trainer
             HOTKEYS_6,
             HOTKEYS_7,
             HOTKEYS_8,
+            HOTKEYS_9,
+            HOTKEYS_10,
+            HOTKEYS_11,
             QUICKBOOT,
             NONE
         }
@@ -94,6 +97,9 @@ namespace Fp2Trainer
 
         public static MelonPreferences_Entry<string> PHKKOCharacter;
         public static MelonPreferences_Entry<string> PHKKOBoss;
+        
+        public static MelonPreferences_Entry<string> PHKInvinciblePlayers;
+        public static MelonPreferences_Entry<string> PHKInvincibleBoss;
 
         public static MelonPreferences_Entry<string> PHKToggleNoClip;
 
@@ -169,6 +175,9 @@ namespace Fp2Trainer
         public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFileP2;
         public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFileP3;
         public static MelonPreferences_Entry<string> DEBUG_LoadSpecificGhostFileP4;
+        
+        public static MelonPreferences_Entry<bool> EnableInvinciblePlayers;
+        public static MelonPreferences_Entry<bool> EnableInvincibleBoss;
         
         public static MelonPreferences_Entry<bool> SixtyFPSHack;
         public static MelonPreferences_Entry<bool> DeterministicMode;
@@ -367,6 +376,9 @@ namespace Fp2Trainer
             SixtyFPSHack = fp2Trainer.CreateEntry("SixtyFPSHack", false);
             DeterministicMode = fp2Trainer.CreateEntry("DeterministicMode", false);
             
+            EnableInvinciblePlayers = fp2Trainer.CreateEntry("EnableInvinciblePlayers", false);
+            EnableInvincibleBoss = fp2Trainer.CreateEntry("EnableInvincibleBoss", false);
+            
             UseInstaSwitch = fp2Trainer.CreateEntry("UseInstaSwitch", true);
             EnableSplitScreen = fp2Trainer.CreateEntry("EnableSplitScreen", false);
             EnableGetPlayerInstanceMultiplayerPatch = fp2Trainer.CreateEntry("EnableGetPlayerInstanceMultiplayerPatch", false);
@@ -386,6 +398,8 @@ namespace Fp2Trainer
 
             PHKKOCharacter = CreateEntryAndBindHotkey("PHKKOCharacter", "Shift+F1");
             PHKKOBoss = CreateEntryAndBindHotkey("PHKKOBoss", "Backspace");
+            PHKInvincibleBoss = CreateEntryAndBindHotkey("PHKInvincibleBoss", "Shift+Backspace");
+            PHKInvinciblePlayers = CreateEntryAndBindHotkey("PHKInvinciblePlayers", "Ctrl+Backspace");
 
             PHKToggleNoClip = CreateEntryAndBindHotkey("PHKToggleNoClip", "F2");
 
@@ -1018,6 +1032,8 @@ namespace Fp2Trainer
                     else
                         CreateFancyTextObjects();
 
+                    HandleInvincibility();
+                    
                     if (ShowInputNamesInTerminal.Value)
                     {
                         FPPlayer2p.ShowPressedButtons();
@@ -1463,9 +1479,24 @@ namespace Fp2Trainer
                         1 + (numHotkeyLinesPerPage * 5));
                     break;
                 case InstructionPage.HOTKEYS_8:
-                    debugDisplay += "**Current Hotkeys Eight**\n";
+                    debugDisplay += "**Current Hotkeys Do I Have To Keep Naming These**\n";
                     debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 5),
                         1 + (numHotkeyLinesPerPage * 6));
+                    break;
+                case InstructionPage.HOTKEYS_9:
+                    debugDisplay += "**Current Hotkeys Nine**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 6),
+                        1 + (numHotkeyLinesPerPage * 7));
+                    break;
+                case InstructionPage.HOTKEYS_10:
+                    debugDisplay += "**Current Hotkeys Ten**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 7),
+                        1 + (numHotkeyLinesPerPage * 8));
+                    break;
+                case InstructionPage.HOTKEYS_11:
+                    debugDisplay += "**Current Hotkeys Eleven**\n";
+                    debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 8),
+                        1 + (numHotkeyLinesPerPage * 9));
                     break;
                 case InstructionPage.QUICKBOOT:
                     debugDisplay += "**QuickBoot**\n";
@@ -1751,6 +1782,34 @@ namespace Fp2Trainer
                 {
                     Log("Attempted to KO all bosses, but no bosses were found... (Check for visible HUDs?)");
                 }
+            }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKInvincibleBoss))
+            {
+                EnableInvincibleBoss.Value = !EnableInvincibleBoss.Value;
+                Log($"Toggled Invincible Bosses: {!EnableInvincibleBoss.Value} => {EnableInvincibleBoss.Value}");
+
+                /*
+                ReacquireBossHuds();
+                if (fpEnemies.Count > 0)
+                {
+                    Log("KO Boss");
+                    foreach (var enemy in fpEnemies)
+                    {
+                        enemy.health = 0;
+                    }
+                }
+                else
+                {
+                    Log("Attempted to KO all bosses, but no bosses were found... (Check for visible HUDs?)");
+                }
+                */
+            }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKInvinciblePlayers))
+            {
+                EnableInvinciblePlayers.Value = !EnableInvinciblePlayers.Value;
+                Log($"Toggled Invincible Players: {!EnableInvinciblePlayers.Value} => {EnableInvinciblePlayers.Value}");
             }
 
             if (FP2TrainerCustomHotkeys.GetButtonDown(PHKToggleInstructions))
@@ -2067,6 +2126,53 @@ namespace Fp2Trainer
             }
 
             FPCamera.stageCamera.RequestZoom(trainerRequestZoomValue);
+        }
+
+        public void HandleInvincibility()
+        {
+            if (EnableInvinciblePlayers.Value)
+            {
+                if (fpplayers != null)
+                {
+                    if (fpplayers.Count < 1)
+                    {
+                        fpplayers = GetFPPlayers();
+                    }
+
+                    foreach (var fpp in fpplayers)
+                    {
+                        fpp.health = fpp.healthMax;
+                    }
+                }
+
+            }
+            
+            if (EnableInvincibleBoss.Value)
+            {
+                ReacquireBossHuds();
+                foreach (var enemy in FPStage.GetActiveEnemies())
+                {
+                    enemy.health = 100;
+                }
+                
+                if (bossHuds != null)
+                {
+                    foreach (var bossHud in bossHuds)
+                    {
+                        bossHud.targetBoss.health = bossHud.maxHealth;
+                    }
+                }
+
+            }
+            
+            if (fpEnemies != null)
+            {
+                foreach (var boss in fpEnemies)
+                {
+                    boss.cannotBeKilled = EnableInvincibleBoss.Value;
+                }
+            }
+
         }
 
         private static bool InputGetKeyAnyShift()
