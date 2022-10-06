@@ -507,6 +507,103 @@ namespace Fp2Trainer
             return newPlayer;
         }
 
+        public static void SpawnExtraCharacters()
+        {
+            try
+            {
+                FPPlayer fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
+                FPPlayer newPlayer;
+                instaswapCharacterInstances.Clear();
+                bool playerObjectValidated = false;
+                
+                for (int i = 0; i < (int)FPCharacterID.NEERA; i++)
+                {
+                    extraPlayerCount++;
+                    int playerNumModulus = extraPlayerCount % 5;
+                    
+                    newPlayer = FPStage.InstantiateFPBaseObject(FPStage.player[i],
+                        out playerObjectValidated);
+
+                    newPlayer.position = fppi.position + (spawnOffset * (playerNumModulus + 1));
+                    newPlayer.gameObject.transform.position =
+                        fppi.transform.position + new Vector3(spawnOffset.x, spawnOffset.y, 0);
+                    //newPlayer.position = FPStage.currentStage.GetPlayerInstance_FPPlayer().position;
+
+                    newPlayer.inputMethod =
+                        newPlayer
+                            .GetInputFromPlayer1;
+                    newPlayer.collisionLayer = fppi.collisionLayer;
+
+                    newPlayer.name = String.Format("Player {0}", extraPlayerCount);
+
+                    //newPlayer.inputMethod = FP2TrainerAllyControls.GetInputMethodFromPreferredAllyControlType(newPlayer);
+
+                    newPlayer.oxygenLevel = 1f;
+                    newPlayer.heatLevel = 0f;
+                    newPlayer.interactWithObjects = true;
+
+                    newPlayer.powerups = fppi.powerups;
+                    newPlayer.potions = fppi.potions;
+                    newPlayer.totalCrystals = fppi.crystals;
+                    newPlayer.hasSpecialItem = fppi.hasSpecialItem;
+                    //newPlayer.name = playerName;
+
+                    Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
+                    if (Fp2Trainer.fpplayers.Contains(fppi))
+                    {
+                        Fp2Trainer.fpplayers.Remove(fppi);
+                    }
+
+                    Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance_FPPlayer().name + " joins the party!");
+
+                    if (FP2TrainerCharacterNameTag.instance != null)
+                    {
+                        FP2TrainerCharacterNameTag.instance.InstantiateNewNametag(newPlayer);
+                    }
+                    
+                    if (newPlayer.characterID == fppi.characterID)
+                    {
+                        newPlayer.gameObject.SetActive(true);
+                        newPlayer.activationMode = FPActivationMode.ALWAYS_ACTIVE;
+                        newPlayer.GetComponent<SpriteRenderer>().enabled = true;
+                        newPlayer.enabled = true;
+                            
+                        newPlayer.position = fppi.position;
+                        newPlayer.collisionLayer = fppi.collisionLayer;
+                        FPStage.currentStage.SetPlayerInstance_FPPlayer(newPlayer);
+                        FPCamera.SetCameraTarget(newPlayer.gameObject);
+                        FPCamera.stageCamera.targetPlayer = newPlayer;
+                        FPCamera.stageCamera.target = newPlayer;
+                        Fp2Trainer.fpplayer = newPlayer;
+                    }
+                    else
+                    {
+                        newPlayer.gameObject.SetActive(false);
+                        newPlayer.activationMode = FPActivationMode.NEVER_ACTIVE;
+                        newPlayer.GetComponent<SpriteRenderer>().enabled = false;
+                        newPlayer.enabled = false;
+                    }
+                    instaswapCharacterInstances.Add(newPlayer);
+                }
+                
+                fppi.gameObject.SetActive(false);
+                fppi.activationMode = FPActivationMode.NEVER_ACTIVE;
+                fppi.GetComponent<SpriteRenderer>().enabled = false;
+                FPStage.DestroyStageObject(fppi);
+                        
+                if (Fp2Trainer.EnableSplitScreen.Value)
+                {
+                    Fp2Trainer.StartSplitscreen(); // Probably need to include a way to stop this from happening automatically.
+                }
+            }
+            catch (Exception e)
+            {
+
+                Fp2Trainer.Log(e.Message + e.StackTrace);
+            }
+
+        }
+        
         public static void SpawnExtraCharactersViaSpawnPoint()
         {
             try
@@ -587,8 +684,47 @@ namespace Fp2Trainer
             }
 
         }//SpawnExtraCharactersViaSpawnPoint()
-
+        
         public static void PerformInstaSwap(FPCharacterID charID)
+        {
+
+            try
+            {
+                if (instaswapCharacterInstances != null)
+                {
+                    Fp2Trainer.Log($"Instaswap to {charID}");
+                    foreach (var fpp in instaswapCharacterInstances)
+                    {
+                        if (fpp.characterID == charID)
+                        {
+                            fpp.gameObject.SetActive(true);
+                            fpp.activationMode = FPActivationMode.ALWAYS_ACTIVE;
+                            fpp.GetComponent<SpriteRenderer>().enabled = true;
+                            fpp.enabled = true;
+                            fpp.Action_PlayerVoiceArrayStart();
+                            
+                            Fp2Trainer.Log($"Instaswapping to {charID}");
+
+                        }
+                        else
+                        {
+                            fpp.gameObject.SetActive(false);
+                            fpp.activationMode = FPActivationMode.NEVER_ACTIVE;
+                            fpp.enabled = false;
+                            fpp.GetComponent<SpriteRenderer>().enabled = false;
+                        }
+                    }
+                    Fp2Trainer.Log($"Instaswap Complete.");
+                }
+            }
+            catch (Exception e)
+            {
+                Fp2Trainer.Log("@@@@@@@@@@@@@@@@@@@@@@");
+                Fp2Trainer.Log(e.Message + e.StackTrace);
+            }
+        }
+
+        public static void PerformInstaSwapOld(FPCharacterID charID)
         {
 
             try
