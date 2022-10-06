@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MelonLoader;
 using UnityEngine;
 
 namespace Fp2Trainer
@@ -409,14 +410,14 @@ namespace Fp2Trainer
             */
         }
 
-        public static FPPlayer SpawnExtraCharacter()
+        public static FPPlayer SpawnExtraCharacter(bool includeBikeCarol = false)
         {
             FPPlayer newPlayer = null;
             FPPlayer fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
             bool playerObjectValidated = false;
 
             extraPlayerCount++;
-            if (extraPlayerCount % 5 == 2) //Skip Bike Carol.
+            if (!includeBikeCarol && extraPlayerCount % 5 == 2) //Skip Bike Carol.
             {
                 extraPlayerCount++;
             }
@@ -425,13 +426,23 @@ namespace Fp2Trainer
 
             // Spawn all possible characters before allowing duplicates.
             int baseMaxCharacterCount = 4;
+            if (includeBikeCarol)
+            {
+                baseMaxCharacterCount++;
+            }
+
             Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
             if (Fp2Trainer.fpplayers.Count <= baseMaxCharacterCount)
             {
                 List<int> availableCharIDs = new List<int>();
                 availableCharIDs.Add(0);
                 availableCharIDs.Add(1);
-                // Bike Carol is 2. Skip.
+                // Bike Carol is 2.
+                if (includeBikeCarol)
+                {
+                    availableCharIDs.Add(2);
+                }
+
                 availableCharIDs.Add(3);
                 availableCharIDs.Add(4);
 
@@ -463,7 +474,7 @@ namespace Fp2Trainer
             newPlayer.inputMethod =
                 newPlayer
                     .GetInputFromPlayer1; // So... you can totally just replace the input method here to control the character with anything we want.
-            newPlayer.collisionLayer = fppi.collisionLayer;
+            
 
             newPlayer.name = String.Format("Player {0}", extraPlayerCount);
 
@@ -473,11 +484,16 @@ namespace Fp2Trainer
             newPlayer.heatLevel = 0f;
             newPlayer.interactWithObjects = true;
 
-            newPlayer.powerups = fppi.powerups;
-            newPlayer.potions = fppi.potions;
-            newPlayer.totalCrystals = fppi.crystals;
-            newPlayer.hasSpecialItem = fppi.hasSpecialItem;
-            //newPlayer.name = playerName;
+            if (fppi != null)
+            {
+                newPlayer.collisionLayer = fppi.collisionLayer;
+                newPlayer.powerups = fppi.powerups;
+                newPlayer.potions = fppi.potions;
+                newPlayer.totalCrystals = fppi.crystals;
+                newPlayer.hasSpecialItem = fppi.hasSpecialItem;
+                //newPlayer.name = playerName;
+            }
+
 
             Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
             Fp2Trainer.Log(FPStage.currentStage.GetPlayerInstance_FPPlayer().name + " joins the party!");
@@ -509,32 +525,45 @@ namespace Fp2Trainer
 
         public static void SpawnExtraCharacters()
         {
+            while (Fp2Trainer.fpplayers.Count < Enum.GetValues(typeof(FPCharacterID)).Length)
+            {
+                MelonLogger.Msg($"fpPlayers Count: {Fp2Trainer.fpplayers.Count}");
+                SpawnExtraCharacter(true);
+            }
+
+            instaswapCharacterInstances = new List<FPPlayer>(Fp2Trainer.fpplayers);
+        }
+        public static void SpawnExtraCharactersV2()
+        {
             try
             {
                 FPPlayer fppi = FPStage.currentStage.GetPlayerInstance_FPPlayer();
                 FPPlayer newPlayer;
                 instaswapCharacterInstances.Clear();
                 bool playerObjectValidated = false;
-                
+
+                int debug = 0;
                 for (int i = 0; i < (int)FPCharacterID.NEERA; i++)
                 {
-                    extraPlayerCount++;
-                    int playerNumModulus = extraPlayerCount % 5;
+                    MelonLogger.Msg($"i: {i}");
+                    MelonLogger.Msg($"debug: {debug++}");
+                    extraPlayerCount++;MelonLogger.Msg($"debug: {debug++}");
+                    int playerNumModulus = extraPlayerCount % 5;MelonLogger.Msg($"debug: {debug++}");
                     
                     newPlayer = FPStage.InstantiateFPBaseObject(FPStage.player[i],
-                        out playerObjectValidated);
+                        out playerObjectValidated);MelonLogger.Msg($"debug: {debug++}");
 
-                    newPlayer.position = fppi.position + (spawnOffset * (playerNumModulus + 1));
+                    newPlayer.position = fppi.position + (spawnOffset * (playerNumModulus + 1));MelonLogger.Msg($"debug: {debug++}");
                     newPlayer.gameObject.transform.position =
-                        fppi.transform.position + new Vector3(spawnOffset.x, spawnOffset.y, 0);
+                        fppi.transform.position + new Vector3(spawnOffset.x, spawnOffset.y, 0);MelonLogger.Msg($"debug: {debug++}");
                     //newPlayer.position = FPStage.currentStage.GetPlayerInstance_FPPlayer().position;
 
                     newPlayer.inputMethod =
                         newPlayer
-                            .GetInputFromPlayer1;
-                    newPlayer.collisionLayer = fppi.collisionLayer;
+                            .GetInputFromPlayer1;MelonLogger.Msg($"debug: {debug++}");
+                    newPlayer.collisionLayer = fppi.collisionLayer;MelonLogger.Msg($"debug: {debug++}");
 
-                    newPlayer.name = String.Format("Player {0}", extraPlayerCount);
+                    newPlayer.name = String.Format("Player {0}", extraPlayerCount);MelonLogger.Msg($"debug: {debug++}");
 
                     //newPlayer.inputMethod = FP2TrainerAllyControls.GetInputMethodFromPreferredAllyControlType(newPlayer);
 
@@ -542,14 +571,18 @@ namespace Fp2Trainer
                     newPlayer.heatLevel = 0f;
                     newPlayer.interactWithObjects = true;
 
+                    // FPPI doesn't exist, so...
+                    /*
                     newPlayer.powerups = fppi.powerups;
                     newPlayer.potions = fppi.potions;
                     newPlayer.totalCrystals = fppi.crystals;
                     newPlayer.hasSpecialItem = fppi.hasSpecialItem;
+                    */
+                    
                     //newPlayer.name = playerName;
 
                     Fp2Trainer.fpplayers = Fp2Trainer.GetFPPlayers();
-                    if (Fp2Trainer.fpplayers.Contains(fppi))
+                    if (fppi != null && Fp2Trainer.fpplayers.Contains(fppi))
                     {
                         Fp2Trainer.fpplayers.Remove(fppi);
                     }
@@ -561,7 +594,7 @@ namespace Fp2Trainer
                         FP2TrainerCharacterNameTag.instance.InstantiateNewNametag(newPlayer);
                     }
                     
-                    if (newPlayer.characterID == fppi.characterID)
+                    if (newPlayer.characterID == FPSaveManager.character)
                     {
                         newPlayer.gameObject.SetActive(true);
                         newPlayer.activationMode = FPActivationMode.ALWAYS_ACTIVE;
@@ -578,10 +611,12 @@ namespace Fp2Trainer
                     }
                     else
                     {
+                        /*
                         newPlayer.gameObject.SetActive(false);
                         newPlayer.activationMode = FPActivationMode.NEVER_ACTIVE;
                         newPlayer.GetComponent<SpriteRenderer>().enabled = false;
                         newPlayer.enabled = false;
+                        */
                     }
                     instaswapCharacterInstances.Add(newPlayer);
                 }
@@ -708,10 +743,12 @@ namespace Fp2Trainer
                         }
                         else
                         {
+                            /*
                             fpp.gameObject.SetActive(false);
                             fpp.activationMode = FPActivationMode.NEVER_ACTIVE;
                             fpp.enabled = false;
                             fpp.GetComponent<SpriteRenderer>().enabled = false;
+                            */
                         }
                     }
                     Fp2Trainer.Log($"Instaswap Complete.");

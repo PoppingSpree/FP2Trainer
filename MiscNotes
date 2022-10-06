@@ -22,6 +22,25 @@ LAST LEFT OFF ON:
 
 > lots and lots of testing and bugfixing.
 
+
+----
+
+public static T InstantiateFPBaseObject<T>(T original, out bool stageListPosValidated) where T : UnityEngine.Object
+Part of InstantiateFPBaseObject's responsibilities is to register the classID and pass that value back to the script&GameObject that instantiated it. From there, CreateStageObject is expecting to have the static Thingy.classID passed in as the first parameter to increase the stack of items of that type.
+immediately after being called, it sets the stageListValidation which will be handed back out as an out argument. stageListPosValidated = FPStage.ProcessInstantiatedFPBaseObjectValidation<T>(t);
+
+okay it looks like this validation thing is really important
+flag = FPStage.ValidateStageListPos(fpbaseObject) && flag; at this poiint, the base object is a down converted version of whatever we cloned from the instantiation call.
+It is impossible to validate on the initial creation because the stage objects created flag is flase. So it has to be called again later with this same object to get its list position validated...
+If it's already valid when passed in, it'll return true. If it's not valid, it'll try to get a a new spawnlist position via 
+currentStage.stageObjSpawnPos = GetFreeSpawnPos(currentStage.stageObjSpawnPos);
+. If there's free room, the objects listPos is set, to the free slot's index, and that slot in the stageObjectList is set to the FPBaseObject that was passed in.
+
+And if we've run out of spawn positions, there will be debug logs warning that an object will be removed from the list to make room.
+
+
+
+----
 ^\d+\|[\d\.]+\|\d+
 ----
 should probably do some kind of enum flag thing like with the inputs to reduce data throughput for sending these commands over net.

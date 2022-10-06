@@ -90,14 +90,7 @@ namespace Fp2Trainer
         {
             try
             {
-                //This should probably be in its own script:
-
-                if (Fp2Trainer.UseInstaSwitch.Value)
-                {
-                    Fp2Trainer.Log("Finna spawn extra chars for instaswap");
-                    //FPPlayer2p.SpawnExtraCharactersViaSpawnPoint();
-                    FPPlayer2p.SpawnExtraCharacters();
-                }
+                
             }
             catch (Exception e)
             {

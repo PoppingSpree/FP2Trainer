@@ -1,5 +1,5 @@
 using System;
-using Harmony;
+using HarmonyLib;
 using MelonLoader;
 
 namespace Fp2Trainer

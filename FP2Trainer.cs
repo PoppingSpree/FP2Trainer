@@ -300,6 +300,8 @@ namespace Fp2Trainer
 
         public static List<SplitScreenCamInfo> SplitScreenCameraInfos = new List<SplitScreenCamInfo>();
 
+        private bool instaSwitchCharsSpawned = false;
+
         public override void OnApplicationStart() // Runs after Game Initialization.
         {
             fp2TrainerInstance = this;
@@ -607,6 +609,8 @@ namespace Fp2Trainer
             textmeshFancyTextPosition = null;
 
             doneMultiplayerStart = false;
+
+            instaSwitchCharsSpawned = false;
 
             if (goFP2Trainer == null)
             {
@@ -979,6 +983,23 @@ namespace Fp2Trainer
                         {
                             HandleHotkeys();
                         }
+                        
+                        try
+                        {
+                            //This should probably be in its own script:
+
+                            if (Fp2Trainer.UseInstaSwitch.Value && !instaSwitchCharsSpawned)
+                            {
+                                Fp2Trainer.Log("Finna spawn extra chars for instaswap");
+                                //FPPlayer2p.SpawnExtraCharactersViaSpawnPoint();
+                                FPPlayer2p.SpawnExtraCharacters();
+                                instaSwitchCharsSpawned = true;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Fp2Trainer.Log(e.Message + e.StackTrace);
+                        }
 
                         if (multiplayerStart && !doneMultiplayerStart)
                         {
@@ -1067,6 +1088,11 @@ namespace Fp2Trainer
                 {
                     UpdateSplitScreens();
                 }
+
+                // Players without a proper validated stageListPos can't interact with many gameplay objects.
+                // So we want to try to make sure they get validated.
+                // Calling this every frame may be a signficant performance penalty though...
+                ValidateAllFPPlayers();
             }
             catch (Exception e)
             {
@@ -1627,7 +1653,24 @@ namespace Fp2Trainer
         public static List<FPPlayer> GetFPPlayers()
         {
             var listPlayers =  new List<FPPlayer>(GameObject.FindObjectsOfType<FPPlayer>());
+            foreach (var player in listPlayers)
+            {
+                FPStage.ValidateStageListPos(player);
+            }
             return listPlayers.OrderBy(fpp => fpp.characterID).ToList();
+        }
+
+        public static void ValidateAllFPPlayers()
+        {
+            if (fpplayer != null)
+            {
+                FPStage.ValidateStageListPos(fpplayer);
+            }
+
+            foreach (var player in fpplayers)
+            {
+                FPStage.ValidateStageListPos(player);
+            }
         }
 
         private GameObject GetFirstPlayerGameObject()
