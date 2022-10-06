@@ -27,7 +27,7 @@ namespace Fp2Trainer
 
         public const string Author = "Catssandra Ann"; // Author of the Mod.  (MUST BE SET)
         public const string Company = null; // Company that made the Mod.  (Set as null if none)
-        public const string Version = "0.8.0"; // Version of the Mod.  (MUST BE SET)
+        public const string Version = "0.9.0"; // Version of the Mod.  (MUST BE SET)
         public const string DownloadLink = null; // Download Link for the Mod.  (Set as null if none)
     }
 
