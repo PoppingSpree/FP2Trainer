@@ -15,6 +15,7 @@ namespace Fp2Trainer
         private List<string> placeholderNames;
 
         public Camera renderCamera = null;
+        public GameObject goStageCamera = null;
 
         public Vector3 posRelativeToCam = Vector3.zero;
         
@@ -70,6 +71,34 @@ namespace Fp2Trainer
             {
                 return;
             }
+            
+            // Make sure cameras exist.
+            try
+            {
+                if (renderCamera == null)
+                {
+                    renderCamera = GameObject.Find("Render Camera").GetComponent<Camera>();
+                }
+
+                if (renderCamera != null)
+                {
+                    //posRelativeToCam = renderCamera.WorldToScreenPoint(fpp.transform.position);
+                }
+                else
+                {
+                    //MelonLogger.Log("dabDABdabDABdabDAB");
+                    //posRelativeToCam = Fp2Trainer.GetPositionRelativeToCamera(FPCamera.stageCamera, fpp.transform.position);
+                }
+
+                if (goStageCamera == null)
+                {
+                    goStageCamera = FPCamera.stageCamera.gameObject;
+                }
+            }
+            catch (Exception e)
+            {
+                Fp2Trainer.Log(e.Message + e.StackTrace);
+            }
 
             foreach (FPPlayer fpp in Fp2Trainer.fpplayers)
             {
@@ -84,47 +113,23 @@ namespace Fp2Trainer
                     GameObject.Destroy(goNametags[fpp.GetInstanceID()]);
                     goNametags.Remove(fpp.GetInstanceID());
                     tmNametags.Remove(fpp.GetInstanceID());
+                    continue;
                 }
 
                 var go = goNametags[fpp.GetInstanceID()];
                 var tm = tmNametags[fpp.GetInstanceID()];
                 
-                try
+                if (goStageCamera != null)
                 {
-                    if (renderCamera == null)
-                    {
-                        renderCamera = GameObject.Find("Render Camera").GetComponent<Camera>();
-                    }
-
-                    if (renderCamera != null)
-                    {
-                        posRelativeToCam = renderCamera.WorldToScreenPoint(fpp.transform.position);
-                    }
-                    else
-                    {
-                        MelonLogger.Log("dabDABdabDABdabDAB");
-                        posRelativeToCam = Fp2Trainer.GetPositionRelativeToCamera(FPCamera.stageCamera, fpp.transform.position);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Fp2Trainer.Log(e.Message + e.StackTrace);
+                    posRelativeToCam = fpp.transform.position - goStageCamera.transform.position;
+                    // Still has the side camera drift going on. Maybe I shouldn't be "relative to camera" at all if it produces floating affect to not move?
                 }
                 
-                //go.transform.position = new Vector3(fpp.transform.position.x, fpp.transform.position.y + 32f, go.transform.position.z );
-                
-                //go.transform.position = new Vector3(64, 64, go.transform.position.z );
-                go.transform.position = posRelativeToCam + new Vector3(0, -64, 0);
-                Fp2Trainer.Log($"gopos: {go.transform.position} | posrel: {posRelativeToCam}");
-                
-                /*
-                 *goFancyTextPosition.transform.parent = goStageHUD.transform;
-                    goFancyTextPosition.transform.localPosition = new Vector3(10, 20, 0);
-                 * 
-                 */
+                go.transform.position = posRelativeToCam + new Vector3(0, -16, 0);
+                //Fp2Trainer.Log($"gopos: {go.transform.position} | posrel: {posRelativeToCam}");
 
                 tm.text = Regex.Replace(tm.text, @"\(.+\)",
-                    $"({Mathf.Round(fpp.health)} / {Mathf.Round(fpp.healthMax)})");
+                    $"({String.Format("{0:0.00}",fpp.health)} / {String.Format("{0:0.00}",fpp.healthMax)})");
 
                 this.transform.position = new Vector3(renderCamera.transform.position.x + (640f / 2f), 
                     renderCamera.transform.position.y - (360f / 2f), 
@@ -134,8 +139,10 @@ namespace Fp2Trainer
                 {
                     var guessedWidth = tm.text.Length * tm.characterSize;
                     var guessedHeight = tm.characterSize;
+
                     
-                    /*
+
+                    /* This proooobably would work if I uncomment it?
                     if (transform.position.x + (guessedWidth / 2) > FPCamera.stageCamera.right)
                     {
                         transform.position += new Vector3(FPCamera.stageCamera.right - (guessedWidth / 2f), 0, 0);

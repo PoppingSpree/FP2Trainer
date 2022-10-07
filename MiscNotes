@@ -3,6 +3,8 @@ LAST LEFT OFF ON:
 > RNG Mitigation https://www.gamedeveloper.com/programming/implementing-a-replay-system-in-unity-and-how-i-d-do-it-differently-next-time
 > hook FPStage and force the time and frametime to a fake 60fps value, then do replays based on step number not time.
 
+> Spawn in a Training Dummy
+
 > Fix additionally-spawned characters not reacting to gimmicks properly.
 > Want to add tidy menus
 > Custom viewpages
@@ -14,6 +16,10 @@ LAST LEFT OFF ON:
 
 > Remember to investigate FPPlayer's swapCharacter field: // 	swapCharacter	{Player Bike Carol (FPPlayer)}	FPPlayer
 
+> Split Screen to view Ghost players.
+
+> Ghost Browser / Downloader / Uploader
+> Ghost Leaderboard
 
 > As of 1.1.4r, there are 86 references to GetPlayerInstance_FPPlayer()
 > As of 1.1.4r, there are 24 references to GetPlayerInstance()

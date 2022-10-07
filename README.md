@@ -29,6 +29,9 @@ Includes features such as:
 Typically, the save files will be at ```C:\Users\<YOUR username here>\AppData\LocalLow\GalaxyTrail\Freedom Planet 2```
 The files 1.json, 2.json, 3.json are your save slots from the main menu. The global.json contains things that apply regardless of which slot you pick. I recommend backing these up.
 
+While there are general use instructions below, they are out of date. Please refer to the instructions provided in-game via the mod instead for more accurate guidance. (Press F1 when in any playable stage to toggle the help viewer.)
+
+**NOTE:**
 + Warps: Hold Guard and tap Jump to set a warp point. Hold Guard and tap Special to warp to it. I don't have a way to bind these to unique buttons from the options yet. It might make more sense if I bind those to function keys on the keyboard or something.
 + More data. A bunch of data points from the FPPlayer object that might be useful. I don't entirely know what they do. I'll try to make this configurable later.
 + F9: Debug Room (Additive, the stage you were in previously is still in memory.)

@@ -906,7 +906,7 @@ namespace Fp2Trainer
                 preferredAllyControlType = AllyControlType.SINGLE_PLAYER;
             }
 
-            if (preferredAllyControlType == AllyControlType.NPC_GHOST)
+            if (preferredAllyControlType == AllyControlType.NPC_GHOST_INPUT)
             {
 	            needToLoadInputs = true;
             }
@@ -941,7 +941,7 @@ namespace Fp2Trainer
 			        result = fpp.HandleAllyControlsHunter;
 			        actually = "Hunter";
 			        break;
-		        case AllyControlType.NPC_GHOST:
+		        case AllyControlType.NPC_GHOST_INPUT:
 			        result = fpp.HandleAllyControlsGhost;
 			        actually = "Ghost";
 			        break;
