@@ -28,6 +28,10 @@ LAST LEFT OFF ON:
 
 > lots and lots of testing and bugfixing.
 
+-----
+
+uiCam = gameObject2.AddComponent<Camera>();
+		gameObject2.name = "UI display Camera";
 
 ----
 

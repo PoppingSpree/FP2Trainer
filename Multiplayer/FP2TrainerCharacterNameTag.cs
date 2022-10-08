@@ -12,6 +12,7 @@ namespace Fp2Trainer
         public static FP2TrainerCharacterNameTag instance;
         public Dictionary<int, GameObject> goNametags;
         public Dictionary<int, TextMesh> tmNametags;
+        public Dictionary<int, FPPlayer> idToPlayers;
         private List<string> placeholderNames;
 
         public Camera renderCamera = null;
@@ -29,6 +30,11 @@ namespace Fp2Trainer
             {
                 instance = this;
                 this.transform.parent = Fp2Trainer.goFP2Trainer.transform;
+                if (!Fp2Trainer.DisplayNametags.Value)
+                {
+                    gameObject.SetActive(false);
+                    this.enabled = false;
+                }
             }
 
             try
@@ -100,6 +106,22 @@ namespace Fp2Trainer
                 Fp2Trainer.Log(e.Message + e.StackTrace);
             }
 
+            
+            // Commenting this out because it seems to be breaking the rest of the fucntionality for the time being. Can fix later.
+            /*
+            foreach (var keyValuePair in idToPlayers)
+            {
+                if (keyValuePair.Value == null)
+                {
+                    GameObject.Destroy(goNametags[keyValuePair.Key]);
+                    goNametags.Remove(keyValuePair.Key);
+                    tmNametags.Remove(keyValuePair.Key);
+                    tmNametags.Remove(keyValuePair.Key);
+                    break; // Only removes one per frame. Potential optimization here.
+                }
+            }
+            */
+
             foreach (FPPlayer fpp in Fp2Trainer.fpplayers)
             {
                 if (fpp != null && !goNametags.ContainsKey(fpp.GetInstanceID()))
@@ -107,13 +129,7 @@ namespace Fp2Trainer
                     GameObject goNametag = InstantiateNewNametag(fpp);
                     goNametags.Add(fpp.GetInstanceID(), goNametag);
                     tmNametags.Add(fpp.GetInstanceID(), goNametag.GetComponent<TextMesh>());
-                }
-                else if (fpp == null && goNametags.ContainsKey(fpp.GetInstanceID()))
-                {
-                    GameObject.Destroy(goNametags[fpp.GetInstanceID()]);
-                    goNametags.Remove(fpp.GetInstanceID());
-                    tmNametags.Remove(fpp.GetInstanceID());
-                    continue;
+                    idToPlayers.Add(fpp.GetInstanceID(), fpp);
                 }
 
                 var go = goNametags[fpp.GetInstanceID()];
@@ -122,48 +138,61 @@ namespace Fp2Trainer
                 if (goStageCamera != null)
                 {
                     posRelativeToCam = fpp.transform.position - goStageCamera.transform.position;
+                    posRelativeToCam -= new Vector3(FPCamera.stageCamera.xpos, FPCamera.stageCamera.ypos, 0);
+                    //posRelativeToCam += new Vector3(64, 64, 0);
+                    
+                    // Verticality is reversed here, this needs to subtract the height rather than add to be visible.
+                    posRelativeToCam += new Vector3(FPCamera.stageCamera.xSize/2, -FPCamera.stageCamera.ySize/2, 0);
                     // Still has the side camera drift going on. Maybe I shouldn't be "relative to camera" at all if it produces floating affect to not move?
                 }
                 
-                go.transform.position = posRelativeToCam + new Vector3(0, -16, 0);
-                //Fp2Trainer.Log($"gopos: {go.transform.position} | posrel: {posRelativeToCam}");
+                // Move it under the character.
+                go.transform.position = posRelativeToCam + new Vector3(0, -128, 0);
 
+                // TODO: This is the actual important text bit, don't forget to uncomment this.
+                
                 tm.text = Regex.Replace(tm.text, @"\(.+\)",
                     $"({String.Format("{0:0.00}",fpp.health)} / {String.Format("{0:0.00}",fpp.healthMax)})");
-
+                
+                
+                
+                /*
                 this.transform.position = new Vector3(renderCamera.transform.position.x + (640f / 2f), 
                     renderCamera.transform.position.y - (360f / 2f), 
                     renderCamera.transform.position.z);
+                */
 
                 try
                 {
                     var guessedWidth = tm.text.Length * tm.characterSize;
                     var guessedHeight = tm.characterSize;
 
-                    
+                    go.transform.position += new Vector3(-guessedWidth / 2, 0, 0);
 
-                    /* This proooobably would work if I uncomment it?
-                    if (transform.position.x + (guessedWidth / 2) > FPCamera.stageCamera.right)
+
+
+                    // Still bugged. Probably need to use some other way to gauge the bounds than the camera direction properties.
+                    /*
+                    if (go.transform.position.x + (guessedWidth / 2) > FPCamera.stageCamera.right)
                     {
-                        transform.position += new Vector3(FPCamera.stageCamera.right - (guessedWidth / 2f), 0, 0);
+                        go.transform.position += new Vector3(FPCamera.stageCamera.right - (guessedWidth / 2f), 0, 0);
                     }
                 
-                    if (transform.position.x - (guessedWidth / 2) < FPCamera.stageCamera.left)
+                    if (go.transform.position.x - (guessedWidth / 2) < FPCamera.stageCamera.left)
                     {
-                        transform.position += new Vector3(FPCamera.stageCamera.left + (guessedWidth / 2f), 0, 0);
+                        go.transform.position += new Vector3(FPCamera.stageCamera.left + (guessedWidth / 2f), 0, 0);
                     }
                 
-                    if (transform.position.y + (guessedHeight / 2) > FPCamera.stageCamera.top)
+                    if (go.transform.position.y + (guessedHeight / 2) > FPCamera.stageCamera.top)
                     {
-                        transform.position += new Vector3(0, FPCamera.stageCamera.top - (guessedHeight / 2f), 0);
+                        go.transform.position += new Vector3(0, FPCamera.stageCamera.top - (guessedHeight / 2f), 0);
                     }
                 
-                    if (transform.position.y - (guessedHeight / 2) < FPCamera.stageCamera.bottom)
+                    if (go.transform.position.y - (guessedHeight / 2) < FPCamera.stageCamera.bottom)
                     {
-                        transform.position += new Vector3(0, FPCamera.stageCamera.bottom + (guessedHeight / 2f), 0);
+                        go.transform.position += new Vector3(0, FPCamera.stageCamera.bottom + (guessedHeight / 2f), 0);
                     }
                     */
-                    // Temporarily dummying out the code that's supposed to make nametags stay within the camera confines.
                 }
 
                 catch (Exception e)

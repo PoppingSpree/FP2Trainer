@@ -1,0 +1,18 @@
+--------------------------------------------------
+7 October 2022: v0.9.1
+--------------------------------------------------
+* Add changelog so I can actually remember what I was trying to do on a given day.
+* Quick Fix for: Default bindings for character insta-swap, font size changes, and camera zoom were bound on numpad and unable to be used without editing the config file for people with no numkeys. These have been moved to the Alpha-Number keys, and Period.
+* Disable Insta-Swap by Default. It is intended to have the additional player instances invisible by default until switched to, but the code to hide and disable the characters is incomplete.
+* Remove all mention of Insta-Swap from the in-game instructions.
+* Remove hotkey pages 9, 10, and 11. They were blank.
+* Adjust nametags to display below characters rather than above, and follow the characters correctly.
+* Disable nametags by default. Again. Nametags will deactivate themselves if they are somehow spawned while the option is disabled.
+-
+
+Immediate Roadmap: 
+? Display a dark background when the help screen is visible to make it easier to read.
+? Split the Trainer, Toybox, and other WIP features into separate mods.
+? Move shared behaviors into a separate library
+? Rewrite instructions to detail installing the mod and library together.
+? Ability to save and laod custom checkpoints. Preferrably from a menu.

@@ -27,7 +27,7 @@ namespace Fp2Trainer
 
         public const string Author = "Catssandra Ann"; // Author of the Mod.  (MUST BE SET)
         public const string Company = null; // Company that made the Mod.  (Set as null if none)
-        public const string Version = "0.9.0"; // Version of the Mod.  (MUST BE SET)
+        public const string Version = "0.9.1"; // Version of the Mod.  (MUST BE SET)
         public const string DownloadLink = null; // Download Link for the Mod.  (Set as null if none)
     }
 
@@ -63,7 +63,7 @@ namespace Fp2Trainer
             QUICK_RESTART,
             NO_CLIP,
             MULTICHARACTER,
-            CHAR_INSTASWAP,
+            //CHAR_INSTASWAP,
 
             //NETPLAY,
             BUGS,
@@ -75,9 +75,9 @@ namespace Fp2Trainer
             HOTKEYS_6,
             HOTKEYS_7,
             HOTKEYS_8,
-            HOTKEYS_9,
-            HOTKEYS_10,
-            HOTKEYS_11,
+            //HOTKEYS_9,
+            //HOTKEYS_10,
+            //HOTKEYS_11,
             QUICKBOOT,
             NONE
         }
@@ -381,7 +381,7 @@ namespace Fp2Trainer
             EnableInvinciblePlayers = fp2Trainer.CreateEntry("EnableInvinciblePlayers", false);
             EnableInvincibleBoss = fp2Trainer.CreateEntry("EnableInvincibleBoss", false);
             
-            UseInstaSwitch = fp2Trainer.CreateEntry("UseInstaSwitch", true);
+            UseInstaSwitch = fp2Trainer.CreateEntry("UseInstaSwitch", false);
             EnableSplitScreen = fp2Trainer.CreateEntry("EnableSplitScreen", false);
             EnableGetPlayerInstanceMultiplayerPatch = fp2Trainer.CreateEntry("EnableGetPlayerInstanceMultiplayerPatch", false);
             DisplayNametags = fp2Trainer.CreateEntry("DisplayNametags", false);
@@ -417,19 +417,19 @@ namespace Fp2Trainer
             
             PHKStartSplitscreen = CreateEntryAndBindHotkey("PHKStartSplitscreen", "Slash");
             
-            PHKSwitchCurrentPlayerToLilac = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToLilac", "Keypad0");
-            PHKSwitchCurrentPlayerToCarol = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToCarol", "Keypad1");
-            PHKSwitchCurrentPlayerToCarolBike = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToCarolBike", "Keypad2");
-            PHKSwitchCurrentPlayerToMilla = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToMilla", "Keypad3");
-            PHKSwitchCurrentPlayerToNeera = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToNeera", "Keypad4");
-            PHKSwitchCurrentPlayerToNext = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToNext", "Keypad9");
-            PHKSwitchCurrentPlayerToPrev = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToPrev", "Keypad8");
+            PHKSwitchCurrentPlayerToLilac = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToLilac", "Alpha0");
+            PHKSwitchCurrentPlayerToCarol = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToCarol", "Alpha1");
+            PHKSwitchCurrentPlayerToCarolBike = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToCarolBike", "Alpha2");
+            PHKSwitchCurrentPlayerToMilla = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToMilla", "Alpha3");
+            PHKSwitchCurrentPlayerToNeera = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToNeera", "Alpha4");
+            PHKSwitchCurrentPlayerToNext = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToNext", "Alpha9");
+            PHKSwitchCurrentPlayerToPrev = CreateEntryAndBindHotkey("PHKSwitchCurrentPlayerToPrev", "Alpha8");
 
             PHKGetOutGetOutGetOut = CreateEntryAndBindHotkey("PHKGetOutGetOutGetOut", "Delete");
 
-            PHKCameraZoomIn = CreateEntryAndBindHotkey("PHKCameraZoomIn", "KeypadPlus");
-            PHKCameraZoomOut = CreateEntryAndBindHotkey("PHKCameraZoomOut", "KeypadMinus");
-            PHKCameraZoomReset = CreateEntryAndBindHotkey("PHKCameraZoomReset", "KeypadPeriod");
+            PHKCameraZoomIn = CreateEntryAndBindHotkey("PHKCameraZoomIn", "Plus");
+            PHKCameraZoomOut = CreateEntryAndBindHotkey("PHKCameraZoomOut", "Minus");
+            PHKCameraZoomReset = CreateEntryAndBindHotkey("PHKCameraZoomReset", "Period");
 
             PHKShowNextDataPage = CreateEntryAndBindHotkey("PHKShowNextDataPage", "PageDown");
             PHKShowPreviousDataPage = CreateEntryAndBindHotkey("PHKShowPreviousDataPage", "PageUp");
@@ -442,9 +442,8 @@ namespace Fp2Trainer
             PHKLoadAssetBundles = CreateEntryAndBindHotkey("PHKLoadAssetBundles", "Shift+F9");
             //PHKTogglePauseMenuOrTrainerMenu = CreateEntryAndBindHotkey("PHKTogglePauseMenuOrTrainerMenu", "F1");
             PHKGoToLevelAtLastIndex = CreateEntryAndBindHotkey("PHKGoToLevelAtLastIndex", "BackQuote");
-
-            PHKIncreaseFontSize = CreateEntryAndBindHotkey("PHKIncreaseFontSize", "Shift+KeypadPlus");
-            PHKDecreaseFontSize = CreateEntryAndBindHotkey("PHKDecreaseFontSize", "Shift+KeypadMinus");
+            PHKIncreaseFontSize = CreateEntryAndBindHotkey("PHKIncreaseFontSize", "Shift+Plus");
+            PHKDecreaseFontSize = CreateEntryAndBindHotkey("PHKDecreaseFontSize", "Shift+Minus");
 
             PHKReturnToCheckpoint = CreateEntryAndBindHotkey("PHKReturnToCheckpoint", "R");
             PHKRestartStage = CreateEntryAndBindHotkey("PHKRestartStage", "Shift+R");
@@ -1435,6 +1434,7 @@ namespace Fp2Trainer
                                         PHKToggleMultiCharStart.Value, PHKCyclePreferredAllyControlType.Value,
                                         PHKKOCharacter.Value, PHKKOBoss.Value, PHKStartSplitscreen.Value);
                     break;
+                /*
                 case InstructionPage.CHAR_INSTASWAP:
                     debugDisplay += "**Character Insta-swap**\n" +
                                     "WIP. Switch to any character on the fly." +
@@ -1453,6 +1453,7 @@ namespace Fp2Trainer
                                         PHKSwitchCurrentPlayerToNext.Value,
                                         PHKSwitchCurrentPlayerToPrev.Value);
                     break;
+                    */
                 /*case InstructionPage.NETPLAY:
                     debugDisplay += "**Basics**\n";
                     // PHKStartInputPlayback
@@ -1509,6 +1510,7 @@ namespace Fp2Trainer
                     debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 5),
                         1 + (numHotkeyLinesPerPage * 6));
                     break;
+                /*
                 case InstructionPage.HOTKEYS_9:
                     debugDisplay += "**Current Hotkeys Nine**\n";
                     debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 6),
@@ -1524,6 +1526,7 @@ namespace Fp2Trainer
                     debugDisplay += FP2TrainerCustomHotkeys.GetBindingString(1 + (numHotkeyLinesPerPage * 8),
                         1 + (numHotkeyLinesPerPage * 9));
                     break;
+                    */
                 case InstructionPage.QUICKBOOT:
                     debugDisplay += "**QuickBoot**\n";
                     debugDisplay +=

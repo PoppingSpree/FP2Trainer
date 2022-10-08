@@ -74,6 +74,7 @@
         <Compile Include="TrainerPauseMenu.cs" />
     </ItemGroup>
     <ItemGroup>
+      <Content Include="Changes.txt" />
       <Content Include="LICENSE.md" />
       <Content Include="MiscNotes" />
       <Content Include="NOTICE.txt" />
