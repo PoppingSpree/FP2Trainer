@@ -104,6 +104,7 @@ namespace Fp2Trainer
             foreach (GameObject go in planeSwitchersVisualizers)
             {
                 go.SetActive(planeSwitchVisualizersVisible);
+                go.GetComponent<SpriteRenderer>().enabled = planeSwitchVisualizersVisible;
             }
         }
 

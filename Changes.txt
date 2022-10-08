@@ -8,7 +8,9 @@
 * Remove hotkey pages 9, 10, and 11. They were blank.
 * Adjust nametags to display below characters rather than above, and follow the characters correctly.
 * Disable nametags by default. Again. Nametags will deactivate themselves if they are somehow spawned while the option is disabled.
--
+* Fix PlaneSwitcherVisualizer Toggle not hiding existing plane switchers after they were made visible.
+* Add hotkey to immediately hide the data display. Defaults to Backslash.
+----------
 
 Immediate Roadmap: 
 ? Display a dark background when the help screen is visible to make it easier to read.

@@ -134,6 +134,7 @@ namespace Fp2Trainer
 
         public static MelonPreferences_Entry<string> PHKShowNextDataPage;
         public static MelonPreferences_Entry<string> PHKShowPreviousDataPage;
+        public static MelonPreferences_Entry<string> PHKHideDataView;
 
         public static MelonPreferences_Entry<string> PHKGoToMainMenu;
         public static MelonPreferences_Entry<string> PHKLoadDebugRoom;
@@ -433,6 +434,7 @@ namespace Fp2Trainer
 
             PHKShowNextDataPage = CreateEntryAndBindHotkey("PHKShowNextDataPage", "PageDown");
             PHKShowPreviousDataPage = CreateEntryAndBindHotkey("PHKShowPreviousDataPage", "PageUp");
+            PHKHideDataView = CreateEntryAndBindHotkey("PHKHideDataView", "Backslash");
 
             PHKGoToMainMenu = CreateEntryAndBindHotkey("PHKGoToMainMenu", "F7");
             PHKLoadDebugRoom = CreateEntryAndBindHotkey("PHKLoadDebugRoom", "F8");
@@ -1389,6 +1391,7 @@ namespace Fp2Trainer
                                     "collision layer, dps, boss info, and more!\n" +
                                     String.Format("View DataViewer Next Page: {0}\n" +
                                                   "View DataViewer Previous Page: {1}\n" +
+                                                  "Hide DataViewer{7}\n" +
                                                   "Set Warp Point: {2}\n" +
                                                   "Teleport to Warp Point: {3}\n" +
                                                   "Toggle PlaneSwitcherVisualizers: {4}\n\n" +
@@ -1397,7 +1400,8 @@ namespace Fp2Trainer
                                                   "Confirm Stage Menu Choice: (Jump Button)\n",
                                         PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKSetWarpPoint.Value,
                                         PHKGotoWarpPoint.Value, PHKTogglePlaneSwitcherVisualizers.Value,
-                                        PHKGoToLevelSelectMenu.Value, PHKToggleShowColliders.Value);
+                                        PHKGoToLevelSelectMenu.Value, PHKToggleShowColliders.Value, 
+                                        PHKHideDataView.Value);
                     break;
                 case InstructionPage.QUICK_RESTART:
                     debugDisplay += "**Quick Restart**\n" +
@@ -1556,8 +1560,8 @@ namespace Fp2Trainer
             }
 
             debugDisplay += String.Format(
-                "{0} / {1} -> View Next / Prev Page.\nPress {2} to toggle Instructions on or off.\n",
-                PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKToggleInstructions.Value);
+                "{0} / {1} -> View Next / Prev Page.\nPress {2} to toggle Instructions on or off. {3}: Close Dataviewer.\n",
+                PHKShowNextDataPage.Value, PHKShowPreviousDataPage.Value, PHKToggleInstructions.Value, PHKHideDataView.Value);
         }
 
         public void UpdateDPS()
@@ -1778,6 +1782,20 @@ namespace Fp2Trainer
                 {
                     ToggleVariableDisplayPrevious();
                     Log("Previous Data Page (" + Enum.GetName(typeof(DataPage), currentDataPage) + ")");
+                }
+            }
+            
+            if (FP2TrainerCustomHotkeys.GetButtonDown(PHKHideDataView))
+            {
+                if (currentDataPage != DataPage.NONE)
+                {
+                    currentDataPage = DataPage.NONE;
+                    Log("Hide Inspector");
+                }
+                else
+                {
+                    currentDataPage = DataPage.MOVEMENT;
+                    Log("Reveal Inspector");
                 }
             }
 
